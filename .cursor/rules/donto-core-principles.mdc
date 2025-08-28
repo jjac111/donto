@@ -1,0 +1,88 @@
+---
+description: Core product principles and development guidelines for Donto dental clinic software
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Donto Development Rules
+
+## Core Product Principles (NON-NEGOTIABLE)
+
+### 1. Ease of access, ease of use
+- Every flow should be obvious and frictionless
+- Day-one users should be productive without training
+- Golden paths must be fast for common tasks (patient creation, appointment booking, note entry)
+
+### 2. Great data visibility
+- Users can quickly search and reach any relevant record from anywhere
+- Provide lightweight global search and context-aware quick actions
+
+### 3. Fewer clicks, faster work
+- Optimize for minimal interactions - common tasks in a few clicks
+- Prefer inline actions and keyboard shortcuts over deep navigation
+
+### 4. Modern layouts, low visual noise
+- Prioritize essential information; secondary details stay accessible but unobtrusive
+- Consistent visual hierarchy and spacing; readable typography; predictable components
+- Mobile and desktop friendly. Responsive first.
+
+### 5. Zero tolerance for user frustration
+- Proactively prevent foot-guns. Validate early, confirm destructive actions
+- Error states are specific, actionable, and helpful
+- Empty states guide users to next steps
+
+## Technical Guidelines
+
+### Spanish-First Development
+- All UI text must be in Spanish by default
+- Use i18n framework for all user-facing strings
+- Consider Spanish text length in UI layouts
+
+### Database & API
+- Use UUIDs for all primary keys
+- Follow established schema patterns in @db/schema.sql
+- Prefer normalized data structures
+- Always include proper foreign key constraints
+- ALWAYS update @db/schema.sql when making schema changes
+- Create migration files for each schema change in db/migrations/
+
+### UI/UX Standards
+- Use shadcn/ui components consistently
+- Follow established design patterns
+- Minimize form fields - only capture essential data
+- Provide immediate feedback for user actions
+
+### Performance Requirements
+- Common list views must return in ≤500ms P95
+- Patient search results in ≤200ms
+- Appointment creation in ≤30 seconds total
+- Patient registration in ≤60 seconds total
+
+### Code Quality
+- Prefer TypeScript strict mode
+- Use meaningful variable and function names in English
+- Write self-documenting code
+- Follow Next.js 14+ best practices
+
+## Dental-Specific Rules
+
+### Odontogram Requirements
+- Use standard tooth numbering: FDI
+- Support 5-section tooth model (center + 4 cardinal surfaces)
+- Store tooth conditions in normalized database structure
+- Visual tooth selection must be intuitive and fast
+
+### Clinical Workflow
+- Never lose clinical data
+- Maintain audit trail for sensitive operations
+- Support both SOAP and simplified note formats
+- Treatment plans must link to specific tooth surfaces
+
+## Anti-Patterns to Avoid
+- Complex multi-step wizards
+- Unclear navigation hierarchies
+- Verbose forms with unnecessary fields
+- Generic error messages
+- Slow search interfaces
+- Non-responsive layouts
+ 
