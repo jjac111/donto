@@ -7,268 +7,108 @@ This document defines the core user flows for Donto dental clinic administration
 
 ## Flow 1: New Patient Registration
 
-**Primary Actor:** Assistant  
-**Trigger:** Walk-in patient or phone call for new patient  
-**Goal:** Complete patient registration ready for appointment booking
+**Goal:** Complete patient registration with initial diagnosis
 
 ### Steps:
-1. **Patient Search** (verify not already in system)
-   - Search by name, phone, or ID
-   - If found → redirect to existing patient profile
-   - If not found → continue to registration
+1. **Search existing patients** (name/phone/ID) → if found, redirect to profile
+2. **Enter basic info:** name, DOB, sex, phone, email, address
+3. **Add representative** (if under 18): name, relationship, contact, consent notes
+4. **Record allergies and medical history** (free text)
+5. **Initial odontogram:** click tooth surfaces to record current conditions
+6. **Save** → option to book appointment immediately
 
-2. **Basic Information Capture**
-   - Full name, DOB, sex, phone, email, address
-   - Patient ID generation (auto or manual)
-   - Emergency contact information
-
-3. **Medical History & Allergies**
-   - Known allergies (drug, environmental)
-   - Current medications
-   - Medical conditions (diabetes, heart disease, etc.)
-   - Previous dental history (free text for MVP)
-
-4. **Representative/Guardian (if applicable)**
-   - Patient age check → if under 18 or dependent
-   - Representative name, relationship, contact info
-   - Consent notes and authorization details
-
-5. **Initial Tooth Assessment**
-   - Open odontogram interface
-   - Record baseline tooth conditions per surface
-   - Note missing teeth, existing restorations, obvious issues
-
-6. **Insurance/Payment Info** (future - note for now)
-   - Insurance provider details
-   - Payment preferences
-
-7. **Save & Next Actions**
-   - Save patient record
-   - Option to immediately book appointment
-   - Print patient welcome packet (future)
-
-**Success Criteria:** Patient created in <60 seconds, ready for appointment booking
+**Success Criteria:** Patient created in <60 seconds
 
 ---
 
 ## Flow 2: Appointment Creation
 
-**Primary Actor:** Assistant  
-**Trigger:** Patient requests appointment (new or existing)  
-**Goal:** Schedule appointment with appropriate provider and time slot
+**Goal:** Schedule appointment with no double-bookings
 
 ### Steps:
-1. **Patient Selection**
-   - Search for existing patient
-   - If new patient → redirect to registration flow first
-   - Display patient summary (last visit, active treatments)
+1. **Search and select patient** → if new, redirect to registration
+2. **Select appointment type:** consultation, cleaning, treatment, emergency
+3. **Set duration:** 15min, 30min, 1hr, 2hr
+4. **Choose provider** from available list
+5. **Pick date/time** from calendar view (unavailable slots blocked)
+6. **Add notes** (optional)
+7. **Save** → send calendar invite to provider email
 
-2. **Appointment Type & Urgency**
-   - Select appointment reason (consultation, cleaning, treatment, emergency)
-   - Estimated duration (15min, 30min, 1hr, 2hr)
-   - Urgency level (routine, urgent, emergency)
-
-3. **Provider Selection**
-   - Show available providers
-   - Display specialties if relevant to appointment type
-   - Consider provider preferences for patient (history)
-
-4. **Date & Time Selection**
-   - Calendar view showing provider availability
-   - Block out unavailable slots (lunch, existing appointments)
-   - Show scheduling conflicts if any
-   - Suggest alternative times if first choice unavailable
-
-5. **Appointment Details**
-   - Add notes about appointment purpose
-   - Special instructions or requirements
-   - Pre-appointment prep needed
-
-6. **Confirmation & Notifications**
-   - Review appointment summary
-   - Send calendar invitation to provider email
-   - Option to print appointment card for patient
-   - Add to clinic calendar
-
-**Success Criteria:** Appointment scheduled in <30 seconds with no double-bookings
+**Success Criteria:** Appointment scheduled in <30 seconds
 
 ---
 
 ## Flow 3: Treatment Plan Creation
 
-**Primary Actor:** Provider  
-**Trigger:** After patient examination or during consultation  
-**Goal:** Define comprehensive treatment plan with procedures and timeline
+**Goal:** Define treatment plan with procedures and timeline
 
 ### Steps:
-1. **Patient Context Review**
-   - Open patient chart
-   - Review recent clinical notes
-   - Check current odontogram status
-   - Review previous treatment plans
+1. **Open patient chart** → review current odontogram and notes
+2. **Update odontogram** with new findings per tooth surface
+3. **Add treatment items:**
+   - Select procedure from list
+   - Click affected tooth surfaces on odontogram
+   - Set priority (urgent/recommended/optional)
+   - Add provider notes
+4. **Set treatment sequence** and dependencies
+5. **Save** → option to create cost estimate immediately
 
-2. **Examination Documentation**
-   - Update odontogram with current findings
-   - Note new conditions per tooth surface
-   - Photo documentation placeholders (future)
-
-3. **Treatment Planning**
-   - Add treatment items one by one:
-     - Procedure code and name
-     - Affected teeth/surfaces (select via odontogram)
-     - Priority level (urgent, recommended, optional)
-     - Estimated duration
-   - Set treatment sequence/dependencies
-   - Add provider notes for each item
-
-4. **Timeline Planning**
-   - Suggested appointment schedule
-   - Group procedures by visit when possible
-   - Consider healing time between treatments
-   - Mark any urgent items
-
-5. **Patient Communication Prep**
-   - Generate treatment summary for patient
-   - Note discussion points
-   - Mark items for cost estimation
-
-6. **Save & Next Steps**
-   - Save treatment plan
-   - Option to create cost estimate immediately
-   - Schedule next appointment if agreed
-   - Flag items for insurance pre-authorization (future)
-
-**Success Criteria:** Comprehensive treatment plan created with clear next steps
+**Success Criteria:** Treatment plan ready for cost estimation
 
 ---
 
-## Flow 4: Treatment Estimate (Presupuesto) Creation
+## Flow 4: Cost Estimate Creation
 
-**Primary Actor:** Assistant or Provider  
-**Trigger:** Treatment plan exists and patient requests cost information  
-**Goal:** Provide accurate cost breakdown for planned treatments
+**Goal:** Generate cost breakdown for treatment plan
 
 ### Steps:
-1. **Treatment Plan Review**
-   - Open existing treatment plan
-   - Review all planned procedures
-   - Check procedure codes and descriptions
+1. **Open treatment plan** → review procedures list
+2. **Assign costs:** each procedure loads default price, manually adjust if needed
+3. **Apply discounts** if applicable
+4. **Group by priority/visit** and calculate totals
+5. **Generate printable estimate** with validity period
+6. **Save estimate** → option to convert approved items to scheduled treatments
 
-2. **Cost Assignment**
-   - For each treatment item:
-     - Assign procedure cost (from fee schedule)
-     - Note any material costs
-     - Apply provider-specific rates if applicable
-     - Consider multiple visit requirements
-
-3. **Payment Options & Discounts**
-   - Apply insurance coverage if available (future)
-   - Calculate patient portion
-   - Add payment plan options
-   - Apply clinic discounts if applicable
-
-4. **Estimate Formatting**
-   - Group by priority or visit
-   - Show itemized breakdown
-   - Calculate subtotals and total
-   - Add validity period for estimate
-
-5. **Patient Presentation**
-   - Generate printable estimate
-   - Review with patient
-   - Note any modifications requested
-   - Document patient questions/concerns
-
-6. **Follow-up Actions**
-   - Save estimate version
-   - Schedule discussion follow-up if needed
-   - Convert approved items to scheduled treatments
-   - Send copy to patient email (future)
-
-**Success Criteria:** Clear, professional cost estimate ready for patient discussion
+**Success Criteria:** Professional estimate ready for patient review
 
 ---
 
-## Flow 5: Patient Check-in for Appointment
+## Flow 5: Appointment Management
 
-**Primary Actor:** Assistant → Provider  
-**Trigger:** Patient arrives for scheduled appointment  
-**Goal:** Efficient transition from arrival to treatment
+**Goal:** Track appointment status and document visit
 
-### Assistant Tasks:
-1. **Arrival Processing**
-   - Verify patient identity
-   - Check appointment details
-   - Update contact info if needed
-   - Collect any required forms
-
-2. **Pre-appointment Updates**
-   - Review/update medical history changes
-   - Check for new allergies or medications
-   - Update insurance information (future)
-   - Collect payment for previous services if due
-
-3. **Clinical Preparation**
-   - Flag any special requirements for provider
-   - Prepare patient chart/tablet for provider
-   - Note any patient concerns or questions
-   - Update appointment status to "checked in"
-
-### Provider Tasks:
-4. **Chart Review**
-   - Review patient history quickly
-   - Check planned treatments for today
-   - Note any alerts or special considerations
-   - Review previous visit notes
-
-5. **Patient Interaction**
-   - Greet patient and confirm treatment plan
-   - Address any patient questions
-   - Perform examination/treatment
-   - Update odontogram with findings
-
-6. **Documentation**
+### Steps:
+1. **Mark appointment status:** click appointment in calendar → select "show", "no show", or "cancelled"
+2. **For completed appointments:**
    - Create clinical note for visit
+   - Update odontogram if treatments performed
    - Mark completed treatment items
-   - Update treatment plan status
-   - Note any complications or follow-up needs
+   - Schedule follow-up if needed
 
-7. **Visit Completion**
-   - Schedule follow-up appointments if needed
-   - Provide post-treatment instructions
-   - Update billing information
-   - Finalize clinical notes
-
-**Success Criteria:** Smooth patient flow from check-in to completion with complete documentation
+**Success Criteria:** Appointment status tracked, visit documented
 
 ---
 
-## Cross-Flow Considerations
+## Key Design Principles
 
-### Information Continuity
-- Each flow should carry forward relevant context
-- Patient alerts visible across all flows
-- Treatment history accessible during planning
-- Cost information linked to treatment plans
+### Minimal Clicks
+- Search → select → minimal required fields → save
+- Default values where possible
+- Immediate navigation to next logical step
 
 ### Error Prevention
-- Validation at each step
+- Prevent double-booking automatically
+- Validate required fields
 - Confirm destructive actions
-- Prevent double-booking
-- Flag incomplete information
 
-### Spanish-First Design
-- All flows designed with Spanish text in mind
-- Cultural considerations for patient interaction
-- Local terminology and procedures
-
-### Future Role Separation
-- Clear handoff points between assistant and provider tasks
-- Permission-aware interfaces ready for role implementation
-- Audit trail hooks for sensitive actions
+### Context Awareness
+- Carry patient context between flows
+- Show relevant alerts/history
+- Link treatment plans to cost estimates
 
 ---
 
 **Version:** 1.0  
 **Last Updated:** TBD  
 **Owner:** Product
+
