@@ -19,19 +19,19 @@ Donto is a cloud-based dental clinic administration system for managing patients
   - Create/edit/cancel appointments with patient, provider, date/time, duration, reason.
   - Central clinic calendar views (day/week), filter by provider.
   - Prevent double-booking the same provider time slot.
-  - External calendar sync (provider calendars) — baseline support (see 7.4).
+  - Calendar invitations: send standard calendar invites (ical format) to providers via email for appointments.
 - Clinical notes: basic encounter notes (subjective/objective/assessment/plan or simplified SOAP), per-visit; finalize with addenda.
 - Treatment plans and procedures: define planned procedures per patient, mark as completed during visits, track status.
 - Authentication & authorization: single-role now; architecture prepared for future RBAC.
 - Internationalization: Spanish-first UI; i18n scaffolding in place for future languages.
-- Tooth-level data capture (minimal): record initial tooth condition baseline at patient onboarding and specify tooth targets for treatment items via form fields (no graphical odontogram UI in MVP).
+- Odontogram and tooth-level data capture: interactive tooth diagram with clickable surfaces (each tooth as circle divided into 5 sections: center and 4 cardinal surfaces) to specify conditions per surface for treatment planning and patient records.
 
 ## 4) Out of scope for MVP (post-MVP targets)
 - Reporting and data export (CSV or dashboards).
 - Audit trail/change history UI and detailed logging (reserve hooks for later).
 - Patient file uploads (PDFs/images) and document management.
 - Appointment reminders and notifications (including WhatsApp/SMS/email).
-- Graphical odontogram/charting UI and overlays.
+- Advanced odontogram features (complex charting overlays, detailed condition tracking beyond basic surface conditions).
 - Imaging/PACS integrations (e.g., panoramic/CBCT).
 - Patient portal and online booking.
 - Multi-location org hierarchy and cross-location scheduling.
@@ -68,16 +68,14 @@ Donto is a cloud-based dental clinic administration system for managing patients
 ### 7.3 Patient management
 - Create/edit patients: name, DOB, sex, contact info, identifiers (e.g., MRN), allergies, brief medical history (free text for MVP).
 - Add representative/guardian: name, relationship, contact info, and consent notes.
-- Record initial tooth condition baseline using simple tooth-level fields (e.g., present/missing/treated/notes) without graphical charting.
+- Record initial tooth condition baseline and ongoing conditions using interactive odontogram (5-section tooth diagrams).
 - Search patients by name, phone, or ID.
 
 ### 7.4 Appointments & scheduling
 - Create/edit/cancel appointments with patient, provider, date/time, duration, reason.
 - Calendar views: day and week; filter by provider; central clinic calendar.
 - Prevent double-booking the same provider time slot.
-- External calendar sync (baseline):
-  - One-way push from Donto to provider calendar when an appointment is created/updated/cancelled.
-  - Read provider busy times for conflict checks if feasible; otherwise, start with push-only and iterate.
+- Calendar invitations: send standard ical format calendar invites via email to providers when appointments are created/updated/cancelled.
 
 ### 7.5 Clinical notes
 - Per-visit note tied to an appointment (or standalone if needed).
@@ -85,8 +83,8 @@ Donto is a cloud-based dental clinic administration system for managing patients
 - Read-only after finalization with an addendum mechanism.
 
 ### 7.6 Treatment plans & procedures
-- Create a plan per patient; add planned procedures with code/name, tooth (required when applicable), notes, and status.
-- Mark procedures as completed with date/provider and tooth reference.
+- Create a plan per patient; add planned procedures with code/name, tooth surfaces (selected via odontogram), notes, and status.
+- Mark procedures as completed with date/provider and tooth surface references.
 - View history of completed procedures per patient.
 
 ### 7.7 Internationalization (i18n)
@@ -120,8 +118,8 @@ Key relationships:
 - TreatmentPlan has many TreatmentItems; TreatmentItem can be linked to an Appointment when completed.
 
 Tooth-level data (MVP):
-- Tooth reference stored on TreatmentItem and in Patient’s baseline record using a chosen numbering system.
-- Graphical display deferred; captured via form fields.
+- Tooth surface conditions stored on TreatmentItem and in Patient's baseline record using a chosen numbering system.
+- Interactive odontogram with 5-section tooth diagrams (center + 4 cardinal surfaces) for visual selection and condition specification.
 
 Note: This section is conceptual; specific schemas are defined during implementation.
 
@@ -138,11 +136,11 @@ Note: This section is conceptual; specific schemas are defined during implementa
 ## 12) Phased roadmap
 - Phase 0 — Project setup: repo, CI, environments, auth, skeleton UI, RBAC scaffolding, Spanish i18n baseline.
 - Phase 1 — Patients & Providers: registry screens, search, representatives, provider availability, external calendar linkage metadata.
-- Phase 2 — Scheduling: appointment CRUD, central clinic calendar views, double-booking prevention, one-way calendar push.
+- Phase 2 — Scheduling: appointment CRUD, central clinic calendar views, double-booking prevention, email calendar invitations.
 - Phase 3 — Clinical notes: per-visit notes, finalize and addendum.
-- Phase 4 — Treatment plans: create plans, manage items, mark complete; tooth-level fields required where applicable.
+- Phase 4 — Treatment plans: create plans, manage items, mark complete; odontogram integration for tooth surface selection.
 - Phase 5 — Hardening: performance, UX polish, minimal write-audit hooks (no UI), documentation.
-- Post-MVP — Graphical odontogram UI, reporting/exports, full audit trail UI, notifications (WhatsApp/SMS/email), portal/online booking, imaging.
+- Post-MVP — Advanced odontogram features, reporting/exports, full audit trail UI, notifications (WhatsApp/SMS/email), portal/online booking, imaging.
 
 ## 13) Assumptions (MVP)
 - Single clinic (single tenant) in MVP; multi-location is post-MVP.
@@ -150,17 +148,16 @@ Note: This section is conceptual; specific schemas are defined during implementa
 - Desktop-first UX; mobile web should be usable but not optimized.
 - No appointment reminders in MVP.
 - No patient file uploads in MVP.
-- No graphical odontogram UI in MVP (tooth-level data captured via forms).
+- Basic odontogram UI included in MVP (5-section tooth diagrams); advanced charting features are post-MVP.
 
 ## 14) Open questions
 - Regulatory constraints for initial markets (e.g., PHI storage location) — TBD.
 - Tooth numbering system: FDI (ISO-3950) vs Universal vs Palmer — which to adopt first?
-- Which external calendar providers to support first (Google, Microsoft 365, both)?
-- Do we need provider busy-time reads in MVP or can we defer to post-MVP iteration?
+- Email delivery service for calendar invitations (SMTP, SendGrid, etc.) - which to use for reliability?
 
 ## 15) Risks and mitigations
 - Scope creep from advanced dental-specific features (odontogram, imaging): strictly gate to post-MVP.
-- Scheduling complexity (availability, overlapping roles, external calendar conflicts): start with push-only; validate with early users, iterate to read busy times.
+- Scheduling complexity (availability, overlapping roles): start with basic internal calendar; validate with early users before adding advanced features.
 - Adoption risk: keep flows Spanish-first, fast, and low-friction.
 
 ## 16) Glossary (selected)
