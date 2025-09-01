@@ -177,7 +177,7 @@ CREATE TABLE tooth_conditions (
     UNIQUE(patient_id, tooth_number, surface)
 );
 
--- Indexes for performance
+-- Basic indexes for performance
 CREATE INDEX idx_appointments_date ON appointments(appointment_date);
 CREATE INDEX idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX idx_appointments_provider ON appointments(provider_id);
@@ -188,3 +188,87 @@ CREATE INDEX idx_treatment_items_procedure ON treatment_items(procedure_id);
 CREATE INDEX idx_tooth_conditions_patient ON tooth_conditions(patient_id);
 CREATE INDEX idx_clinical_notes_patient ON clinical_notes(patient_id);
 CREATE INDEX idx_procedures_clinic ON procedures(clinic_id);
+
+-- GIN indexes for full-text search (Spanish language)
+-- Patient search: name, phone, email, patient number
+CREATE INDEX idx_patients_search ON patients 
+USING gin(to_tsvector('spanish', 
+    first_name || ' ' || last_name || ' ' || 
+    COALESCE(patient_number, '')
+));
+
+-- Provider search: name and specialty
+CREATE INDEX idx_providers_search ON providers 
+USING gin(to_tsvector('spanish', 
+    first_name || ' ' || last_name || ' ' || 
+    COALESCE(specialty, '')
+));
+
+-- Procedure search: name and description
+CREATE INDEX idx_procedures_search ON procedures 
+USING gin(to_tsvector('spanish', 
+    name || ' ' || 
+    COALESCE(description, '') || ' ' || 
+    COALESCE(code, '')
+));
+
+-- Clinical notes search (for finding past treatments)
+CREATE INDEX idx_clinical_notes_search ON clinical_notes 
+USING gin(to_tsvector('spanish', 
+    COALESCE(subjective, '') || ' ' || 
+    COALESCE(objective, '') || ' ' || 
+    COALESCE(assessment, '') || ' ' || 
+    COALESCE(plan, '')
+));
+
+-- PostgreSQL functions for full-text search using GIN indexes
+
+-- Patient search function using GIN index
+CREATE OR REPLACE FUNCTION search_patients(search_query TEXT, result_limit INTEGER DEFAULT 20)
+RETURNS SETOF patients AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM patients
+    WHERE to_tsvector('spanish', 
+        first_name || ' ' || last_name || ' ' || 
+        COALESCE(patient_number, '')
+    ) @@ plainto_tsquery('spanish', search_query)
+    ORDER BY created_at DESC
+    LIMIT result_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Provider search function
+CREATE OR REPLACE FUNCTION search_providers(search_query TEXT, result_limit INTEGER DEFAULT 20)
+RETURNS SETOF providers AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM providers
+    WHERE to_tsvector('spanish', 
+        first_name || ' ' || last_name || ' ' || 
+        COALESCE(specialty, '')
+    ) @@ plainto_tsquery('spanish', search_query)
+    ORDER BY created_at DESC
+    LIMIT result_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure search function
+CREATE OR REPLACE FUNCTION search_procedures(search_query TEXT, result_limit INTEGER DEFAULT 20)
+RETURNS SETOF procedures AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM procedures
+    WHERE to_tsvector('spanish', 
+        name || ' ' || 
+        COALESCE(description, '') || ' ' || 
+        COALESCE(code, '')
+    ) @@ plainto_tsquery('spanish', search_query)
+    AND is_active = true
+    ORDER BY created_at DESC
+    LIMIT result_limit;
+END;
+$$ LANGUAGE plpgsql;
