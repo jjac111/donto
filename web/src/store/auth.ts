@@ -64,11 +64,11 @@ export const useAuthStore = create<AuthState>()(
               const user: User = {
                 id: data.user.id,
                 email: data.user.email!,
-                firstName: data.user.user_metadata?.first_name || "User",
-                lastName: data.user.user_metadata?.last_name || "",
-                role: data.user.user_metadata?.role || "admin",
-                clinicId: data.user.user_metadata?.clinic_id || "clinic-1",
-                displayName: `${data.user.user_metadata?.first_name || "User"} ${data.user.user_metadata?.last_name || ""}`.trim(),
+                firstName: data.user.user_metadata?.first_name,
+                lastName: data.user.user_metadata?.last_name,
+                role: data.user.user_metadata?.role,
+                clinicId: data.user.user_metadata?.clinic_id,
+                displayName: `${data.user.user_metadata?.first_name} ${data.user.user_metadata?.last_name}`.trim(),
               };
               
               set(
@@ -145,11 +145,11 @@ const initializeAuthStateListener = () => {
       const user: User = {
         id: session.user.id,
         email: session.user.email!,
-        firstName: session.user.user_metadata?.first_name || "User",
-        lastName: session.user.user_metadata?.last_name || "",
-        role: session.user.user_metadata?.role || "admin",
-        clinicId: session.user.user_metadata?.clinic_id || "clinic-1",
-        displayName: `${session.user.user_metadata?.first_name || "User"} ${session.user.user_metadata?.last_name || ""}`.trim(),
+        firstName: session.user.user_metadata?.first_name,
+        lastName: session.user.user_metadata?.last_name,
+        role: session.user.user_metadata?.role,
+        clinicId: session.user.user_metadata?.clinic_id,
+        displayName: `${session.user.user_metadata?.first_name} ${session.user.user_metadata?.last_name}`.trim(),
       };
       
       useAuthStore.setState({ 
@@ -178,11 +178,11 @@ const initializeAuthStateListener = () => {
       const user: User = {
         id: session.user.id,
         email: session.user.email!,
-        firstName: session.user.user_metadata?.first_name || "User",
-        lastName: session.user.user_metadata?.last_name || "",
-        role: session.user.user_metadata?.role || "admin",
-        clinicId: session.user.user_metadata?.clinic_id || "clinic-1",
-        displayName: `${session.user.user_metadata?.first_name || "User"} ${session.user.user_metadata?.last_name || ""}`.trim(),
+        firstName: session.user.user_metadata?.first_name,
+        lastName: session.user.user_metadata?.last_name,
+        role: session.user.user_metadata?.role,
+        clinicId: session.user.user_metadata?.clinic_id,
+        displayName: `${session.user.user_metadata?.first_name} ${session.user.user_metadata?.last_name}`.trim(),
       };
       
       useAuthStore.setState({ 
