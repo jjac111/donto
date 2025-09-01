@@ -80,184 +80,364 @@ export const transformAppointment = (
   }[dbAppointment.status],
 });
 
+export const transformProvider = (dbProvider: DbProvider): Provider => ({
+  id: dbProvider.id,
+  clinicId: dbProvider.clinic_id,
+  firstName: dbProvider.first_name,
+  lastName: dbProvider.last_name,
+  email: dbProvider.email || undefined,
+  phone: dbProvider.phone || undefined,
+  specialty: dbProvider.specialty || undefined,
+  isActive: dbProvider.is_active,
+  displayName: `${dbProvider.first_name} ${dbProvider.last_name}`,
+});
+
+export const transformProcedure = (dbProcedure: DbProcedure): Procedure => ({
+  id: dbProcedure.id,
+  clinicId: dbProcedure.clinic_id,
+  code: dbProcedure.code || undefined,
+  name: dbProcedure.name,
+  description: dbProcedure.description || undefined,
+  defaultCost: dbProcedure.default_cost || undefined,
+  estimatedDurationMinutes: dbProcedure.estimated_duration_minutes || undefined,
+  category: dbProcedure.category || undefined,
+  isActive: dbProcedure.is_active,
+  displayName: dbProcedure.code
+    ? `${dbProcedure.code} - ${dbProcedure.name}`
+    : dbProcedure.name,
+});
+
 // API functions - these will be used by TanStack Query
 
 // Patients API
 export const patientsApi = {
-  // ⚠️ DEPRECATED: Don't use for large datasets
-  getAll: async (): Promise<Patient[]> => {
-    // TODO: Remove this for production - only for small clinics
-    console.warn("patientsApi.getAll() should not be used for large datasets");
-    return patientsApi.getPage(1, 50).then((result) => result.data);
-  },
-
   // Paginated approach for large datasets
   getPage: async (
     page: number,
     pageSize: number
   ): Promise<PaginatedResponse<Patient>> => {
-    // TODO: Replace with actual Supabase call
-    // const { data, error, count } = await supabase
-    //   .from('patients')
-    //   .select('*', { count: 'exact' })
-    //   .range((page - 1) * pageSize, page * pageSize - 1)
-    //   .order('created_at', { ascending: false })
+    // Real Supabase implementation
+    const { data, error, count } = await supabase
+      .from("patients")
+      .select("*", { count: "exact" })
+      .range((page - 1) * pageSize, page * pageSize - 1)
+      .order("created_at", { ascending: false });
 
-    // Mock paginated data
-    const mockPatients: DbPatient[] = [
-      {
-        id: "1",
-        clinic_id: "clinic-1",
-        first_name: "María",
-        last_name: "González",
-        date_of_birth: "1985-03-15",
-        sex: "F",
-        phone: "+34 600 123 456",
-        email: "maria.gonzalez@email.com",
-        address: "Calle Mayor 123, Madrid",
-        emergency_contact_name: "Juan González",
-        emergency_contact_phone: "+34 600 654 321",
-        medical_history: "Sin antecedentes relevantes",
-        allergies: "Penicilina",
-        patient_number: "P001",
-        created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
-      },
-    ];
+    if (error) {
+      throw new Error(`Failed to fetch patients: ${error.message}`);
+    }
 
     return {
-      data: mockPatients.map(transformPatient),
-      total: 5000, // Mock total
+      data: (data || []).map(transformPatient),
+      total: count || 0,
       page,
       pageSize,
-      hasMore: page * pageSize < 5000,
+      hasMore: page * pageSize < (count || 0),
     };
   },
 
   // Recent patients for dashboard
   getRecent: async (limit: number = 10): Promise<Patient[]> => {
-    // TODO: Replace with actual Supabase call
-    // const { data, error } = await supabase
-    //   .from('patients')
-    //   .select('*')
-    //   .order('created_at', { ascending: false })
-    //   .limit(limit)
+    const { data, error } = await supabase
+      .from("patients")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-    return patientsApi.getPage(1, limit).then((result) => result.data);
+    if (error) {
+      throw new Error(`Failed to fetch recent patients: ${error.message}`);
+    }
+
+    return (data || []).map(transformPatient);
   },
 
   // Frequent patients for quick access
   getFrequent: async (limit: number = 15): Promise<Patient[]> => {
-    // TODO: Replace with actual Supabase call with appointment count join
-    // const { data, error } = await supabase
-    //   .from('patients')
-    //   .select('*, appointments(count)')
-    //   .order('appointments.count', { ascending: false })
-    //   .limit(limit)
+    const { data, error } = await supabase
+      .from("patients")
+      .select(
+        `
+        *,
+        appointments!inner(id)
+      `
+      )
+      .order("appointments.count", { ascending: false })
+      .limit(limit);
 
-    return patientsApi.getPage(1, limit).then((result) => result.data);
+    if (error) {
+      throw new Error(`Failed to fetch frequent patients: ${error.message}`);
+    }
+
+    return (data || []).map(transformPatient);
   },
 
   getById: async (id: string): Promise<Patient | null> => {
-    // TODO: Replace with actual Supabase call
-    const patients = await patientsApi.getAll();
-    return patients.find((p) => p.id === id) || null;
+    const { data, error } = await supabase
+      .from("patients")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return null; // Patient not found
+      }
+      throw new Error(`Failed to fetch patient: ${error.message}`);
+    }
+
+    return transformPatient(data);
   },
 
   search: async (query: string, limit: number = 20): Promise<Patient[]> => {
-    // TODO: Replace with actual Supabase call with full-text search
-    // const { data, error } = await supabase
-    //   .from('patients')
-    //   .select('*')
-    //   .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`)
-    //   .limit(limit)
-    //   .order('created_at', { ascending: false })
+    const { data, error } = await supabase.rpc("search_patients", {
+      search_query: query,
+      result_limit: limit,
+    });
 
-    // Mock search - in real app this would be much faster with DB indexes
-    const allPatients = await patientsApi.getPage(1, 100); // Search in first 100 for demo
-    return allPatients.data
-      .filter(
-        (p) =>
-          p.displayName.toLowerCase().includes(query.toLowerCase()) ||
-          p.phone?.includes(query) ||
-          p.email?.toLowerCase().includes(query.toLowerCase()) ||
-          p.patientNumber?.toLowerCase().includes(query.toLowerCase())
-      )
-      .slice(0, limit);
+    if (error) {
+      throw new Error(`Failed to search patients: ${error.message}`);
+    }
+
+    return (data || []).map(transformPatient);
   },
 
   create: async (patientData: Partial<Patient>): Promise<Patient> => {
-    // TODO: Replace with actual Supabase call
-    throw new Error("Not implemented yet");
+    // Transform frontend data to database format
+    const dbPatientData = {
+      first_name: patientData.firstName!,
+      last_name: patientData.lastName!,
+      date_of_birth: patientData.dateOfBirth!.toISOString().split("T")[0],
+      sex: patientData.sex,
+      phone: patientData.phone,
+      email: patientData.email,
+      address: patientData.address,
+      emergency_contact_name: patientData.emergencyContactName,
+      emergency_contact_phone: patientData.emergencyContactPhone,
+      medical_history: patientData.medicalHistory,
+      allergies: patientData.allergies,
+      // clinic_id will be set from auth context when implemented
+      clinic_id: "clinic-1", // TODO: Get from auth store
+    };
+
+    const { data, error } = await supabase
+      .from("patients")
+      .insert(dbPatientData)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create patient: ${error.message}`);
+    }
+
+    return transformPatient(data);
   },
 
   update: async (
     id: string,
     patientData: Partial<Patient>
   ): Promise<Patient> => {
-    // TODO: Replace with actual Supabase call
-    throw new Error("Not implemented yet");
+    // Transform frontend data to database format
+    const dbPatientData: any = {};
+
+    if (patientData.firstName) dbPatientData.first_name = patientData.firstName;
+    if (patientData.lastName) dbPatientData.last_name = patientData.lastName;
+    if (patientData.dateOfBirth)
+      dbPatientData.date_of_birth = patientData.dateOfBirth
+        .toISOString()
+        .split("T")[0];
+    if (patientData.sex) dbPatientData.sex = patientData.sex;
+    if (patientData.phone !== undefined)
+      dbPatientData.phone = patientData.phone;
+    if (patientData.email !== undefined)
+      dbPatientData.email = patientData.email;
+    if (patientData.address !== undefined)
+      dbPatientData.address = patientData.address;
+    if (patientData.emergencyContactName !== undefined)
+      dbPatientData.emergency_contact_name = patientData.emergencyContactName;
+    if (patientData.emergencyContactPhone !== undefined)
+      dbPatientData.emergency_contact_phone = patientData.emergencyContactPhone;
+    if (patientData.medicalHistory !== undefined)
+      dbPatientData.medical_history = patientData.medicalHistory;
+    if (patientData.allergies !== undefined)
+      dbPatientData.allergies = patientData.allergies;
+
+    const { data, error } = await supabase
+      .from("patients")
+      .update(dbPatientData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update patient: ${error.message}`);
+    }
+
+    return transformPatient(data);
   },
 
   delete: async (id: string): Promise<void> => {
-    // TODO: Replace with actual Supabase call
-    throw new Error("Not implemented yet");
+    const { error } = await supabase.from("patients").delete().eq("id", id);
+
+    if (error) {
+      throw new Error(`Failed to delete patient: ${error.message}`);
+    }
   },
 };
 
 // Appointments API
 export const appointmentsApi = {
   getAll: async (): Promise<Appointment[]> => {
-    // TODO: Replace with actual Supabase call
-    return [];
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .order("appointment_date", { ascending: true });
+
+    if (error) {
+      throw new Error(`Failed to fetch appointments: ${error.message}`);
+    }
+
+    return (data || []).map(transformAppointment);
   },
 
   getByDate: async (date: string): Promise<Appointment[]> => {
-    // TODO: Replace with actual Supabase call
-    return [];
+    const startOfDay = `${date}T00:00:00.000Z`;
+    const endOfDay = `${date}T23:59:59.999Z`;
+
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .gte("appointment_date", startOfDay)
+      .lte("appointment_date", endOfDay)
+      .order("appointment_date", { ascending: true });
+
+    if (error) {
+      throw new Error(`Failed to fetch appointments by date: ${error.message}`);
+    }
+
+    return (data || []).map(transformAppointment);
   },
 
   getByPatient: async (patientId: string): Promise<Appointment[]> => {
-    // TODO: Replace with actual Supabase call
-    return [];
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("appointment_date", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch patient appointments: ${error.message}`);
+    }
+
+    return (data || []).map(transformAppointment);
   },
 
   create: async (
     appointmentData: Partial<Appointment>
   ): Promise<Appointment> => {
-    // TODO: Replace with actual Supabase call
-    throw new Error("Not implemented yet");
+    const dbAppointmentData = {
+      clinic_id: "clinic-1", // TODO: Get from auth store
+      patient_id: appointmentData.patientId!,
+      provider_id: appointmentData.providerId!,
+      appointment_date: appointmentData.appointmentDate!.toISOString(),
+      duration_minutes: appointmentData.durationMinutes!,
+      appointment_type: appointmentData.appointmentType!,
+      notes: appointmentData.notes,
+    };
+
+    const { data, error } = await supabase
+      .from("appointments")
+      .insert(dbAppointmentData)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create appointment: ${error.message}`);
+    }
+
+    return transformAppointment(data);
   },
 
   update: async (
     id: string,
     appointmentData: Partial<Appointment>
   ): Promise<Appointment> => {
-    // TODO: Replace with actual Supabase call
-    throw new Error("Not implemented yet");
+    const dbAppointmentData: any = {};
+
+    if (appointmentData.appointmentDate)
+      dbAppointmentData.appointment_date =
+        appointmentData.appointmentDate.toISOString();
+    if (appointmentData.durationMinutes)
+      dbAppointmentData.duration_minutes = appointmentData.durationMinutes;
+    if (appointmentData.appointmentType)
+      dbAppointmentData.appointment_type = appointmentData.appointmentType;
+    if (appointmentData.status)
+      dbAppointmentData.status = appointmentData.status;
+    if (appointmentData.notes !== undefined)
+      dbAppointmentData.notes = appointmentData.notes;
+
+    const { data, error } = await supabase
+      .from("appointments")
+      .update(dbAppointmentData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update appointment: ${error.message}`);
+    }
+
+    return transformAppointment(data);
   },
 
   updateStatus: async (
     id: string,
     status: Appointment["status"]
   ): Promise<Appointment> => {
-    // TODO: Replace with actual Supabase call
-    throw new Error("Not implemented yet");
+    const { data, error } = await supabase
+      .from("appointments")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update appointment status: ${error.message}`);
+    }
+
+    return transformAppointment(data);
   },
 };
 
 // Providers API
 export const providersApi = {
   getAll: async (): Promise<Provider[]> => {
-    // TODO: Replace with actual Supabase call
-    return [];
+    const { data, error } = await supabase
+      .from("providers")
+      .select("*")
+      .eq("is_active", true)
+      .order("first_name", { ascending: true });
+
+    if (error) {
+      throw new Error(`Failed to fetch providers: ${error.message}`);
+    }
+
+    return (data || []).map(transformProvider);
   },
 };
 
 // Procedures API
 export const proceduresApi = {
   getAll: async (): Promise<Procedure[]> => {
-    // TODO: Replace with actual Supabase call
-    return [];
+    const { data, error } = await supabase
+      .from("procedures")
+      .select("*")
+      .eq("is_active", true)
+      .order("category", { ascending: true });
+
+    if (error) {
+      throw new Error(`Failed to fetch procedures: ${error.message}`);
+    }
+
+    return (data || []).map(transformProcedure);
   },
 };
