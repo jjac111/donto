@@ -60,7 +60,8 @@ export const useAuthStore = create<AuthState>()(
                 firstName: 'Admin',
                 lastName: 'User',
                 role: 'admin',
-                clinicId: 'clinic-1'
+                clinicId: 'clinic-1',
+                displayName: 'Admin User'
               }
               set({ user, isLoading: false }, false, 'auth/login/success')
             } else {
