@@ -1,14 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { usePatients } from "@/hooks/use-patients";
+import { usePatientSearch } from "@/hooks/use-patients";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AppLayout } from "@/components/layout/app-layout";
 
 export default function PatientsPage() {
   const t = useTranslations("patients");
   const tCommon = useTranslations("common");
-  const { data: patients, isLoading, error } = usePatients();
+  const { data: patients, isLoading, error } = usePatientSearch("");
 
   if (isLoading) {
     return (
