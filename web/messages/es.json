@@ -1,0 +1,48 @@
+{
+  "auth": {
+    "login": "Iniciar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "loginButton": "Entrar",
+    "loginError": "Error al iniciar sesión"
+  },
+  "navigation": {
+    "patients": "Pacientes",
+    "appointments": "Citas",
+    "calendar": "Calendario",
+    "treatments": "Tratamientos",
+    "settings": "Configuración"
+  },
+  "patients": {
+    "newPatient": "Nuevo Paciente",
+    "search": "Buscar paciente...",
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "dateOfBirth": "Fecha de Nacimiento",
+    "phone": "Teléfono",
+    "email": "Correo",
+    "address": "Dirección",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "appointments": {
+    "newAppointment": "Nueva Cita",
+    "selectPatient": "Seleccionar Paciente",
+    "selectProvider": "Seleccionar Doctor",
+    "date": "Fecha",
+    "time": "Hora",
+    "duration": "Duración",
+    "type": "Tipo de Cita",
+    "notes": "Notas",
+    "schedule": "Agendar"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "close": "Cerrar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver"
+  }
+}

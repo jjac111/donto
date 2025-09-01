@@ -1,0 +1,48 @@
+{
+  "auth": {
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Sign In",
+    "loginError": "Login error"
+  },
+  "navigation": {
+    "patients": "Patients",
+    "appointments": "Appointments",
+    "calendar": "Calendar",
+    "treatments": "Treatments",
+    "settings": "Settings"
+  },
+  "patients": {
+    "newPatient": "New Patient",
+    "search": "Search patient...",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "dateOfBirth": "Date of Birth",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "appointments": {
+    "newAppointment": "New Appointment",
+    "selectPatient": "Select Patient",
+    "selectProvider": "Select Provider",
+    "date": "Date",
+    "time": "Time",
+    "duration": "Duration",
+    "type": "Appointment Type",
+    "notes": "Notes",
+    "schedule": "Schedule"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View"
+  }
+}
