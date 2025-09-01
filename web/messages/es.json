@@ -43,6 +43,8 @@
     "close": "Cerrar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "view": "Ver"
+    "view": "Ver",
+    "logout": "Cerrar Sesión",
+    "dashboard": "Dashboard"
   }
 }
