@@ -313,3 +313,200 @@ CREATE INDEX idx_profiles_provider_id ON profiles(provider_id);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
 CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
+
+-- Function to get current active clinic from session
+CREATE OR REPLACE FUNCTION get_current_active_clinic()
+RETURNS UUID AS $$
+DECLARE
+    clinic_id UUID;
+BEGIN
+    -- Get active clinic from current session
+    -- This will be set by the application when user selects clinic
+    SELECT active_clinic_id INTO clinic_id
+    FROM user_sessions
+    WHERE user_id = auth.uid()
+    AND expires_at > NOW()
+    ORDER BY updated_at DESC
+    LIMIT 1;
+    
+    RETURN clinic_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to set active clinic for current session
+CREATE OR REPLACE FUNCTION set_active_clinic(clinic_uuid UUID, session_duration_hours INTEGER DEFAULT 24)
+RETURNS UUID AS $$
+DECLARE
+    session_id UUID;
+    new_token UUID;
+BEGIN
+    -- Verify user has access to this clinic
+    IF NOT EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE user_id = auth.uid() 
+        AND clinic_id = clinic_uuid 
+        AND is_active = true
+    ) THEN
+        RAISE EXCEPTION 'User does not have access to clinic %', clinic_uuid;
+    END IF;
+    
+    -- Generate new session token
+    new_token := gen_random_uuid();
+    
+    -- Deactivate existing sessions for this user
+    UPDATE user_sessions 
+    SET expires_at = NOW() 
+    WHERE user_id = auth.uid();
+    
+    -- Create new session
+    INSERT INTO user_sessions (user_id, active_clinic_id, session_token, expires_at)
+    VALUES (auth.uid(), clinic_uuid, new_token, NOW() + (session_duration_hours || ' hours')::interval)
+    RETURNING id INTO session_id;
+    
+    RETURN new_token;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get user's clinic memberships
+CREATE OR REPLACE FUNCTION get_user_clinics()
+RETURNS TABLE (
+    clinic_id UUID,
+    clinic_name VARCHAR(255),
+    user_role VARCHAR(50),
+    is_active BOOLEAN,
+    provider_id UUID
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.id as clinic_id,
+        c.name as clinic_name,
+        p.role as user_role,
+        p.is_active,
+        p.provider_id
+    FROM profiles p
+    JOIN clinics c ON c.id = p.clinic_id
+    WHERE p.user_id = auth.uid()
+    AND p.is_active = true
+    ORDER BY c.name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Enable Row Level Security on all main tables
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE providers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinical_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE treatment_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE treatment_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE procedures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tooth_conditions ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for profiles table
+CREATE POLICY "Users can view own profiles" ON profiles
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Users can update own profiles" ON profiles
+    FOR UPDATE USING (user_id = auth.uid());
+
+-- RLS Policies for user_sessions table
+CREATE POLICY "Users can manage own sessions" ON user_sessions
+    FOR ALL USING (user_id = auth.uid());
+
+-- Core RLS policy: All clinic data must match current active clinic
+CREATE POLICY "Clinic isolation for patients" ON patients
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for providers" ON providers
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for appointments" ON appointments
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for clinical_notes" ON clinical_notes
+    FOR ALL USING (
+        -- Clinical notes don't have clinic_id directly, so check via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for treatment_plans" ON treatment_plans
+    FOR ALL USING (
+        -- Treatment plans link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for treatment_items" ON treatment_items
+    FOR ALL USING (
+        -- Treatment items link via treatment plan -> patient
+        EXISTS (
+            SELECT 1 FROM treatment_plans tp
+            JOIN patients p ON p.id = tp.patient_id
+            WHERE tp.id = treatment_plan_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for procedures" ON procedures
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for tooth_conditions" ON tooth_conditions
+    FOR ALL USING (
+        -- Tooth conditions link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+-- Security function to validate current session
+CREATE OR REPLACE FUNCTION validate_current_session()
+RETURNS BOOLEAN AS $$
+BEGIN
+    -- Check if user has an active, valid session
+    RETURN EXISTS (
+        SELECT 1 FROM user_sessions
+        WHERE user_id = auth.uid()
+        AND expires_at > NOW()
+        AND active_clinic_id IN (
+            SELECT clinic_id FROM profiles
+            WHERE user_id = auth.uid()
+            AND is_active = true
+        )
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
