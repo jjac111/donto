@@ -12,24 +12,23 @@ CREATE TABLE clinics (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Providers (dentists, hygienists, etc.)
+-- Providers (dentists, hygienists, etc.) - linked to persons
 CREATE TABLE providers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
     clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(255),
-    phone VARCHAR(50),
     specialty VARCHAR(100),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Patients
-CREATE TABLE patients (
+-- Centralized persons table per clinic (national_id + country uniqueness)
+CREATE TABLE persons (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    national_id VARCHAR(50) NOT NULL,
+    country VARCHAR(3) NOT NULL DEFAULT 'ECU', -- ISO country code, default Dominican Republic
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NOT NULL,
@@ -37,11 +36,21 @@ CREATE TABLE patients (
     phone VARCHAR(50),
     email VARCHAR(255),
     address TEXT,
-    emergency_contact_name VARCHAR(200),
-    emergency_contact_phone VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(clinic_id, national_id, country) -- One person per clinic per national ID
+);
+
+-- Patients (role-specific data linked to persons)
+CREATE TABLE patients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
     medical_history TEXT,
     allergies TEXT,
-    patient_number VARCHAR(50) UNIQUE,
+    emergency_contact_name VARCHAR(200),
+    emergency_contact_phone VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -178,11 +187,16 @@ CREATE TABLE tooth_conditions (
 );
 
 -- Basic indexes for performance
+CREATE INDEX idx_persons_clinic ON persons(clinic_id);
+CREATE INDEX idx_persons_national_id ON persons(clinic_id, national_id, country);
+CREATE INDEX idx_patients_person ON patients(person_id);
+CREATE INDEX idx_patients_clinic ON patients(clinic_id);
+
+CREATE INDEX idx_providers_person ON providers(person_id);
+CREATE INDEX idx_providers_clinic ON providers(clinic_id);
 CREATE INDEX idx_appointments_date ON appointments(appointment_date);
 CREATE INDEX idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX idx_appointments_provider ON appointments(provider_id);
-CREATE INDEX idx_patients_clinic ON patients(clinic_id);
-CREATE INDEX idx_patients_number ON patients(patient_number);
 CREATE INDEX idx_treatment_items_plan ON treatment_items(treatment_plan_id);
 CREATE INDEX idx_treatment_items_procedure ON treatment_items(procedure_id);
 CREATE INDEX idx_tooth_conditions_patient ON tooth_conditions(patient_id);
@@ -190,17 +204,20 @@ CREATE INDEX idx_clinical_notes_patient ON clinical_notes(patient_id);
 CREATE INDEX idx_procedures_clinic ON procedures(clinic_id);
 
 -- GIN indexes for full-text search (Spanish language)
--- Patient search: name, phone, email, patient number
-CREATE INDEX idx_patients_search ON patients 
+-- Person search: name, national_id, phone, email
+CREATE INDEX idx_persons_search ON persons 
 USING gin(to_tsvector('spanish', 
     first_name || ' ' || last_name || ' ' || 
-    COALESCE(patient_number, '')
+    national_id || ' ' ||
+    COALESCE(phone, '') || ' ' ||
+    COALESCE(email, '')
 ));
 
--- Provider search: name and specialty
+-- Patient search: no longer needed as we search via persons table
+
+-- Provider search: specialty only (person data searched separately)
 CREATE INDEX idx_providers_search ON providers 
 USING gin(to_tsvector('spanish', 
-    first_name || ' ' || last_name || ' ' || 
     COALESCE(specialty, '')
 ));
 
@@ -223,37 +240,168 @@ USING gin(to_tsvector('spanish',
 
 -- PostgreSQL functions for full-text search using GIN indexes
 
--- Patient search function using GIN index
-CREATE OR REPLACE FUNCTION search_patients(search_query TEXT, result_limit INTEGER DEFAULT 20)
-RETURNS SETOF patients AS $$
+-- Find or create person by national_id in current clinic
+CREATE OR REPLACE FUNCTION find_or_create_person(
+    p_national_id VARCHAR(50),
+    p_country VARCHAR(3),
+    p_first_name VARCHAR(100),
+    p_last_name VARCHAR(100),
+    p_date_of_birth DATE,
+    p_sex VARCHAR(10) DEFAULT NULL,
+    p_phone VARCHAR(50) DEFAULT NULL,
+    p_email VARCHAR(255) DEFAULT NULL,
+    p_address TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+    person_uuid UUID;
+    clinic_uuid UUID;
 BEGIN
-    RETURN QUERY
-    SELECT *
-    FROM patients
-    WHERE to_tsvector('spanish', 
-        first_name || ' ' || last_name || ' ' || 
-        COALESCE(patient_number, '')
-    ) @@ plainto_tsquery('spanish', search_query)
-    ORDER BY created_at DESC
-    LIMIT result_limit;
+    -- Get current active clinic
+    clinic_uuid := get_current_active_clinic();
+    
+    IF clinic_uuid IS NULL THEN
+        RAISE EXCEPTION 'No active clinic selected';
+    END IF;
+    
+    -- Try to find existing person
+    SELECT id INTO person_uuid
+    FROM persons
+    WHERE clinic_id = clinic_uuid
+    AND national_id = p_national_id
+    AND country = p_country;
+    
+    -- If not found, create new person
+    IF person_uuid IS NULL THEN
+        INSERT INTO persons (
+            clinic_id, national_id, country, first_name, last_name,
+            date_of_birth, sex, phone, email, address
+        ) VALUES (
+            clinic_uuid, p_national_id, p_country, p_first_name, p_last_name,
+            p_date_of_birth, p_sex, p_phone, p_email, p_address
+        ) RETURNING id INTO person_uuid;
+    ELSE
+        -- Update existing person data (in case info changed)
+        UPDATE persons SET
+            first_name = p_first_name,
+            last_name = p_last_name,
+            date_of_birth = p_date_of_birth,
+            sex = COALESCE(p_sex, sex),
+            phone = COALESCE(p_phone, phone),
+            email = COALESCE(p_email, email),
+            address = COALESCE(p_address, address),
+            updated_at = NOW()
+        WHERE id = person_uuid;
+    END IF;
+    
+    RETURN person_uuid;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Provider search function
-CREATE OR REPLACE FUNCTION search_providers(search_query TEXT, result_limit INTEGER DEFAULT 20)
-RETURNS SETOF providers AS $$
+-- Search persons in current clinic
+CREATE OR REPLACE FUNCTION search_persons(search_query TEXT, result_limit INTEGER DEFAULT 20)
+RETURNS SETOF persons AS $$
 BEGIN
     RETURN QUERY
     SELECT *
-    FROM providers
-    WHERE to_tsvector('spanish', 
+    FROM persons
+    WHERE clinic_id = get_current_active_clinic()
+    AND to_tsvector('spanish', 
         first_name || ' ' || last_name || ' ' || 
-        COALESCE(specialty, '')
+        national_id || ' ' ||
+        COALESCE(phone, '') || ' ' ||
+        COALESCE(email, '')
     ) @@ plainto_tsquery('spanish', search_query)
     ORDER BY created_at DESC
     LIMIT result_limit;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Enhanced patient search (joins with persons)
+CREATE OR REPLACE FUNCTION search_patients(search_query TEXT, result_limit INTEGER DEFAULT 20)
+RETURNS TABLE (
+    patient_id UUID,
+    person_id UUID,
+    national_id VARCHAR(50),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    date_of_birth DATE,
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    medical_history TEXT,
+    allergies TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id as patient_id,
+        pe.id as person_id,
+        pe.national_id,
+        pe.first_name,
+        pe.last_name,
+        pe.date_of_birth,
+        pe.phone,
+        pe.email,
+        p.medical_history,
+        p.allergies
+    FROM patients p
+    JOIN persons pe ON pe.id = p.person_id
+    WHERE p.clinic_id = get_current_active_clinic()
+    AND (
+        to_tsvector('spanish', 
+            pe.first_name || ' ' || pe.last_name || ' ' || 
+            pe.national_id || ' ' ||
+            COALESCE(pe.phone, '') || ' ' ||
+            COALESCE(pe.email, '')
+        ) @@ plainto_tsquery('spanish', search_query)
+    )
+    ORDER BY p.created_at DESC
+    LIMIT result_limit;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Enhanced provider search (joins with persons)
+CREATE OR REPLACE FUNCTION search_providers(search_query TEXT, result_limit INTEGER DEFAULT 20)
+RETURNS TABLE (
+    provider_id UUID,
+    person_id UUID,
+    national_id VARCHAR(50),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    specialty VARCHAR(100),
+    is_active BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        pr.id as provider_id,
+        pe.id as person_id,
+        pe.national_id,
+        pe.first_name,
+        pe.last_name,
+        pe.phone,
+        pe.email,
+        pr.specialty,
+        pr.is_active
+    FROM providers pr
+    JOIN persons pe ON pe.id = pr.person_id
+    WHERE pr.clinic_id = get_current_active_clinic()
+    AND pr.is_active = true
+    AND (
+        to_tsvector('spanish', 
+            pe.first_name || ' ' || pe.last_name || ' ' || 
+            pe.national_id || ' ' ||
+            COALESCE(pe.phone, '') || ' ' ||
+            COALESCE(pe.email, '') || ' ' ||
+            COALESCE(pr.specialty, '')
+        ) @@ plainto_tsquery('spanish', search_query)
+    )
+    ORDER BY pr.created_at DESC
+    LIMIT result_limit;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Procedure search function
 CREATE OR REPLACE FUNCTION search_procedures(search_query TEXT, result_limit INTEGER DEFAULT 20)
@@ -272,3 +420,249 @@ BEGIN
     LIMIT result_limit;
 END;
 $$ LANGUAGE plpgsql;
+
+-- User profiles table for multi-clinic, multi-role access
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    provider_id UUID REFERENCES providers(id) ON DELETE SET NULL, -- Optional link to provider record
+    role VARCHAR(50) NOT NULL DEFAULT 'admin', -- admin, provider, staff
+    is_active BOOLEAN DEFAULT true,
+    invited_by UUID REFERENCES auth.users(id),
+    invited_at TIMESTAMP WITH TIME ZONE,
+    joined_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(user_id, clinic_id) -- One profile per user per clinic
+);
+
+-- User sessions table to track active clinic per session
+CREATE TABLE user_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    active_clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    session_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Ensure user has access to the active clinic
+    CONSTRAINT fk_user_clinic_access 
+        FOREIGN KEY (user_id, active_clinic_id) 
+        REFERENCES profiles(user_id, clinic_id)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_profiles_user_id ON profiles(user_id);
+CREATE INDEX idx_profiles_clinic_id ON profiles(clinic_id);
+CREATE INDEX idx_profiles_provider_id ON profiles(provider_id);
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
+
+-- Function to get current active clinic from session
+CREATE OR REPLACE FUNCTION get_current_active_clinic()
+RETURNS UUID AS $$
+DECLARE
+    clinic_id UUID;
+BEGIN
+    -- Get active clinic from current session
+    -- This will be set by the application when user selects clinic
+    SELECT active_clinic_id INTO clinic_id
+    FROM user_sessions
+    WHERE user_id = auth.uid()
+    AND expires_at > NOW()
+    ORDER BY updated_at DESC
+    LIMIT 1;
+    
+    RETURN clinic_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to set active clinic for current session
+CREATE OR REPLACE FUNCTION set_active_clinic(clinic_uuid UUID, session_duration_hours INTEGER DEFAULT 24)
+RETURNS UUID AS $$
+DECLARE
+    session_id UUID;
+    new_token UUID;
+BEGIN
+    -- Verify user has access to this clinic
+    IF NOT EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE user_id = auth.uid() 
+        AND clinic_id = clinic_uuid 
+        AND is_active = true
+    ) THEN
+        RAISE EXCEPTION 'User does not have access to clinic %', clinic_uuid;
+    END IF;
+    
+    -- Generate new session token
+    new_token := gen_random_uuid();
+    
+    -- Deactivate existing sessions for this user
+    UPDATE user_sessions 
+    SET expires_at = NOW() 
+    WHERE user_id = auth.uid();
+    
+    -- Create new session
+    INSERT INTO user_sessions (user_id, active_clinic_id, session_token, expires_at)
+    VALUES (auth.uid(), clinic_uuid, new_token, NOW() + (session_duration_hours || ' hours')::interval)
+    RETURNING id INTO session_id;
+    
+    RETURN new_token;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get user's clinic memberships
+CREATE OR REPLACE FUNCTION get_user_clinics()
+RETURNS TABLE (
+    clinic_id UUID,
+    clinic_name VARCHAR(255),
+    user_role VARCHAR(50),
+    is_active BOOLEAN,
+    provider_id UUID
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.id as clinic_id,
+        c.name as clinic_name,
+        p.role as user_role,
+        p.is_active,
+        p.provider_id
+    FROM profiles p
+    JOIN clinics c ON c.id = p.clinic_id
+    WHERE p.user_id = auth.uid()
+    AND p.is_active = true
+    ORDER BY c.name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Enable Row Level Security on all main tables
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE persons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE providers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinical_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE treatment_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE treatment_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE procedures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tooth_conditions ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for profiles table
+CREATE POLICY "Users can view own profiles" ON profiles
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Users can update own profiles" ON profiles
+    FOR UPDATE USING (user_id = auth.uid());
+
+-- RLS Policies for user_sessions table
+CREATE POLICY "Users can manage own sessions" ON user_sessions
+    FOR ALL USING (user_id = auth.uid());
+
+-- Core RLS policy: All clinic data must match current active clinic
+CREATE POLICY "Clinic isolation for persons" ON persons
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for patients" ON patients
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for providers" ON providers
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for appointments" ON appointments
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for clinical_notes" ON clinical_notes
+    FOR ALL USING (
+        -- Clinical notes don't have clinic_id directly, so check via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for treatment_plans" ON treatment_plans
+    FOR ALL USING (
+        -- Treatment plans link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for treatment_items" ON treatment_items
+    FOR ALL USING (
+        -- Treatment items link via treatment plan -> patient
+        EXISTS (
+            SELECT 1 FROM treatment_plans tp
+            JOIN patients p ON p.id = tp.patient_id
+            WHERE tp.id = treatment_plan_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for procedures" ON procedures
+    FOR ALL USING (
+        clinic_id = get_current_active_clinic()
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for tooth_conditions" ON tooth_conditions
+    FOR ALL USING (
+        -- Tooth conditions link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+-- Security function to validate current session
+CREATE OR REPLACE FUNCTION validate_current_session()
+RETURNS BOOLEAN AS $$
+BEGIN
+    -- Check if user has an active, valid session
+    RETURN EXISTS (
+        SELECT 1 FROM user_sessions
+        WHERE user_id = auth.uid()
+        AND expires_at > NOW()
+        AND active_clinic_id IN (
+            SELECT clinic_id FROM profiles
+            WHERE user_id = auth.uid()
+            AND is_active = true
+        )
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

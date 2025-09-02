@@ -1,0 +1,152 @@
+# Database Security Tests
+
+## Overview
+Critical security tests for multi-clinic, persons-centric database with RLS policies.
+
+## Test Categories
+
+### 1. RLS Policy Tests
+
+#### Clinic Isolation Tests
+- [ ] User can only see persons from active clinic
+- [ ] User can only see patients from active clinic  
+- [ ] User can only see providers from active clinic
+- [ ] User can only see appointments from active clinic
+- [ ] User cannot access data when no active clinic set
+- [ ] User cannot access data from inactive clinics
+
+#### Cross-Clinic Access Prevention
+- [ ] User A cannot see User B's clinic data
+- [ ] Provider at Clinic 1 cannot see Clinic 2 patients
+- [ ] Search functions respect clinic boundaries
+- [ ] Join queries don't leak cross-clinic data
+
+### 2. Session Security Tests
+
+#### Session Validation
+- [ ] `get_current_active_clinic()` returns correct clinic
+- [ ] `get_current_active_clinic()` returns NULL when no session
+- [ ] Expired sessions block data access
+- [ ] Invalid session tokens rejected
+
+#### Session Management
+- [ ] `set_active_clinic()` creates valid session
+- [ ] `set_active_clinic()` rejects invalid clinic access
+- [ ] Setting new clinic invalidates old sessions
+- [ ] Session expiration works correctly
+
+### 3. Real-Time Access Revocation
+
+#### Profile Deactivation
+- [ ] Deactivating user profile immediately blocks access
+- [ ] User loses access when removed from clinic
+- [ ] Role changes don't break existing sessions
+- [ ] Deleted clinic invalidates all user sessions
+
+#### Session Cleanup
+- [ ] Orphaned sessions are cleaned up
+- [ ] Invalid profile references block access
+- [ ] Foreign key constraints prevent invalid sessions
+
+### 4. Person/Identity Tests
+
+#### National ID Uniqueness
+- [ ] Cannot create duplicate national_id within clinic
+- [ ] Can create same national_id across different clinics
+- [ ] `find_or_create_person()` finds existing person
+- [ ] `find_or_create_person()` creates new person when needed
+
+#### Person Data Integrity
+- [ ] Deleting person cascades to patients/providers
+- [ ] Person updates reflect in all roles
+- [ ] Person search works across roles
+
+### 5. Function Security Tests
+
+#### Database Functions
+- [ ] Functions reject unauthenticated calls
+- [ ] Functions validate user permissions
+- [ ] Functions handle invalid parameters
+- [ ] Functions respect RLS policies
+
+#### Search Functions
+- [ ] `search_patients()` only returns clinic data
+- [ ] `search_providers()` only returns clinic data
+- [ ] `search_persons()` only returns clinic data
+- [ ] Search functions handle empty queries
+
+### 6. Edge Case Tests
+
+#### Malicious Access Attempts
+- [ ] Direct table access blocked by RLS
+- [ ] SQL injection attempts fail
+- [ ] Invalid session manipulation blocked
+- [ ] Cross-clinic data requests rejected
+
+#### Data Consistency
+- [ ] Referential integrity maintained
+- [ ] Cascade deletes work correctly
+- [ ] Concurrent access handled properly
+- [ ] Transaction rollbacks clean
+
+## Test Implementation
+
+### Unit Tests (SQL)
+- Direct PostgreSQL connection
+- Test each RLS policy individually
+- Test database functions in isolation
+- Use test fixtures for consistent data
+
+### Integration Tests (API)
+- Test via Supabase client
+- Simulate real user scenarios
+- Test auth token validation
+- Test session lifecycle
+
+### Security Tests (Penetration)
+- Attempt unauthorized data access
+- Test session hijacking scenarios
+- Validate input sanitization
+- Test privilege escalation attempts
+
+## Test Data Requirements
+
+### Test Users
+- User with single clinic access
+- User with multiple clinic access
+- User with no clinic access
+- Deactivated user
+
+### Test Clinics
+- Active clinic with data
+- Empty clinic
+- Clinic with multiple users
+
+### Test Scenarios
+- Normal operation
+- Access revocation during session
+- Expired sessions
+- Invalid permissions
+
+## Success Criteria
+
+### Security Validation
+- [ ] Zero data leakage between clinics
+- [ ] Real-time access revocation works
+- [ ] All RLS policies enforce correctly
+- [ ] Session security validated
+
+### Performance Validation
+- [ ] RLS policies don't degrade performance significantly
+- [ ] Session validation is fast (<50ms)
+- [ ] Search functions perform well with RLS
+- [ ] Database functions are efficient
+
+## Critical Test Cases
+
+### Must Pass Before Production
+1. **Clinic isolation**: Users cannot see other clinic data
+2. **Session validation**: Invalid sessions block all access
+3. **Real-time revocation**: Removing user access works immediately
+4. **Person uniqueness**: National ID constraints work correctly
+5. **Function security**: All database functions respect permissions

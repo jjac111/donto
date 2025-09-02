@@ -11,13 +11,50 @@ export interface DbClinic {
   updated_at: string
 }
 
-export interface DbProvider {
+export interface DbPerson {
   id: string
   clinic_id: string
+  national_id: string
+  country: string
   first_name: string
   last_name: string
-  email: string | null
+  date_of_birth: string // Date string from database
+  sex: string | null
   phone: string | null
+  email: string | null
+  address: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DbProfile {
+  id: string
+  user_id: string
+  clinic_id: string
+  provider_id: string | null
+  role: 'admin' | 'provider' | 'staff'
+  is_active: boolean
+  invited_by: string | null
+  invited_at: string | null
+  joined_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DbUserSession {
+  id: string
+  user_id: string
+  active_clinic_id: string
+  session_token: string
+  expires_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DbProvider {
+  id: string
+  person_id: string
+  clinic_id: string
   specialty: string | null
   is_active: boolean
   created_at: string
@@ -26,19 +63,12 @@ export interface DbProvider {
 
 export interface DbPatient {
   id: string
+  person_id: string
   clinic_id: string
-  first_name: string
-  last_name: string
-  date_of_birth: string // Date string from database
-  sex: string | null
-  phone: string | null
-  email: string | null
-  address: string | null
-  emergency_contact_name: string | null
-  emergency_contact_phone: string | null
   medical_history: string | null
   allergies: string | null
-  patient_number: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
   created_at: string
   updated_at: string
 }
