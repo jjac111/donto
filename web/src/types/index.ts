@@ -12,7 +12,9 @@ export interface LoginForm {
   password: string
 }
 
-export interface PatientForm {
+export interface PersonForm {
+  nationalId: string
+  country: string
   firstName: string
   lastName: string
   dateOfBirth: string // date input string
@@ -20,10 +22,17 @@ export interface PatientForm {
   phone?: string
   email?: string
   address?: string
+}
+
+export interface PatientForm extends PersonForm {
   emergencyContactName?: string
   emergencyContactPhone?: string
   medicalHistory?: string
   allergies?: string
+}
+
+export interface ProviderForm extends PersonForm {
+  specialty?: string
 }
 
 export interface AppointmentForm {

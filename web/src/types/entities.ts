@@ -6,9 +6,48 @@ export interface User {
   email: string
   firstName: string
   lastName: string
-  role: 'admin' // MVP: single role
+  role: 'admin' | 'provider' | 'staff'
   clinicId: string
   displayName: string // computed: firstName + lastName
+}
+
+export interface UserSession {
+  id: string
+  userId: string
+  activeClinicId: string
+  sessionToken: string
+  expiresAt: Date
+}
+
+export interface Profile {
+  id: string
+  userId: string
+  clinicId: string
+  providerId?: string
+  role: 'admin' | 'provider' | 'staff'
+  isActive: boolean
+  invitedBy?: string
+  invitedAt?: Date
+  joinedAt?: Date
+}
+
+export interface Person {
+  id: string
+  clinicId: string
+  nationalId: string
+  country: string
+  firstName: string
+  lastName: string
+  dateOfBirth: Date
+  sex?: string
+  phone?: string
+  email?: string
+  address?: string
+  
+  // Computed fields
+  displayName: string // firstName + lastName
+  age: number // calculated from dateOfBirth
+  initials: string // first letters of first/last name
 }
 
 export interface Clinic {
@@ -21,36 +60,34 @@ export interface Clinic {
 
 export interface Provider {
   id: string
+  personId: string
   clinicId: string
-  firstName: string
-  lastName: string
-  email?: string
-  phone?: string
   specialty?: string
   isActive: boolean
-  displayName: string // computed: firstName + lastName
+  
+  // Person data (populated via join)
+  person?: Person
+  
+  // Computed fields (from person)
+  displayName: string // person.firstName + person.lastName
 }
 
 export interface Patient {
   id: string
+  personId: string
   clinicId: string
-  firstName: string
-  lastName: string
-  dateOfBirth: Date // parsed Date object
-  sex?: string
-  phone?: string
-  email?: string
-  address?: string
-  emergencyContactName?: string
-  emergencyContactPhone?: string
   medicalHistory?: string
   allergies?: string
-  patientNumber?: string
+  emergencyContactName?: string
+  emergencyContactPhone?: string
   
-  // Computed fields
-  displayName: string // firstName + lastName
-  age: number // calculated from dateOfBirth
-  initials: string // first letters of first/last name
+  // Person data (populated via join)
+  person?: Person
+  
+  // Computed fields (from person)
+  displayName: string // person.firstName + person.lastName
+  age: number // calculated from person.dateOfBirth
+  initials: string // first letters of person names
 }
 
 export interface PatientRepresentative {
