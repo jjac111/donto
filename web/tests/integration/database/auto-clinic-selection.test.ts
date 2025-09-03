@@ -56,10 +56,10 @@ describe('Auto-Clinic Selection Tests', () => {
   })
 
   it('should handle manual clinic selection when needed', async () => {
-    // For a user that needs manual selection, provide clinic ID
+    // Use emptyClinicUser who has access to emptyClinic for manual selection
     const session = await createFullUserSession(
-      TEST_USERS.noAccessUser.email,
-      TEST_USERS.noAccessUser.password,
+      TEST_USERS.emptyClinicUser.email,
+      TEST_USERS.emptyClinicUser.password,
       TEST_CLINICS.emptyClinic
     )
 
