@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   supabase,
+  supabaseAdmin,
   TEST_USERS,
   TEST_CLINICS,
   createFullUserSession,
@@ -233,6 +234,89 @@ describe('Clinic Isolation Tests', () => {
       if (searchResults && searchResults.length > 0) {
         searchResults.forEach((person: any) => {
           expect(person.clinic_id).toBe(TEST_CLINICS.clinic1)
+        })
+      }
+    })
+  })
+
+  describe('Enhanced RLS Policy Tests', () => {
+    it('should block access when user profile is deactivated (inactive clinic access)', async () => {
+      // Create a session for clinic1Admin first
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      // Verify initial access works
+      const { data: initialPatients, error: initialError } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(initialError).toBeNull()
+      expect(initialPatients!.length).toBeGreaterThan(0)
+
+      // Deactivate the user's profile for the clinic
+      const { error: deactivateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ is_active: false })
+        .eq('user_id', TEST_USERS.clinic1Admin.id)
+        .eq('clinic_id', TEST_CLINICS.clinic1)
+
+      expect(deactivateError).toBeNull()
+
+      // Try to access data - should now be blocked by updated get_current_active_clinic()
+      const { data: blockedPatients, error: blockedError } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(blockedError).toBeNull()
+      expect(blockedPatients).toEqual([]) // Should be empty due to inactive profile
+
+      // Reactivate for cleanup (important for other tests)
+      await supabaseAdmin
+        .from('profiles')
+        .update({ is_active: true })
+        .eq('user_id', TEST_USERS.clinic1Admin.id)
+        .eq('clinic_id', TEST_CLINICS.clinic1)
+    })
+
+    it('should prevent cross-clinic data leakage in join queries', async () => {
+      // Login as clinic1Admin
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      // Complex query with joins across appointments, patients, and persons
+      const { data: appointmentData, error } = await supabase.from(
+        'appointments'
+      ).select(`
+          id,
+          clinic_id,
+          patient_id,
+          patients!inner (
+            id,
+            clinic_id,
+            persons!inner (
+              id,
+              clinic_id,
+              first_name,
+              last_name
+            )
+          )
+        `)
+
+      expect(error).toBeNull()
+      expect(appointmentData).toBeDefined()
+
+      // Verify all returned data belongs to clinic1
+      if (appointmentData && appointmentData.length > 0) {
+        appointmentData.forEach((appointment: any) => {
+          expect(appointment.clinic_id).toBe(TEST_CLINICS.clinic1)
+          expect(appointment.patients.clinic_id).toBe(TEST_CLINICS.clinic1)
+          expect(appointment.patients.persons.clinic_id).toBe(
+            TEST_CLINICS.clinic1
+          )
         })
       }
     })
