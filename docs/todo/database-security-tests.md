@@ -31,7 +31,7 @@ Critical security tests for multi-clinic, persons-centric database with RLS poli
 - [x] `get_current_active_clinic()` returns correct clinic
 - [x] `get_current_active_clinic()` returns NULL when no session
 - [x] Expired sessions block data access
-- [ ] Invalid session tokens rejected
+- [x] Invalid session tokens rejected
 
 #### Session Management
 

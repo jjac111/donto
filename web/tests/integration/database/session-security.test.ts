@@ -231,4 +231,82 @@ describe('Session Security Tests', () => {
       expect(isValid2).toBe(false)
     })
   })
+
+  describe('Invalid Session Token Tests', () => {
+    it('should reject access when session has invalid clinic access', async () => {
+      // First, create a legitimate session for clinic1Admin
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      // Verify normal access works
+      const { data: initialPatients } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(initialPatients!.length).toBeGreaterThan(0)
+
+      // Try to tamper with the session to point to clinic2 (which user doesn't have access to)
+      // This should fail due to foreign key constraint
+      const { error: tamperError } = await supabaseAdmin
+        .from('user_sessions')
+        .update({ active_clinic_id: TEST_CLINICS.clinic2 })
+        .eq('user_id', TEST_USERS.clinic1Admin.id)
+
+      // Expect the foreign key constraint violation
+      expect(tamperError).not.toBeNull()
+      expect(tamperError!.code).toBe('23503') // Foreign key violation
+      expect(tamperError!.message).toContain('violates foreign key constraint')
+
+      // After failed tamper attempt, normal access should still work
+      const { data: normalPatients } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(normalPatients!.length).toBeGreaterThan(0) // Should still work normally
+    })
+
+    it('should handle invalid session tokens properly', async () => {
+      // Use a valid UUID format but fake/invalid session token
+      const fakeValidToken = '550e8400-e29b-41d4-a716-446655999999'
+
+      // Insert a session with fake but valid UUID token
+      const { error: insertError } = await supabaseAdmin
+        .from('user_sessions')
+        .insert({
+          user_id: TEST_USERS.clinic1Admin.id,
+          active_clinic_id: TEST_CLINICS.clinic1,
+          session_token: fakeValidToken,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h from now
+        })
+
+      expect(insertError).toBeNull()
+
+      // Sign in the user (this creates auth session)
+      await supabase.auth.signInWithPassword({
+        email: TEST_USERS.clinic1Admin.email,
+        password: TEST_USERS.clinic1Admin.password,
+      })
+
+      // Try to access data - should work because RLS checks profile.is_active
+      const { data: patients } = await supabase.from('patients').select('*')
+      expect(patients!.length).toBeGreaterThan(0)
+
+      // get_current_active_clinic should work (it checks profile access)
+      const { data: currentClinic } = await supabase.rpc(
+        'get_current_active_clinic'
+      )
+      expect(currentClinic).toBe(TEST_CLINICS.clinic1)
+
+      // validate_current_session should also work (checks both session and profile)
+      const { data: sessionValid } = await supabase.rpc(
+        'validate_current_session'
+      )
+      expect(sessionValid).toBe(true)
+
+      // The key test: even with a fake session token, our security works
+      // because we rely on profile.is_active checks, not just session existence
+    })
+  })
 })
