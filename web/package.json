@@ -9,9 +9,9 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test": "cd .. && supabase db reset && cd web && vitest",
+    "test:ui": "cd .. && supabase db reset && cd web && vitest --ui", 
+    "test:run": "cd .. && supabase db reset && cd web && vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
