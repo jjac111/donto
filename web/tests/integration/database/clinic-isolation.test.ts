@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { 
-  supabase, 
-  TEST_USERS, 
+import {
+  supabase,
+  TEST_USERS,
   TEST_CLINICS,
-  createFullUserSession
+  createFullUserSession,
 } from '../../setup'
 
 describe('Clinic Isolation Tests', () => {
@@ -119,16 +119,20 @@ describe('Clinic Isolation Tests', () => {
       // Verify no overlap in patient IDs
       const clinic1PatientIds = clinic1Patients!.map(p => p.id)
       const clinic2PatientIds = clinic2Patients!.map(p => p.id)
-      const overlap = clinic1PatientIds.filter(id => clinic2PatientIds.includes(id))
+      const overlap = clinic1PatientIds.filter(id =>
+        clinic2PatientIds.includes(id)
+      )
       expect(overlap).toHaveLength(0)
     })
 
     it('should block access when no active clinic set', async () => {
       // Login but don't set clinic (deactivated user)
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: TEST_USERS.deactivatedUser.email,
-        password: TEST_USERS.deactivatedUser.password,
-      })
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email: TEST_USERS.deactivatedUser.email,
+          password: TEST_USERS.deactivatedUser.password,
+        }
+      )
 
       expect(authError).toBeNull()
       expect(data.user).toBeTruthy()
@@ -150,20 +154,23 @@ describe('Clinic Isolation Tests', () => {
         TEST_USERS.clinic1Admin.password
       )
 
-      const { data: searchResults, error } = await supabase.rpc('search_patients', {
-        search_query: 'María',
-        result_limit: 10
-      })
+      const { data: searchResults, error } = await supabase.rpc(
+        'search_patients',
+        {
+          search_query: 'María',
+          result_limit: 10,
+        }
+      )
 
       expect(error).toBeNull()
       expect(searchResults).toBeDefined()
-      
+
       // All results should be from clinic1 patients
       if (searchResults && searchResults.length > 0) {
         // We need to check via a join since search_patients doesn't return clinic_id directly
         // Let's verify by checking if we can find these patient IDs in our clinic
         const patientIds = searchResults.map((p: any) => p.patient_id)
-        
+
         const { data: patients } = await supabase
           .from('patients')
           .select('id, clinic_id')
@@ -181,17 +188,20 @@ describe('Clinic Isolation Tests', () => {
         TEST_USERS.clinic1Admin.password
       )
 
-      const { data: searchResults, error } = await supabase.rpc('search_providers', {
-        search_query: 'Roberto',
-        result_limit: 10
-      })
+      const { data: searchResults, error } = await supabase.rpc(
+        'search_providers',
+        {
+          search_query: 'Roberto',
+          result_limit: 10,
+        }
+      )
 
       expect(error).toBeNull()
       expect(searchResults).toBeDefined()
-      
+
       if (searchResults && searchResults.length > 0) {
         const providerIds = searchResults.map((p: any) => p.provider_id)
-        
+
         const { data: providers } = await supabase
           .from('providers')
           .select('id, clinic_id')
@@ -209,14 +219,17 @@ describe('Clinic Isolation Tests', () => {
         TEST_USERS.clinic1Admin.password
       )
 
-      const { data: searchResults, error } = await supabase.rpc('search_persons', {
-        search_query: 'María',
-        result_limit: 10
-      })
+      const { data: searchResults, error } = await supabase.rpc(
+        'search_persons',
+        {
+          search_query: 'María',
+          result_limit: 10,
+        }
+      )
 
       expect(error).toBeNull()
       expect(searchResults).toBeDefined()
-      
+
       if (searchResults && searchResults.length > 0) {
         searchResults.forEach((person: any) => {
           expect(person.clinic_id).toBe(TEST_CLINICS.clinic1)
