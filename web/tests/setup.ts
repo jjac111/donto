@@ -76,14 +76,36 @@ afterAll(async () => {
   console.log('✅ Test database cleanup complete')
 })
 
+// Enhanced cleanup for strong test isolation
+async function strongTestCleanup() {
+  try {
+    // 1. Sign out current auth session
+    await supabase.auth.signOut()
+    
+    // 2. Clear ALL user sessions from database for test users
+    const testUserIds = Object.values(TEST_USERS).map(user => user.id)
+    
+    await supabaseAdmin
+      .from('user_sessions')
+      .delete()
+      .in('user_id', testUserIds)
+    
+    // 3. Small delay to ensure cleanup propagates
+    await new Promise(resolve => setTimeout(resolve, 25))
+    
+  } catch (error) {
+    console.warn('⚠️ Cleanup warning:', error)
+  }
+}
+
 beforeEach(async () => {
-  // Clear any existing sessions before each test
-  await supabase.auth.signOut()
+  // Strong isolation: clear everything before each test
+  await strongTestCleanup()
 })
 
 afterEach(async () => {
-  // Cleanup after each test
-  await supabase.auth.signOut()
+  // Strong isolation: clear everything after each test
+  await strongTestCleanup()
 })
 
 async function seedTestData() {
@@ -174,6 +196,9 @@ export async function loginWithAutoClinicSelection(userEmail: string, password: 
     throw new Error(`Failed to sign in test user: ${authError.message}`)
   }
   
+  // Wait a bit for session to be fully established  
+  await new Promise(resolve => setTimeout(resolve, 100))
+  
   // Try to auto-select clinic
   const { data: sessionToken, error: clinicError } = await supabase.rpc('auto_select_clinic_on_login')
   
@@ -184,7 +209,7 @@ export async function loginWithAutoClinicSelection(userEmail: string, password: 
   return {
     authData,
     sessionToken, // Will be null if user has 0 or multiple clinics
-    needsClinicSelection: sessionToken === null
+    needsClinicSelection: sessionToken === null // true when auto-selection failed
   }
 }
 
