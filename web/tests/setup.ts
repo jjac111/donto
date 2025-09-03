@@ -128,3 +128,56 @@ export async function getCurrentActiveClinic() {
   
   return data
 }
+
+// Utility function to login and auto-select clinic if user has only one
+export async function loginWithAutoClinicSelection(userEmail: string, password: string) {
+  // First, sign in the user
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email: userEmail,
+    password: password,
+  })
+  
+  if (authError) {
+    throw new Error(`Failed to sign in test user: ${authError.message}`)
+  }
+  
+  // Try to auto-select clinic
+  const { data: sessionToken, error: clinicError } = await supabase.rpc('auto_select_clinic_on_login')
+  
+  if (clinicError) {
+    throw new Error(`Failed to auto-select clinic: ${clinicError.message}`)
+  }
+  
+  return {
+    authData,
+    sessionToken, // Will be null if user has 0 or multiple clinics
+    needsClinicSelection: sessionToken === null
+  }
+}
+
+// Helper to create a full authenticated session (login + clinic selection)
+export async function createFullUserSession(userEmail: string, password: string, clinicId?: string) {
+  const loginResult = await loginWithAutoClinicSelection(userEmail, password)
+  
+  // If auto-selection worked, we're done
+  if (!loginResult.needsClinicSelection) {
+    return {
+      ...loginResult,
+      activeClinic: await getCurrentActiveClinic()
+    }
+  }
+  
+  // If manual selection needed and clinicId provided
+  if (clinicId) {
+    const sessionToken = await setActiveClinic(clinicId)
+    return {
+      ...loginResult,
+      sessionToken,
+      activeClinic: clinicId,
+      needsClinicSelection: false
+    }
+  }
+  
+  // User needs to select clinic but none provided
+  throw new Error('User has multiple/no clinics and requires manual clinic selection')
+}
