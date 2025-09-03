@@ -12,16 +12,6 @@ CREATE TABLE clinics (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Providers (dentists, hygienists, etc.) - linked to persons
-CREATE TABLE providers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    specialty VARCHAR(100),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 
 -- Centralized persons table per clinic (national_id + country uniqueness)
 CREATE TABLE persons (
@@ -41,6 +31,19 @@ CREATE TABLE persons (
     
     UNIQUE(clinic_id, national_id, country) -- One person per clinic per national ID
 );
+
+
+-- Providers (dentists, hygienists, etc.) - linked to persons
+CREATE TABLE providers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    specialty VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 -- Patients (role-specific data linked to persons)
 CREATE TABLE patients (
