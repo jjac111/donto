@@ -65,11 +65,11 @@ beforeAll(async () => {
   console.log('✅ Test database setup complete')
 })
 
-/* afterAll(async () => {
+afterAll(async () => {
   console.log('🧹 Cleaning up test database...')
   await cleanupTestData()
   console.log('✅ Test database cleanup complete')
-}) */
+})
 
 beforeEach(async () => {
   // Clear any existing sessions before each test
@@ -90,10 +90,33 @@ async function seedTestData() {
   // This will be expanded when we create the seed.sql file
 }
 
+async function cleanupUserSessions() {
+  // Delete user sessions created during tests
+  // We'll delete all sessions for our test users - this is safe since they're test-only accounts
+  const testUserIds = Object.values(TEST_USERS).map(user => user.id)
+  
+  const { error } = await supabaseAdmin
+    .from('user_sessions')
+    .delete()
+    .in('user_id', testUserIds)
+  
+  if (error) {
+    console.warn('⚠️ Failed to cleanup user sessions:', error.message)
+  } else {
+    console.log('✅ Cleaned up user sessions')
+  }
+}
+
 async function cleanupTestData() {
-  // Clean up test data if needed
-  // For development, we might want to keep data between runs
+  // Clean up only data created during tests, preserve seed data
   console.log('🗑️ Cleaning up test data...')
+  
+  await cleanupUserSessions()
+  
+  // TODO: Add more cleanup functions as we add more test scenarios
+  // await cleanupTestPatients()
+  // await cleanupTestAppointments()
+  // etc.
 }
 
 // Utility function to create authenticated user session
