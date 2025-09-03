@@ -6,7 +6,7 @@ import {
   loginWithAutoClinicSelection,
   createFullUserSession,
   getCurrentActiveClinic 
-} from '../setup'
+} from '../../setup'
 
 describe('Auto-Clinic Selection Tests', () => {
   beforeEach(async () => {

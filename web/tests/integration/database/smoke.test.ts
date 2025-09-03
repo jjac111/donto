@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { supabase, supabaseAdmin } from '../setup'
+import { supabase, supabaseAdmin } from '../../setup'
 
 describe('Database Smoke Tests', () => {
   it('should connect to Supabase', async () => {
