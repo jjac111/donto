@@ -472,12 +472,15 @@ DECLARE
     clinic_id UUID;
 BEGIN
     -- Get active clinic from current session
-    -- This will be set by the application when user selects clinic
-    SELECT active_clinic_id INTO clinic_id
-    FROM user_sessions
-    WHERE user_id = auth.uid()
-    AND expires_at > NOW()
-    ORDER BY updated_at DESC
+    -- User must have an active profile for that specific clinic
+    SELECT us.active_clinic_id INTO clinic_id
+    FROM user_sessions us
+    JOIN profiles p ON p.user_id = us.user_id 
+      AND p.clinic_id = us.active_clinic_id 
+      AND p.is_active = true
+    WHERE us.user_id = auth.uid()
+    AND us.expires_at > NOW()
+    ORDER BY us.updated_at DESC
     LIMIT 1;
     
     RETURN clinic_id;
