@@ -309,4 +309,107 @@ describe('Session Security Tests', () => {
       // because we rely on profile.is_active checks, not just session existence
     })
   })
+
+  describe('Real-Time Access Revocation Advanced', () => {
+    it('should immediately block access when user is removed from clinic', async () => {
+      // Create session for clinic1Admin
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      // Verify initial access works
+      const { data: initialPatients } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(initialPatients!.length).toBeGreaterThan(0)
+
+      // Remove user from clinic by deleting their profile (CASCADE will auto-delete sessions)
+      const { error: deleteError } = await supabaseAdmin
+        .from('profiles')
+        .delete()
+        .eq('user_id', TEST_USERS.clinic1Admin.id)
+        .eq('clinic_id', TEST_CLINICS.clinic1)
+
+      expect(deleteError).toBeNull()
+
+      // Try to access data - should be immediately blocked
+      const { data: blockedPatients } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(blockedPatients).toEqual([]) // Should be empty due to removed profile
+
+      // get_current_active_clinic should return null
+      const { data: currentClinic } = await supabase.rpc(
+        'get_current_active_clinic'
+      )
+      expect(currentClinic).toBeNull()
+
+      // validate_current_session should return false
+      const { data: sessionValid } = await supabase.rpc(
+        'validate_current_session'
+      )
+      expect(sessionValid).toBe(false)
+
+      // Restore profile for cleanup (important for other tests)
+      await supabaseAdmin.from('profiles').insert({
+        user_id: TEST_USERS.clinic1Admin.id,
+        clinic_id: TEST_CLINICS.clinic1,
+        role: 'admin',
+        is_active: true,
+      })
+    })
+
+    it('should maintain access when user role changes', async () => {
+      // Create session for clinic1Admin
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      // Verify initial access works
+      const { data: initialPatients } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(initialPatients!.length).toBeGreaterThan(0)
+
+      // Change role from admin to staff
+      const { error: roleChangeError } = await supabaseAdmin
+        .from('profiles')
+        .update({ role: 'staff' })
+        .eq('user_id', TEST_USERS.clinic1Admin.id)
+        .eq('clinic_id', TEST_CLINICS.clinic1)
+
+      expect(roleChangeError).toBeNull()
+
+      // Access should still work - role change doesn't break session
+      const { data: patientsAfterRoleChange } = await supabase
+        .from('patients')
+        .select('*')
+
+      expect(patientsAfterRoleChange!.length).toBeGreaterThan(0)
+
+      // get_current_active_clinic should still work
+      const { data: currentClinic } = await supabase.rpc(
+        'get_current_active_clinic'
+      )
+      expect(currentClinic).toBe(TEST_CLINICS.clinic1)
+
+      // validate_current_session should still return true
+      const { data: sessionValid } = await supabase.rpc(
+        'validate_current_session'
+      )
+      expect(sessionValid).toBe(true)
+
+      // Restore original role for cleanup
+      await supabaseAdmin
+        .from('profiles')
+        .update({ role: 'admin' })
+        .eq('user_id', TEST_USERS.clinic1Admin.id)
+        .eq('clinic_id', TEST_CLINICS.clinic1)
+    })
+  })
 })

@@ -52,8 +52,8 @@ Critical security tests for multi-clinic, persons-centric database with RLS poli
 #### Profile Deactivation
 
 - [x] Deactivating user profile immediately blocks access
-- [ ] User loses access when removed from clinic
-- [ ] Role changes don't break existing sessions
+- [x] User loses access when removed from clinic
+- [x] Role changes don't break existing sessions
 - [ ] Deleted clinic invalidates all user sessions
 
 #### Session Cleanup
@@ -66,15 +66,15 @@ Critical security tests for multi-clinic, persons-centric database with RLS poli
 
 #### National ID Uniqueness
 
-- [ ] Cannot create duplicate national_id within clinic
-- [ ] Can create same national_id across different clinics
-- [ ] `find_or_create_person()` finds existing person
-- [ ] `find_or_create_person()` creates new person when needed
+- [x] Cannot create duplicate national_id within clinic
+- [x] Can create same national_id across different clinics
+- [x] `find_or_create_person()` finds existing person
+- [x] `find_or_create_person()` creates new person when needed
 
 #### Person Data Integrity
 
-- [ ] Deleting person cascades to patients/providers
-- [ ] Person updates reflect in all roles
+- [x] Deleting person cascades to patients/providers
+- [x] Person updates reflect in all roles
 - [ ] Person search works across roles
 
 ### 5. Function Security Tests

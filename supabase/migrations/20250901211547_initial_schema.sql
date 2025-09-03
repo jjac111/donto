@@ -455,6 +455,7 @@ CREATE TABLE user_sessions (
     CONSTRAINT fk_user_clinic_access 
         FOREIGN KEY (user_id, active_clinic_id) 
         REFERENCES profiles(user_id, clinic_id)
+        ON DELETE CASCADE
 );
 
 -- Indexes for performance
