@@ -40,6 +40,13 @@ Critical security tests for multi-clinic, persons-centric database with RLS poli
 - [ ] Setting new clinic invalidates old sessions
 - [ ] Session expiration works correctly
 
+#### Auto-Clinic Selection
+
+- [ ] User with single clinic access gets clinic auto-selected on login
+- [ ] User with multiple clinic access requires manual selection
+- [ ] User with no clinic access cannot proceed
+- [ ] Auto-selection creates valid user session
+
 ### 3. Real-Time Access Revocation
 
 #### Profile Deactivation
