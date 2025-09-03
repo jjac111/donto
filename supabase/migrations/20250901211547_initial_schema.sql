@@ -669,3 +669,28 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to auto-select clinic on login if user has only one clinic
+CREATE OR REPLACE FUNCTION auto_select_clinic_on_login()
+RETURNS UUID AS $$
+DECLARE
+    clinic_count INTEGER;
+    single_clinic_id UUID;
+    session_token UUID;
+BEGIN
+    -- Get count of active clinics for current user
+    SELECT COUNT(*), MIN(clinic_id) INTO clinic_count, single_clinic_id
+    FROM profiles 
+    WHERE user_id = auth.uid() 
+    AND is_active = true;
+    
+    -- If user has exactly one clinic, auto-select it
+    IF clinic_count = 1 THEN
+        session_token := set_active_clinic(single_clinic_id);
+        RETURN session_token;
+    END IF;
+    
+    -- If user has 0 or multiple clinics, return NULL (requires manual selection)
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
