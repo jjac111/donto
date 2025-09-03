@@ -10,6 +10,15 @@ import {
 describe('Person/Identity Tests', () => {
   beforeEach(async () => {
     await supabase.auth.signOut()
+
+    // Clean up any test records from previous failed runs
+    await supabaseAdmin.from('persons').delete().eq('last_name', 'CrossClinic')
+
+    await supabaseAdmin.from('persons').delete().eq('last_name', 'Duplicate')
+
+    await supabaseAdmin.from('persons').delete().eq('last_name', 'Usuario')
+
+    await supabaseAdmin.from('persons').delete().eq('last_name', 'Cascade')
   })
 
   describe('National ID Uniqueness', () => {
@@ -63,7 +72,7 @@ describe('Person/Identity Tests', () => {
       expect(error).toBeNull()
       expect(data).toBeDefined()
 
-      // Cleanup
+      // Cleanup - delete the test record we just created
       if (data && data.length > 0) {
         await supabaseAdmin.from('persons').delete().eq('id', data[0].id)
       }
