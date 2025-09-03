@@ -60,11 +60,11 @@ beforeAll(async () => {
   console.log('✅ Test database setup complete')
 })
 
-afterAll(async () => {
+/* afterAll(async () => {
   console.log('🧹 Cleaning up test database...')
   await cleanupTestData()
   console.log('✅ Test database cleanup complete')
-})
+}) */
 
 beforeEach(async () => {
   // Clear any existing sessions before each test
