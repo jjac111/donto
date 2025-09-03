@@ -12,16 +12,6 @@ CREATE TABLE clinics (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Providers (dentists, hygienists, etc.) - linked to persons
-CREATE TABLE providers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
-    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    specialty VARCHAR(100),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 
 -- Centralized persons table per clinic (national_id + country uniqueness)
 CREATE TABLE persons (
@@ -41,6 +31,19 @@ CREATE TABLE persons (
     
     UNIQUE(clinic_id, national_id, country) -- One person per clinic per national ID
 );
+
+
+-- Providers (dentists, hygienists, etc.) - linked to persons
+CREATE TABLE providers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    specialty VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 -- Patients (role-specific data linked to persons)
 CREATE TABLE patients (
@@ -452,6 +455,7 @@ CREATE TABLE user_sessions (
     CONSTRAINT fk_user_clinic_access 
         FOREIGN KEY (user_id, active_clinic_id) 
         REFERENCES profiles(user_id, clinic_id)
+        ON DELETE CASCADE
 );
 
 -- Indexes for performance
@@ -469,15 +473,26 @@ DECLARE
     clinic_id UUID;
 BEGIN
     -- Get active clinic from current session
-    -- This will be set by the application when user selects clinic
-    SELECT active_clinic_id INTO clinic_id
-    FROM user_sessions
-    WHERE user_id = auth.uid()
-    AND expires_at > NOW()
-    ORDER BY updated_at DESC
+    -- User must have an active profile for that specific clinic
+    SELECT us.active_clinic_id INTO clinic_id
+    FROM user_sessions us
+    JOIN profiles p ON p.user_id = us.user_id 
+      AND p.clinic_id = us.active_clinic_id 
+      AND p.is_active = true
+    WHERE us.user_id = auth.uid()
+    AND us.expires_at > NOW()
+    ORDER BY us.updated_at DESC
     LIMIT 1;
     
     RETURN clinic_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Debug function to check auth.uid()
+CREATE OR REPLACE FUNCTION debug_auth_uid()
+RETURNS UUID AS $$
+BEGIN
+    RETURN auth.uid();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -664,5 +679,36 @@ BEGIN
             AND is_active = true
         )
     );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to auto-select clinic on login if user has only one clinic
+CREATE OR REPLACE FUNCTION auto_select_clinic_on_login()
+RETURNS UUID AS $$
+DECLARE
+    clinic_count INTEGER;
+    single_clinic_id UUID;
+    session_token UUID;
+BEGIN
+    -- Get count of active clinics for current user
+    SELECT COUNT(*) INTO clinic_count
+    FROM profiles 
+    WHERE user_id = auth.uid() 
+    AND is_active = true;
+    
+    -- If user has exactly one clinic, get it and auto-select
+    IF clinic_count = 1 THEN
+        SELECT clinic_id INTO single_clinic_id
+        FROM profiles 
+        WHERE user_id = auth.uid() 
+        AND is_active = true
+        LIMIT 1;
+        
+        session_token := set_active_clinic(single_clinic_id);
+        RETURN session_token;
+    END IF;
+    
+    -- If user has 0 or multiple clinics, return NULL (requires manual selection)
+    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
