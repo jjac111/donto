@@ -484,6 +484,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Debug function to check auth.uid()
+CREATE OR REPLACE FUNCTION debug_auth_uid()
+RETURNS UUID AS $$
+BEGIN
+    RETURN auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Function to set active clinic for current session
 CREATE OR REPLACE FUNCTION set_active_clinic(clinic_uuid UUID, session_duration_hours INTEGER DEFAULT 24)
 RETURNS UUID AS $$
