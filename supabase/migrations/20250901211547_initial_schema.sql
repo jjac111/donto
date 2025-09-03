@@ -679,13 +679,19 @@ DECLARE
     session_token UUID;
 BEGIN
     -- Get count of active clinics for current user
-    SELECT COUNT(*), MIN(clinic_id) INTO clinic_count, single_clinic_id
+    SELECT COUNT(*) INTO clinic_count
     FROM profiles 
     WHERE user_id = auth.uid() 
     AND is_active = true;
     
-    -- If user has exactly one clinic, auto-select it
+    -- If user has exactly one clinic, get it and auto-select
     IF clinic_count = 1 THEN
+        SELECT clinic_id INTO single_clinic_id
+        FROM profiles 
+        WHERE user_id = auth.uid() 
+        AND is_active = true
+        LIMIT 1;
+        
         session_token := set_active_clinic(single_clinic_id);
         RETURN session_token;
     END IF;
