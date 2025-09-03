@@ -8,6 +8,51 @@ DELETE FROM user_sessions WHERE user_id IN (
 DELETE FROM profiles WHERE user_id IN (
     SELECT id FROM auth.users WHERE email LIKE '%@test.com'
 );
+DELETE FROM auth.identities WHERE user_id IN (
+    SELECT id FROM auth.users WHERE email LIKE '%@test.com'
+);
+DELETE FROM auth.users WHERE email LIKE '%@test.com';
+
+-- Create test auth users
+INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    recovery_sent_at,
+    last_sign_in_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    email_change,
+    email_change_token_new,
+    recovery_token
+) VALUES
+    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530001', 'authenticated', 'authenticated', 'clinic1-admin@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530002', 'authenticated', 'authenticated', 'clinic1-provider@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530003', 'authenticated', 'authenticated', 'clinic2-admin@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530004', 'authenticated', 'authenticated', 'no-access@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', '');
+
+-- Create test user email identities (required for newer Supabase versions)
+INSERT INTO auth.identities (
+    id,
+    user_id,
+    provider_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+) VALUES
+    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530001', '550e8400-e29b-41d4-a716-446655530001', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530001'::text, 'clinic1-admin@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
+    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530002', '550e8400-e29b-41d4-a716-446655530002', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530002'::text, 'clinic1-provider@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
+    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530003', '550e8400-e29b-41d4-a716-446655530003', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530003'::text, 'clinic2-admin@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
+    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530004', '550e8400-e29b-41d4-a716-446655530004', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530004'::text, 'no-access@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp);
 
 -- Test clinics
 INSERT INTO clinics (id, name, address, phone, email) VALUES
@@ -93,20 +138,16 @@ INSERT INTO treatment_items (id, treatment_plan_id, procedure_id, tooth_number, 
     ('550e8400-e29b-41d4-a716-446655521001', '550e8400-e29b-41d4-a716-446655511001', '550e8400-e29b-41d4-a716-446655471002', '16', 'O', 'urgent', 'planned', 35.00, 'Caries profunda requiere atención inmediata'),
     ('550e8400-e29b-41d4-a716-446655521002', '550e8400-e29b-41d4-a716-446655511001', '550e8400-e29b-41d4-a716-446655471001', NULL, NULL, 'recommended', 'planned', 45.00, 'Limpieza preventiva');
 
--- Test user profiles (these will be linked to auth.users by the test setup)
--- Note: The actual user IDs will be populated when we create auth users in the test setup
--- For now, we'll use placeholder UUIDs that will be updated in the test setup
-
--- Insert placeholder profiles that will be updated with real auth user IDs
+-- Test user profiles (linked to the auth users created above)
 INSERT INTO profiles (id, user_id, clinic_id, provider_id, role, is_active) VALUES
-    -- Clinic 1 admin (will be updated with real auth user ID)
-    ('550e8400-e29b-41d4-a716-446655531001', '00000000-0000-0000-0000-000000000001', '550e8400-e29b-41d4-a716-446655440001', NULL, 'admin', true),
-    -- Clinic 1 provider (will be updated with real auth user ID)
-    ('550e8400-e29b-41d4-a716-446655531002', '00000000-0000-0000-0000-000000000002', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655461001', 'provider', true),
-    -- Clinic 2 admin (will be updated with real auth user ID)
-    ('550e8400-e29b-41d4-a716-446655532001', '00000000-0000-0000-0000-000000000003', '550e8400-e29b-41d4-a716-446655440002', NULL, 'admin', true),
-    -- User with no clinic access (will be updated with real auth user ID)
-    ('550e8400-e29b-41d4-a716-446655533001', '00000000-0000-0000-0000-000000000004', '550e8400-e29b-41d4-a716-446655440003', NULL, 'staff', false);
+    -- Clinic 1 admin
+    ('550e8400-e29b-41d4-a716-446655531001', '550e8400-e29b-41d4-a716-446655530001', '550e8400-e29b-41d4-a716-446655440001', NULL, 'admin', true),
+    -- Clinic 1 provider
+    ('550e8400-e29b-41d4-a716-446655531002', '550e8400-e29b-41d4-a716-446655530002', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655461001', 'provider', true),
+    -- Clinic 2 admin
+    ('550e8400-e29b-41d4-a716-446655532001', '550e8400-e29b-41d4-a716-446655530003', '550e8400-e29b-41d4-a716-446655440002', NULL, 'admin', true),
+    -- User with no clinic access (deactivated profile)
+    ('550e8400-e29b-41d4-a716-446655533001', '550e8400-e29b-41d4-a716-446655530004', '550e8400-e29b-41d4-a716-446655440003', NULL, 'staff', false);
 
 -- Create some cost estimates for testing
 INSERT INTO cost_estimates (id, treatment_plan_id, patient_id, estimate_number, subtotal, discount_amount, total_amount, valid_until, status, notes) VALUES
