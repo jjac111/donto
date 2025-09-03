@@ -60,6 +60,9 @@ export const useAuthStore = create<AuthState>()(
             }
 
             if (data.user) {
+              // Try auto-clinic selection
+              await supabase.rpc('auto_select_clinic_on_login')
+              
               // Create our app user from Supabase user
               const user: User = {
                 id: data.user.id,
