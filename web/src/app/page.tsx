@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import { ProtectedRoute } from "@/components/auth/protected-route";
-import { AppLayout } from "@/components/layout/app-layout";
-import { redirect } from "next/navigation";
-import { useEffect } from "react";
+import { ProtectedRoute } from '@/components/auth/protected-route'
+import { AppLayout } from '@/components/layout/app-layout'
+import { redirect } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function Home() {
   useEffect(() => {
-    redirect("/dashboard");
-  }, []);
+    redirect('/dashboard')
+  }, [])
 
   return (
     <ProtectedRoute>
@@ -16,5 +16,5 @@ export default function Home() {
         <div>Redirecting to dashboard...</div>
       </AppLayout>
     </ProtectedRoute>
-  );
+  )
 }
