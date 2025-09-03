@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Test environment variables
-const SUPABASE_URL = process.env.SUPABASE_URL || 'http://localhost:54321'
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'your-anon-key'
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key'
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY 
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Global test clients
 export let supabase: SupabaseClient
@@ -44,8 +44,8 @@ export const TEST_CLINICS = {
 
 beforeAll(async () => {
   // Initialize Supabase clients
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
+  supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
