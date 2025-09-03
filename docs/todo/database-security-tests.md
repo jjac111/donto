@@ -15,14 +15,14 @@ Critical security tests for multi-clinic, persons-centric database with RLS poli
 - [x] User can only see providers from active clinic
 - [x] User can only see appointments from active clinic
 - [x] User cannot access data when no active clinic set
-- [ ] User cannot access data from inactive clinics
+- [x] User cannot access data from inactive clinics
 
 #### Cross-Clinic Access Prevention
 
 - [x] User A cannot see User B's clinic data
 - [x] Provider at Clinic 1 cannot see Clinic 2 patients
 - [x] Search functions respect clinic boundaries
-- [ ] Join queries don't leak cross-clinic data
+- [x] Join queries don't leak cross-clinic data
 
 ### 2. Session Security Tests
 
