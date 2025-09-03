@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from 'vitest'
 import {
   supabase,
   supabaseAdmin,
@@ -6,9 +6,9 @@ import {
   TEST_CLINICS,
   loginWithAutoClinicSelection,
   getCurrentActiveClinic,
-} from "./setup";
+} from './setup'
 
-describe("Debug Auto-Clinic Selection", () => {
+describe('Debug Auto-Clinic Selection', () => {
   beforeEach(async () => {
     // Clean slate for each test
     /*await supabase.auth.signOut()
@@ -20,7 +20,7 @@ describe("Debug Auto-Clinic Selection", () => {
       .delete()
       .in('user_id', testUserIds)
       */
-  });
+  })
 
-  it("should do nothing", async () => {});
-});
+  it('should do nothing', async () => {})
+})

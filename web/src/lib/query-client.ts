@@ -1,5 +1,5 @@
-import { QueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "@/store";
+import { QueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/store'
 
 // Global query client configuration
 export const queryClient = new QueryClient({
@@ -15,10 +15,10 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error: any) => {
         // Don't retry auth errors (401, 403)
         if (error?.status === 401 || error?.status === 403) {
-          return false;
+          return false
         }
         // Retry up to 3 times for other errors
-        return failureCount < 3;
+        return failureCount < 3
       },
 
       // Refetch on window focus for real-time updates
@@ -30,79 +30,79 @@ export const queryClient = new QueryClient({
     mutations: {
       // Default mutation error handling
       onError: (error: any) => {
-        console.error("Mutation error:", error);
+        console.error('Mutation error:', error)
 
         // Handle auth errors globally
         if (error?.status === 401) {
-          useAuthStore.getState().logout();
+          useAuthStore.getState().logout()
         }
       },
     },
   },
-});
+})
 
 // Query key factory for consistent naming
 export const queryKeys = {
   // Auth
-  auth: ["auth"] as const,
+  auth: ['auth'] as const,
 
   // Patients
-  patients: ["patients"] as const,
-  patient: (id: string) => ["patients", id] as const,
+  patients: ['patients'] as const,
+  patient: (id: string) => ['patients', id] as const,
   patientSearch: (query: string, limit?: number) =>
-    ["patients", "search", query, limit] as const,
+    ['patients', 'search', query, limit] as const,
   patientsPage: (page: number, pageSize: number) =>
-    ["patients", "page", page, pageSize] as const,
-  recentPatients: (limit: number) => ["patients", "recent", limit] as const,
-  frequentPatients: () => ["patients", "frequent"] as const,
+    ['patients', 'page', page, pageSize] as const,
+  recentPatients: (limit: number) => ['patients', 'recent', limit] as const,
+  frequentPatients: () => ['patients', 'frequent'] as const,
 
   // Appointments
-  appointments: ["appointments"] as const,
-  appointment: (id: string) => ["appointments", id] as const,
+  appointments: ['appointments'] as const,
+  appointment: (id: string) => ['appointments', id] as const,
   appointmentsByDate: (date: string) =>
-    ["appointments", "by-date", date] as const,
+    ['appointments', 'by-date', date] as const,
   appointmentsByPatient: (patientId: string) =>
-    ["appointments", "by-patient", patientId] as const,
+    ['appointments', 'by-patient', patientId] as const,
 
   // Providers
-  providers: ["providers"] as const,
-  provider: (id: string) => ["providers", id] as const,
+  providers: ['providers'] as const,
+  provider: (id: string) => ['providers', id] as const,
 
   // Treatment Plans
-  treatmentPlans: ["treatment-plans"] as const,
-  treatmentPlan: (id: string) => ["treatment-plans", id] as const,
+  treatmentPlans: ['treatment-plans'] as const,
+  treatmentPlan: (id: string) => ['treatment-plans', id] as const,
   treatmentPlansByPatient: (patientId: string) =>
-    ["treatment-plans", "by-patient", patientId] as const,
+    ['treatment-plans', 'by-patient', patientId] as const,
 
   // Procedures
-  procedures: ["procedures"] as const,
-  procedure: (id: string) => ["procedures", id] as const,
+  procedures: ['procedures'] as const,
+  procedure: (id: string) => ['procedures', id] as const,
 
   // Tooth Conditions
-  toothConditions: ["tooth-conditions"] as const,
+  toothConditions: ['tooth-conditions'] as const,
   toothConditionsByPatient: (patientId: string) =>
-    ["tooth-conditions", "by-patient", patientId] as const,
-};
+    ['tooth-conditions', 'by-patient', patientId] as const,
+}
 
 // Utility to invalidate related queries
 export const invalidatePatientData = (patientId: string) => {
-  queryClient.invalidateQueries({ queryKey: queryKeys.patient(patientId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.patient(patientId) })
   queryClient.invalidateQueries({
     queryKey: queryKeys.appointmentsByPatient(patientId),
-  });
+  })
   queryClient.invalidateQueries({
     queryKey: queryKeys.treatmentPlansByPatient(patientId),
-  });
+  })
   queryClient.invalidateQueries({
     queryKey: queryKeys.toothConditionsByPatient(patientId),
-  });
-};
+  })
+}
 
 export const invalidateAppointmentData = () => {
-  queryClient.invalidateQueries({ queryKey: queryKeys.appointments });
+  queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
   // Also invalidate today's appointments specifically
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split('T')[0]
   queryClient.invalidateQueries({
     queryKey: queryKeys.appointmentsByDate(today),
-  });
-};
+  })
+}

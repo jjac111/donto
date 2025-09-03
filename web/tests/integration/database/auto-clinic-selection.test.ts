@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { 
-  supabase, 
-  TEST_USERS, 
+import {
+  supabase,
+  TEST_USERS,
   TEST_CLINICS,
   loginWithAutoClinicSelection,
   createFullUserSession,
-  getCurrentActiveClinic 
+  getCurrentActiveClinic,
 } from '../../setup'
 
 describe('Auto-Clinic Selection Tests', () => {
@@ -17,13 +17,13 @@ describe('Auto-Clinic Selection Tests', () => {
   it('should auto-select clinic for user with single clinic access', async () => {
     // clinic1Admin has access to only one clinic
     const result = await loginWithAutoClinicSelection(
-      TEST_USERS.clinic1Admin.email, 
+      TEST_USERS.clinic1Admin.email,
       TEST_USERS.clinic1Admin.password
     )
 
     expect(result.needsClinicSelection).toBe(false)
     expect(result.sessionToken).toBeTruthy()
-    
+
     // Verify the correct clinic was selected
     const activeClinic = await getCurrentActiveClinic()
     expect(activeClinic).toBe(TEST_CLINICS.clinic1)
@@ -38,7 +38,7 @@ describe('Auto-Clinic Selection Tests', () => {
 
     expect(result.needsClinicSelection).toBe(true)
     expect(result.sessionToken).toBeNull()
-    
+
     // Verify no clinic is active
     const activeClinic = await getCurrentActiveClinic()
     expect(activeClinic).toBeNull()

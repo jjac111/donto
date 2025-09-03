@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+build/
+
+# Cache directories
+.cache/
+.temp/
+
+# Generated files
+*.d.ts
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env*
+
+# Git
+.git/
+
+# Other
+*.log
+coverage/
+.nyc_output/
