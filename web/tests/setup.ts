@@ -33,6 +33,11 @@ export const TEST_USERS = {
     password: 'testpassword123',
     id: '550e8400-e29b-41d4-a716-446655530004',
   },
+  deactivatedUser: {
+    email: 'deactivated@test.com',
+    password: 'testpassword123',
+    id: '550e8400-e29b-41d4-a716-446655530005',
+  },
 }
 
 // Test clinic IDs (match seed.sql)
