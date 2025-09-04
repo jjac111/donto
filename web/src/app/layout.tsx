@@ -1,19 +1,14 @@
 import type { Metadata } from 'next'
-import { Roboto, Geist_Mono } from 'next/font/google'
+import { Comfortaa as Font } from 'next/font/google'
 import './globals.css'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { QueryProvider } from '@/providers/query-provider'
 
-const font = Roboto({
+const font = Font({
   variable: '--font-primary',
   subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  weight: ['400'],
 })
 
 export const metadata: Metadata = {
