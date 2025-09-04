@@ -56,7 +56,7 @@ export function DarkModeToggle({
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
         {showIcons && <Sun className="h-4 w-4" />}
-        <Toggle checked={false} disabled />
+        <Toggle checked={false} disabled onCheckedChange={() => {}} />
         {showIcons && <Moon className="h-4 w-4" />}
       </div>
     )
@@ -65,7 +65,7 @@ export function DarkModeToggle({
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       {showIcons && <Sun className="h-4 w-4" />}
-      <Toggle checked={isDarkMode} onCheckedChange={handleToggle} size={size} />
+      <Toggle checked={isDarkMode} onCheckedChange={handleToggle} />
       {showIcons && <Moon className="h-4 w-4" />}
     </div>
   )

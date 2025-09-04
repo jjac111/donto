@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useAuthStore()
+  const { isAuthenticated, isLoading } = useAuthStore()
   const t = useTranslations('common')
   const [isHydrated, setIsHydrated] = useState(false)
 

@@ -30,22 +30,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Container } from '@/components/ui/container'
-import { PageHeader } from '@/components/ui/page-header'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FormInput, FormTextarea, FormSelect } from '@/components/ui/form-field'
-import { Toggle } from '@/components/ui/toggle'
 import { AppLayout } from '@/components/layout/app-layout'
-import {
-  Users,
-  Calendar,
-  FileText,
-  Settings,
-  Plus,
-  Search,
-  Moon,
-  Sun,
-} from 'lucide-react'
+import { Users, Calendar, FileText, Settings, Plus } from 'lucide-react'
 
 export default function TestPage() {
   const [inputValue, setInputValue] = useState('')

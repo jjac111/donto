@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
-import { Button } from '@/components/ui/button'
-import { Menu } from 'lucide-react'
 
 interface AppLayoutProps {
   children: React.ReactNode

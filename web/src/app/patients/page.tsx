@@ -73,8 +73,12 @@ export default function PatientsPage() {
                         {patient.age} años
                       </p>
                     </div>
-                    <div className="text-sm text-gray-900">{patient.phone}</div>
-                    <div className="text-sm text-gray-900">{patient.email}</div>
+                    <div className="text-sm text-gray-900">
+                      {patient.person?.phone}
+                    </div>
+                    <div className="text-sm text-gray-900">
+                      {patient.person?.email}
+                    </div>
                     <div className="text-sm text-gray-500">-</div>
                   </div>
                 </div>

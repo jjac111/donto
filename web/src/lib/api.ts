@@ -6,16 +6,13 @@ import {
   Patient,
   Appointment,
   Provider,
-  TreatmentPlan,
   Procedure,
-  ToothCondition,
+  Person,
   DbPatient,
   DbAppointment,
   DbProvider,
-  DbTreatmentPlan,
   DbProcedure,
-  DbToothCondition,
-  ApiResponse,
+  DbPerson,
   PaginatedResponse,
 } from '@/types'
 
@@ -27,27 +24,42 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-key'
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Data transformation utilities
-export const transformPatient = (dbPatient: DbPatient): Patient => ({
+export const transformPatient = (
+  dbPatient: DbPatient,
+  dbPerson: DbPerson
+): Patient => ({
   id: dbPatient.id,
+  personId: dbPatient.person_id,
   clinicId: dbPatient.clinic_id,
-  firstName: dbPatient.first_name,
-  lastName: dbPatient.last_name,
-  dateOfBirth: new Date(dbPatient.date_of_birth),
-  sex: dbPatient.sex || undefined,
-  phone: dbPatient.phone || undefined,
-  email: dbPatient.email || undefined,
-  address: dbPatient.address || undefined,
-  emergencyContactName: dbPatient.emergency_contact_name || undefined,
-  emergencyContactPhone: dbPatient.emergency_contact_phone || undefined,
   medicalHistory: dbPatient.medical_history || undefined,
   allergies: dbPatient.allergies || undefined,
-  patientNumber: dbPatient.patient_number || undefined,
+  emergencyContactName: dbPatient.emergency_contact_name || undefined,
+  emergencyContactPhone: dbPatient.emergency_contact_phone || undefined,
+
+  // Person data
+  person: {
+    id: dbPerson.id,
+    clinicId: dbPerson.clinic_id,
+    nationalId: dbPerson.national_id,
+    country: dbPerson.country,
+    firstName: dbPerson.first_name,
+    lastName: dbPerson.last_name,
+    dateOfBirth: new Date(dbPerson.date_of_birth),
+    sex: dbPerson.sex || undefined,
+    phone: dbPerson.phone || undefined,
+    email: dbPerson.email || undefined,
+    address: dbPerson.address || undefined,
+    displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,
+    age:
+      new Date().getFullYear() - new Date(dbPerson.date_of_birth).getFullYear(),
+    initials: `${dbPerson.first_name[0]}${dbPerson.last_name[0]}`.toUpperCase(),
+  },
 
   // Computed fields
-  displayName: `${dbPatient.first_name} ${dbPatient.last_name}`,
+  displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,
   age:
-    new Date().getFullYear() - new Date(dbPatient.date_of_birth).getFullYear(),
-  initials: `${dbPatient.first_name[0]}${dbPatient.last_name[0]}`.toUpperCase(),
+    new Date().getFullYear() - new Date(dbPerson.date_of_birth).getFullYear(),
+  initials: `${dbPerson.first_name[0]}${dbPerson.last_name[0]}`.toUpperCase(),
 })
 
 export const transformAppointment = (
@@ -80,16 +92,37 @@ export const transformAppointment = (
   }[dbAppointment.status],
 })
 
-export const transformProvider = (dbProvider: DbProvider): Provider => ({
+export const transformProvider = (
+  dbProvider: DbProvider,
+  dbPerson: DbPerson
+): Provider => ({
   id: dbProvider.id,
+  personId: dbProvider.person_id,
   clinicId: dbProvider.clinic_id,
-  firstName: dbProvider.first_name,
-  lastName: dbProvider.last_name,
-  email: dbProvider.email || undefined,
-  phone: dbProvider.phone || undefined,
   specialty: dbProvider.specialty || undefined,
   isActive: dbProvider.is_active,
-  displayName: `${dbProvider.first_name} ${dbProvider.last_name}`,
+
+  // Person data
+  person: {
+    id: dbPerson.id,
+    clinicId: dbPerson.clinic_id,
+    nationalId: dbPerson.national_id,
+    country: dbPerson.country,
+    firstName: dbPerson.first_name,
+    lastName: dbPerson.last_name,
+    dateOfBirth: new Date(dbPerson.date_of_birth),
+    sex: dbPerson.sex || undefined,
+    phone: dbPerson.phone || undefined,
+    email: dbPerson.email || undefined,
+    address: dbPerson.address || undefined,
+    displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,
+    age:
+      new Date().getFullYear() - new Date(dbPerson.date_of_birth).getFullYear(),
+    initials: `${dbPerson.first_name[0]}${dbPerson.last_name[0]}`.toUpperCase(),
+  },
+
+  // Computed fields
+  displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,
 })
 
 export const transformProcedure = (dbProcedure: DbProcedure): Procedure => ({
@@ -119,7 +152,13 @@ export const patientsApi = {
     // Real Supabase implementation
     const { data, error, count } = await supabase
       .from('patients')
-      .select('*', { count: 'exact' })
+      .select(
+        `
+        *,
+        person:person_id(*)
+      `,
+        { count: 'exact' }
+      )
       .range((page - 1) * pageSize, page * pageSize - 1)
       .order('created_at', { ascending: false })
 
@@ -128,7 +167,9 @@ export const patientsApi = {
     }
 
     return {
-      data: (data || []).map(transformPatient),
+      data: (data || []).map((item: any) =>
+        transformPatient(item, item.person)
+      ),
       total: count || 0,
       page,
       pageSize,
@@ -140,7 +181,12 @@ export const patientsApi = {
   getRecent: async (limit: number = 10): Promise<Patient[]> => {
     const { data, error } = await supabase
       .from('patients')
-      .select('*')
+      .select(
+        `
+        *,
+        person:person_id(*)
+      `
+      )
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -148,7 +194,7 @@ export const patientsApi = {
       throw new Error(`Failed to fetch recent patients: ${error.message}`)
     }
 
-    return (data || []).map(transformPatient)
+    return (data || []).map((item: any) => transformPatient(item, item.person))
   },
 
   // Frequent patients for quick access
@@ -158,6 +204,7 @@ export const patientsApi = {
       .select(
         `
         *,
+        person:person_id(*),
         appointments!inner(id)
       `
       )
@@ -168,13 +215,18 @@ export const patientsApi = {
       throw new Error(`Failed to fetch frequent patients: ${error.message}`)
     }
 
-    return (data || []).map(transformPatient)
+    return (data || []).map((item: any) => transformPatient(item, item.person))
   },
 
   getById: async (id: string): Promise<Patient | null> => {
     const { data, error } = await supabase
       .from('patients')
-      .select('*')
+      .select(
+        `
+        *,
+        person:person_id(*)
+      `
+      )
       .eq('id', id)
       .single()
 
@@ -185,7 +237,7 @@ export const patientsApi = {
       throw new Error(`Failed to fetch patient: ${error.message}`)
     }
 
-    return transformPatient(data)
+    return transformPatient(data, data.person)
   },
 
   search: async (query: string, limit: number = 20): Promise<Patient[]> => {
@@ -198,25 +250,46 @@ export const patientsApi = {
       throw new Error(`Failed to search patients: ${error.message}`)
     }
 
-    return (data || []).map(transformPatient)
+    return (data || []).map((item: any) => transformPatient(item, item.person))
   },
 
-  create: async (patientData: Partial<Patient>): Promise<Patient> => {
-    // Transform frontend data to database format
+  create: async (
+    patientData: Partial<Patient> & { person: Partial<Person> }
+  ): Promise<Patient> => {
+    // First create the person record
+    const dbPersonData = {
+      first_name: patientData.person.firstName!,
+      last_name: patientData.person.lastName!,
+      date_of_birth: patientData.person
+        .dateOfBirth!.toISOString()
+        .split('T')[0],
+      sex: patientData.person.sex,
+      phone: patientData.person.phone,
+      email: patientData.person.email,
+      address: patientData.person.address,
+      national_id: patientData.person.nationalId!,
+      country: patientData.person.country!,
+      clinic_id: 'clinic-1', // TODO: Get from auth store
+    }
+
+    const { data: personData, error: personError } = await supabase
+      .from('persons')
+      .insert(dbPersonData)
+      .select()
+      .single()
+
+    if (personError) {
+      throw new Error(`Failed to create person: ${personError.message}`)
+    }
+
+    // Then create the patient record
     const dbPatientData = {
-      first_name: patientData.firstName!,
-      last_name: patientData.lastName!,
-      date_of_birth: patientData.dateOfBirth!.toISOString().split('T')[0],
-      sex: patientData.sex,
-      phone: patientData.phone,
-      email: patientData.email,
-      address: patientData.address,
+      person_id: personData.id,
+      clinic_id: 'clinic-1', // TODO: Get from auth store
       emergency_contact_name: patientData.emergencyContactName,
       emergency_contact_phone: patientData.emergencyContactPhone,
       medical_history: patientData.medicalHistory,
       allergies: patientData.allergies,
-      // clinic_id will be set from auth context when implemented
-      clinic_id: 'clinic-1', // TODO: Get from auth store
     }
 
     const { data, error } = await supabase
@@ -229,27 +302,53 @@ export const patientsApi = {
       throw new Error(`Failed to create patient: ${error.message}`)
     }
 
-    return transformPatient(data)
+    return transformPatient(data, personData)
   },
 
   update: async (
     id: string,
-    patientData: Partial<Patient>
+    patientData: Partial<Patient> & { person?: Partial<Person> }
   ): Promise<Patient> => {
-    // Transform frontend data to database format
+    // Get current patient to access person_id
+    const currentPatient = await patientsApi.getById(id)
+    if (!currentPatient) {
+      throw new Error('Patient not found')
+    }
+
+    // Update person data if provided
+    if (patientData.person) {
+      const dbPersonData: any = {}
+
+      if (patientData.person.firstName)
+        dbPersonData.first_name = patientData.person.firstName
+      if (patientData.person.lastName)
+        dbPersonData.last_name = patientData.person.lastName
+      if (patientData.person.dateOfBirth)
+        dbPersonData.date_of_birth = patientData.person.dateOfBirth
+          .toISOString()
+          .split('T')[0]
+      if (patientData.person.sex !== undefined)
+        dbPersonData.sex = patientData.person.sex
+      if (patientData.person.phone !== undefined)
+        dbPersonData.phone = patientData.person.phone
+      if (patientData.person.email !== undefined)
+        dbPersonData.email = patientData.person.email
+      if (patientData.person.address !== undefined)
+        dbPersonData.address = patientData.person.address
+
+      const { error: personError } = await supabase
+        .from('persons')
+        .update(dbPersonData)
+        .eq('id', currentPatient.personId)
+
+      if (personError) {
+        throw new Error(`Failed to update person: ${personError.message}`)
+      }
+    }
+
+    // Update patient data
     const dbPatientData: any = {}
 
-    if (patientData.firstName) dbPatientData.first_name = patientData.firstName
-    if (patientData.lastName) dbPatientData.last_name = patientData.lastName
-    if (patientData.dateOfBirth)
-      dbPatientData.date_of_birth = patientData.dateOfBirth
-        .toISOString()
-        .split('T')[0]
-    if (patientData.sex) dbPatientData.sex = patientData.sex
-    if (patientData.phone !== undefined) dbPatientData.phone = patientData.phone
-    if (patientData.email !== undefined) dbPatientData.email = patientData.email
-    if (patientData.address !== undefined)
-      dbPatientData.address = patientData.address
     if (patientData.emergencyContactName !== undefined)
       dbPatientData.emergency_contact_name = patientData.emergencyContactName
     if (patientData.emergencyContactPhone !== undefined)
@@ -263,14 +362,19 @@ export const patientsApi = {
       .from('patients')
       .update(dbPatientData)
       .eq('id', id)
-      .select()
+      .select(
+        `
+        *,
+        person:person_id(*)
+      `
+      )
       .single()
 
     if (error) {
       throw new Error(`Failed to update patient: ${error.message}`)
     }
 
-    return transformPatient(data)
+    return transformPatient(data, data.person)
   },
 
   delete: async (id: string): Promise<void> => {
@@ -411,15 +515,20 @@ export const providersApi = {
   getAll: async (): Promise<Provider[]> => {
     const { data, error } = await supabase
       .from('providers')
-      .select('*')
+      .select(
+        `
+        *,
+        person:person_id(*)
+      `
+      )
       .eq('is_active', true)
-      .order('first_name', { ascending: true })
+      .order('person.first_name', { ascending: true })
 
     if (error) {
       throw new Error(`Failed to fetch providers: ${error.message}`)
     }
 
-    return (data || []).map(transformProvider)
+    return (data || []).map((item: any) => transformProvider(item, item.person))
   },
 }
 

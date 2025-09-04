@@ -2,13 +2,7 @@ import { cn } from '@/lib/utils'
 import { Label } from './label'
 import { Input } from './input'
 import { Textarea } from './textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './select'
+import { Select, SelectContent, SelectTrigger, SelectValue } from './select'
 
 interface FormFieldProps {
   label: string
