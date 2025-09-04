@@ -52,20 +52,10 @@ export default function TestPage() {
   const [textareaValue, setTextareaValue] = useState('')
   const [selectValue, setSelectValue] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
 
   const handleLoading = () => {
     setLoading(true)
     setTimeout(() => setLoading(false), 2000)
-  }
-
-  const handleDarkModeToggle = (checked: boolean) => {
-    setIsDarkMode(checked)
-    if (checked) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
   }
 
   const sampleData = [
@@ -93,11 +83,7 @@ export default function TestPage() {
   ]
 
   return (
-    <AppLayout
-      title="Component Showcase"
-      isDarkMode={isDarkMode}
-      onDarkModeToggle={handleDarkModeToggle}
-    >
+    <AppLayout title="Component Showcase">
       <Container className="py-8 space-y-8">
         {/* Buttons Section */}
         <Card>

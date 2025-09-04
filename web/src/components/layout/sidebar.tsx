@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
-import { Toggle } from '@/components/ui/toggle'
+import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
 import {
   Users,
   Calendar,
@@ -15,8 +15,6 @@ import {
   DollarSign,
   FileCheck,
   Search,
-  Moon,
-  Sun,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -25,8 +23,6 @@ interface SidebarProps {
   isOpen: boolean
   onClose: () => void
   className?: string
-  isDarkMode?: boolean
-  onDarkModeToggle?: (checked: boolean) => void
 }
 
 const navigation = [
@@ -62,13 +58,7 @@ const navigation = [
   },
 ]
 
-export function Sidebar({
-  isOpen,
-  onClose,
-  className,
-  isDarkMode,
-  onDarkModeToggle,
-}: SidebarProps) {
+export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -114,16 +104,7 @@ export function Sidebar({
             </div>
 
             {/* Dark Mode Toggle */}
-            {onDarkModeToggle && (
-              <div className="flex items-center space-x-3">
-                <Sun className="h-4 w-4" />
-                <Toggle
-                  checked={isDarkMode ?? false}
-                  onCheckedChange={onDarkModeToggle}
-                />
-                <Moon className="h-4 w-4" />
-              </div>
-            )}
+            <DarkModeToggle />
           </div>
 
           <Separator className="lg:hidden" />

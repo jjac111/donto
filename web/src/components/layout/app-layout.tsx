@@ -11,8 +11,6 @@ interface AppLayoutProps {
   showSidebar?: boolean
   title?: string
   showSearch?: boolean
-  isDarkMode?: boolean
-  onDarkModeToggle?: (checked: boolean) => void
 }
 
 export function AppLayout({
@@ -20,8 +18,6 @@ export function AppLayout({
   showSidebar = true,
   title = 'Dashboard',
   showSearch = true,
-  isDarkMode = false,
-  onDarkModeToggle,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -31,12 +27,7 @@ export function AppLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        isDarkMode={isDarkMode}
-        onDarkModeToggle={onDarkModeToggle}
-      />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-y-auto">
@@ -44,8 +35,6 @@ export function AppLayout({
         <Header
           title={title}
           showSearch={showSearch}
-          isDarkMode={isDarkMode}
-          onDarkModeToggle={onDarkModeToggle}
           onMenuClick={() => setSidebarOpen(true)}
         />
 

@@ -4,15 +4,13 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Toggle } from '@/components/ui/toggle'
+import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
 import {
   Search,
   Bell,
   User,
   ChevronDown,
   Building2,
-  Moon,
-  Sun,
   Settings,
   LogOut,
   Menu,
@@ -22,8 +20,6 @@ import { cn } from '@/lib/utils'
 interface HeaderProps {
   title: string
   showSearch?: boolean
-  isDarkMode?: boolean
-  onDarkModeToggle?: (checked: boolean) => void
   onMenuClick?: () => void
   className?: string
 }
@@ -31,8 +27,6 @@ interface HeaderProps {
 export function Header({
   title,
   showSearch = true,
-  isDarkMode = false,
-  onDarkModeToggle,
   onMenuClick,
   className,
 }: HeaderProps) {
@@ -81,13 +75,9 @@ export function Header({
       {/* Right side - Actions */}
       <div className="flex items-center space-x-2">
         {/* Dark mode toggle */}
-        {onDarkModeToggle && (
-          <div className="hidden lg:flex items-center space-x-2">
-            <Sun className="h-4 w-4" />
-            <Toggle checked={isDarkMode} onCheckedChange={onDarkModeToggle} />
-            <Moon className="h-4 w-4" />
-          </div>
-        )}
+        <div className="hidden lg:flex">
+          <DarkModeToggle />
+        </div>
 
         {/* Clinic switcher */}
         <div className="relative">
