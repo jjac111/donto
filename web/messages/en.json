@@ -47,7 +47,8 @@
     "centralClinic": "Central Clinic",
     "profile": "Profile",
     "settings": "Settings",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "defaultUser": "User"
   },
   "test": {
     "title": "Component Showcase",

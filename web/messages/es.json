@@ -47,7 +47,8 @@
     "centralClinic": "Clínica Central",
     "profile": "Perfil",
     "settings": "Configuración",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "defaultUser": "Usuario"
   },
   "test": {
     "title": "Galería de Componentes",

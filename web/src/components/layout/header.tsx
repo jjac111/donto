@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
 import { SearchInput } from '@/components/ui/search-input'
+import { useAuthStore } from '@/store'
 import {
   User,
   ChevronDown,
@@ -31,6 +32,7 @@ export function Header({
   const [searchValue, setSearchValue] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showClinicMenu, setShowClinicMenu] = useState(false)
+  const { user, clinicName, logout } = useAuthStore()
   const t = useTranslations('header')
 
   return (
@@ -79,7 +81,7 @@ export function Header({
             className="hidden lg:flex items-center space-x-2"
           >
             <Building2 className="h-4 w-4" />
-            <span>{t('centralClinic')}</span>
+            <span>{clinicName}</span>
             <ChevronDown className="h-4 w-4" />
           </Button>
         </div>
@@ -106,7 +108,9 @@ export function Header({
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
               <User className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="hidden sm:block">Dr. García</span>
+            <span className="hidden sm:block">
+              {user?.displayName || user?.firstName || t('defaultUser')}
+            </span>
             <ChevronDown className="h-4 w-4" />
           </Button>
 
@@ -136,7 +140,10 @@ export function Header({
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start text-destructive hover:text-destructive"
-                onClick={() => setShowUserMenu(false)}
+                onClick={() => {
+                  setShowUserMenu(false)
+                  logout()
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('logout')}
