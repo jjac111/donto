@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store'
 import { useTranslations } from 'next-intl'
 import { LoginForm } from './login-form'
+import { ClinicSelection } from './clinic-selection'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isAuthenticated, isLoading, needsClinicSelection } = useAuthStore()
   const t = useTranslations('common')
   const [isHydrated, setIsHydrated] = useState(false)
 
@@ -33,6 +34,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <LoginForm />
   }
 
-  // Show protected content if authenticated
+  // Show clinic selection if user needs to select a clinic
+  if (needsClinicSelection) {
+    return <ClinicSelection />
+  }
+
+  // Show protected content if authenticated and clinic selected
   return <>{children}</>
 }

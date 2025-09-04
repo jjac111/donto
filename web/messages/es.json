@@ -4,7 +4,16 @@
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "loginButton": "Entrar",
-    "loginError": "Error al iniciar sesión"
+    "loginError": "Error al iniciar sesión",
+    "clinicSelection": {
+      "title": "Seleccionar Clínica",
+      "help": "Tienes acceso a múltiples clínicas. Haz clic en una para continuar:",
+      "role": {
+        "admin": "Administrador",
+        "provider": "Doctor",
+        "staff": "Personal"
+      }
+    }
   },
   "navigation": {
     "patients": "Pacientes",

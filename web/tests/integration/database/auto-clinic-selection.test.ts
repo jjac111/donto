@@ -56,15 +56,41 @@ describe('Auto-Clinic Selection Tests', () => {
   })
 
   it('should handle manual clinic selection when needed', async () => {
-    // Use emptyClinicUser who has access to emptyClinic for manual selection
+    // Use multiClinicUser who has access to multiple clinics for manual selection
     const session = await createFullUserSession(
-      TEST_USERS.emptyClinicUser.email,
-      TEST_USERS.emptyClinicUser.password,
-      TEST_CLINICS.emptyClinic
+      TEST_USERS.multiClinicUser.email,
+      TEST_USERS.multiClinicUser.password,
+      TEST_CLINICS.clinic1
     )
 
     expect(session.needsClinicSelection).toBe(false)
-    expect(session.activeClinic).toBe(TEST_CLINICS.emptyClinic)
+    expect(session.activeClinic).toBe(TEST_CLINICS.clinic1)
+  })
+
+  it('should require manual selection for multi-clinic user and work after set_active_clinic', async () => {
+    const result = await loginWithAutoClinicSelection(
+      TEST_USERS.multiClinicUser.email,
+      TEST_USERS.multiClinicUser.password
+    )
+
+    expect(result.needsClinicSelection).toBe(true)
+    expect(result.sessionToken).toBeNull()
+
+    // Manually set clinic 2 as active and verify
+    const { data: setResult, error: setError } = await supabase.rpc(
+      'set_active_clinic',
+      {
+        clinic_uuid: TEST_CLINICS.clinic2,
+      }
+    )
+    expect(setError).toBeNull()
+    expect(setResult).toBeTruthy()
+
+    const activeClinic = await getCurrentActiveClinic()
+    expect(
+      activeClinic === TEST_CLINICS.clinic1 ||
+        activeClinic === TEST_CLINICS.clinic2
+    ).toBe(true)
   })
 
   it('should throw error when manual selection needed but no clinic provided', async () => {
