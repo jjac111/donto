@@ -11,7 +11,12 @@
     "appointments": "Citas",
     "calendar": "Calendario",
     "treatments": "Tratamientos",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "dashboard": "Dashboard",
+    "schedule": "Agenda",
+    "treatmentPlans": "Tratamientos",
+    "estimates": "Presupuestos",
+    "clinicalNotes": "Historias Clínicas"
   },
   "patients": {
     "newPatient": "Nuevo Paciente",
@@ -35,6 +40,113 @@
     "type": "Tipo de Cita",
     "notes": "Notas",
     "schedule": "Agendar"
+  },
+  "header": {
+    "searchPlaceholder": "Buscar pacientes, citas...",
+    "openSidebar": "Abrir barra lateral",
+    "centralClinic": "Clínica Central",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "test": {
+    "title": "Galería de Componentes",
+    "buttons": {
+      "title": "Botones",
+      "description": "Todas las variantes y tamaños de botones",
+      "default": "Por Defecto",
+      "secondary": "Secundario",
+      "destructive": "Destructivo",
+      "outline": "Contorno",
+      "ghost": "Fantasma",
+      "link": "Enlace",
+      "small": "Pequeño",
+      "defaultSize": "Por Defecto",
+      "large": "Grande",
+      "disabled": "Deshabilitado",
+      "withIcon": "Con Icono",
+      "testLoading": "Probar Carga"
+    },
+    "forms": {
+      "title": "Componentes de Formulario",
+      "description": "Campos de entrada, etiquetas y validación de formularios",
+      "basicInputs": "Entradas Básicas",
+      "basicInput": "Entrada Básica",
+      "enterText": "Ingresar texto...",
+      "disabledInput": "Entrada Deshabilitada",
+      "inputWithError": "Entrada con Error",
+      "thisHasError": "Esto tiene un error",
+      "fieldRequired": "Este campo es obligatorio",
+      "formComponents": "Componentes de Formulario",
+      "formInput": "Entrada de Formulario",
+      "formInputWithLabel": "Entrada de formulario con etiqueta",
+      "formInputWithError": "Entrada de Formulario con Error",
+      "formTextarea": "Área de Texto de Formulario",
+      "enterLongerMessage": "Ingresar un mensaje más largo...",
+      "formSelect": "Selección de Formulario",
+      "selectOption": "Seleccionar una opción",
+      "option1": "Opción 1",
+      "option2": "Opción 2",
+      "option3": "Opción 3",
+      "selectComponents": "Componentes de Selección",
+      "basicSelect": "Selección Básica",
+      "disabledSelect": "Selección Deshabilitada",
+      "textarea": "Área de Texto"
+    },
+    "badges": {
+      "title": "Insignias y Estado",
+      "description": "Indicadores de estado e insignias"
+    },
+    "table": {
+      "title": "Tabla de Datos",
+      "description": "Tabla de datos de muestra con información de pacientes",
+      "name": "Nombre",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "status": "Estado",
+      "actions": "Acciones",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "edit": "Editar"
+    },
+    "loading": {
+      "title": "Estados de Carga",
+      "description": "Indicadores de carga y estados",
+      "differentSizes": "Diferentes tamaños"
+    },
+    "empty": {
+      "title": "Estados Vacíos",
+      "description": "Componentes de estado vacío",
+      "noPatientsFound": "No se encontraron pacientes",
+      "noPatientsDescription": "Comienza agregando tu primer paciente al sistema.",
+      "addPatient": "Agregar Paciente",
+      "noAppointmentsScheduled": "No hay citas programadas",
+      "noAppointmentsDescription": "Tu horario está libre para hoy.",
+      "scheduleAppointment": "Programar Cita"
+    },
+    "cards": {
+      "title": "Variantes de Tarjetas",
+      "description": "Diferentes diseños y estilos de tarjetas",
+      "patientRecords": "Registros de Pacientes",
+      "patientRecordsDescription": "Gestionar información de pacientes",
+      "patientRecordsContent": "Ver y editar registros de pacientes, historial médico y planes de tratamiento.",
+      "appointments": "Citas",
+      "appointmentsDescription": "Programar y gestionar citas",
+      "appointmentsContent": "Reservar citas, ver calendario y gestionar tu horario.",
+      "settings": "Configuración",
+      "settingsDescription": "Configurar tu clínica",
+      "settingsContent": "Gestionar configuración de clínica, usuarios y preferencias del sistema."
+    },
+    "containers": {
+      "title": "Tamaños de Contenedor",
+      "description": "Diferentes opciones de ancho de contenedor",
+      "smallContainer": "Contenedor Pequeño",
+      "smallContainerContent": "Este es un contenedor pequeño (max-w-2xl)",
+      "mediumContainer": "Contenedor Mediano",
+      "mediumContainerContent": "Este es un contenedor mediano (max-w-4xl)",
+      "largeContainer": "Contenedor Grande (Por Defecto)",
+      "largeContainerContent": "Este es un contenedor grande (max-w-6xl)"
+    }
   },
   "common": {
     "loading": "Cargando...",

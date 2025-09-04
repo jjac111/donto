@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface SidebarProps {
   isOpen: boolean
@@ -25,41 +26,42 @@ interface SidebarProps {
   className?: string
 }
 
-const navigation = [
-  {
-    name: 'Dashboard',
-    href: '/dashboard',
-    icon: FileText,
-  },
-  {
-    name: 'Patients',
-    href: '/patients',
-    icon: Users,
-  },
-  {
-    name: 'Schedule',
-    href: '/schedule',
-    icon: Calendar,
-  },
-  {
-    name: 'Treatment Plans',
-    href: '/treatments',
-    icon: Stethoscope,
-  },
-  {
-    name: 'Estimates',
-    href: '/estimates',
-    icon: DollarSign,
-  },
-  {
-    name: 'Clinical Notes',
-    href: '/clinical-notes',
-    icon: FileCheck,
-  },
-]
-
 export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
   const pathname = usePathname()
+  const t = useTranslations('navigation')
+
+  const navigation = [
+    {
+      name: t('dashboard'),
+      href: '/dashboard',
+      icon: FileText,
+    },
+    {
+      name: t('patients'),
+      href: '/patients',
+      icon: Users,
+    },
+    {
+      name: t('schedule'),
+      href: '/schedule',
+      icon: Calendar,
+    },
+    {
+      name: t('treatmentPlans'),
+      href: '/treatments',
+      icon: Stethoscope,
+    },
+    {
+      name: t('estimates'),
+      href: '/estimates',
+      icon: DollarSign,
+    },
+    {
+      name: t('clinicalNotes'),
+      href: '/clinical-notes',
+      icon: FileCheck,
+    },
+  ]
 
   return (
     <>
@@ -91,7 +93,7 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search patients, appointments..."
+                placeholder={t('search', { ns: 'patients' })}
                 className="pl-10"
               />
             </div>
@@ -125,7 +127,7 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
-                  {item.name === 'Patients' && (
+                  {item.name === t('patients') && (
                     <Badge variant="secondary" className="ml-auto">
                       12
                     </Badge>
@@ -149,7 +151,7 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
               )}
             >
               <Settings className="h-4 w-4" />
-              <span>Settings</span>
+              <span>{t('settings')}</span>
             </Link>
           </div>
         </div>

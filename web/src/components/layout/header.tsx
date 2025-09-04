@@ -14,6 +14,7 @@ import {
   Menu,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface HeaderProps {
   title: string
@@ -31,6 +32,7 @@ export function Header({
   const [searchValue, setSearchValue] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showClinicMenu, setShowClinicMenu] = useState(false)
+  const t = useTranslations('header')
 
   return (
     <header
@@ -48,7 +50,7 @@ export function Header({
             className="lg:hidden p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             <Menu className="h-6 w-6" />
-            <span className="sr-only">Open sidebar</span>
+            <span className="sr-only">{t('openSidebar')}</span>
           </button>
         )}
 
@@ -61,7 +63,7 @@ export function Header({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search patients, appointments..."
+              placeholder={t('searchPlaceholder')}
               value={searchValue}
               onChange={e => setSearchValue(e.target.value)}
               className="pl-10"
@@ -86,7 +88,7 @@ export function Header({
             className="hidden lg:flex items-center space-x-2"
           >
             <Building2 className="h-4 w-4" />
-            <span>Clínica Central</span>
+            <span>{t('centralClinic')}</span>
             <ChevronDown className="h-4 w-4" />
           </Button>
         </div>
@@ -127,7 +129,7 @@ export function Header({
                 onClick={() => setShowUserMenu(false)}
               >
                 <User className="mr-2 h-4 w-4" />
-                Profile
+                {t('profile')}
               </Button>
               <Button
                 variant="ghost"
@@ -136,7 +138,7 @@ export function Header({
                 onClick={() => setShowUserMenu(false)}
               >
                 <Settings className="mr-2 h-4 w-4" />
-                Settings
+                {t('settings')}
               </Button>
               <hr className="my-1" />
               <Button
@@ -146,7 +148,7 @@ export function Header({
                 onClick={() => setShowUserMenu(false)}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                {t('logout')}
               </Button>
             </div>
           )}

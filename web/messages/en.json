@@ -11,7 +11,12 @@
     "appointments": "Appointments",
     "calendar": "Calendar",
     "treatments": "Treatments",
-    "settings": "Settings"
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "schedule": "Schedule",
+    "treatmentPlans": "Treatment Plans",
+    "estimates": "Estimates",
+    "clinicalNotes": "Clinical Notes"
   },
   "patients": {
     "newPatient": "New Patient",
@@ -35,6 +40,113 @@
     "type": "Appointment Type",
     "notes": "Notes",
     "schedule": "Schedule"
+  },
+  "header": {
+    "searchPlaceholder": "Search patients, appointments...",
+    "openSidebar": "Open sidebar",
+    "centralClinic": "Central Clinic",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Sign Out"
+  },
+  "test": {
+    "title": "Component Showcase",
+    "buttons": {
+      "title": "Buttons",
+      "description": "All button variants and sizes",
+      "default": "Default",
+      "secondary": "Secondary",
+      "destructive": "Destructive",
+      "outline": "Outline",
+      "ghost": "Ghost",
+      "link": "Link",
+      "small": "Small",
+      "defaultSize": "Default",
+      "large": "Large",
+      "disabled": "Disabled",
+      "withIcon": "With Icon",
+      "testLoading": "Test Loading"
+    },
+    "forms": {
+      "title": "Form Components",
+      "description": "Input fields, labels, and form validation",
+      "basicInputs": "Basic Inputs",
+      "basicInput": "Basic Input",
+      "enterText": "Enter text...",
+      "disabledInput": "Disabled Input",
+      "inputWithError": "Input with Error",
+      "thisHasError": "This has an error",
+      "fieldRequired": "This field is required",
+      "formComponents": "Form Components",
+      "formInput": "Form Input",
+      "formInputWithLabel": "Form input with label",
+      "formInputWithError": "Form Input with Error",
+      "formTextarea": "Form Textarea",
+      "enterLongerMessage": "Enter a longer message...",
+      "formSelect": "Form Select",
+      "selectOption": "Select an option",
+      "option1": "Option 1",
+      "option2": "Option 2",
+      "option3": "Option 3",
+      "selectComponents": "Select Components",
+      "basicSelect": "Basic Select",
+      "disabledSelect": "Disabled Select",
+      "textarea": "Textarea"
+    },
+    "badges": {
+      "title": "Badges & Status",
+      "description": "Status indicators and badges"
+    },
+    "table": {
+      "title": "Data Table",
+      "description": "Sample data table with patient information",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "status": "Status",
+      "actions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "edit": "Edit"
+    },
+    "loading": {
+      "title": "Loading States",
+      "description": "Loading spinners and states",
+      "differentSizes": "Different sizes"
+    },
+    "empty": {
+      "title": "Empty States",
+      "description": "Empty state components",
+      "noPatientsFound": "No patients found",
+      "noPatientsDescription": "Get started by adding your first patient to the system.",
+      "addPatient": "Add Patient",
+      "noAppointmentsScheduled": "No appointments scheduled",
+      "noAppointmentsDescription": "Your schedule is clear for today.",
+      "scheduleAppointment": "Schedule Appointment"
+    },
+    "cards": {
+      "title": "Card Variants",
+      "description": "Different card layouts and styles",
+      "patientRecords": "Patient Records",
+      "patientRecordsDescription": "Manage patient information",
+      "patientRecordsContent": "View and edit patient records, medical history, and treatment plans.",
+      "appointments": "Appointments",
+      "appointmentsDescription": "Schedule and manage appointments",
+      "appointmentsContent": "Book appointments, view calendar, and manage your schedule.",
+      "settings": "Settings",
+      "settingsDescription": "Configure your clinic",
+      "settingsContent": "Manage clinic settings, users, and system preferences."
+    },
+    "containers": {
+      "title": "Container Sizes",
+      "description": "Different container width options",
+      "smallContainer": "Small Container",
+      "smallContainerContent": "This is a small container (max-w-2xl)",
+      "mediumContainer": "Medium Container",
+      "mediumContainerContent": "This is a medium container (max-w-4xl)",
+      "largeContainer": "Large Container (Default)",
+      "largeContainerContent": "This is a large container (max-w-6xl)"
+    }
   },
   "common": {
     "loading": "Loading...",

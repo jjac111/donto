@@ -35,12 +35,14 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FormInput, FormTextarea, FormSelect } from '@/components/ui/form-field'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Users, Calendar, FileText, Settings, Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export default function TestPage() {
   const [inputValue, setInputValue] = useState('')
   const [textareaValue, setTextareaValue] = useState('')
   const [selectValue, setSelectValue] = useState('')
   const [loading, setLoading] = useState(false)
+  const t = useTranslations('test')
 
   const handleLoading = () => {
     setLoading(true)
@@ -72,37 +74,37 @@ export default function TestPage() {
   ]
 
   return (
-    <AppLayout title="Component Showcase">
+    <AppLayout title={t('title')}>
       <Container className="py-8 space-y-8">
         {/* Buttons Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Buttons</CardTitle>
-            <CardDescription>All button variants and sizes</CardDescription>
+            <CardTitle>{t('buttons.title')}</CardTitle>
+            <CardDescription>{t('buttons.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Button>Default</Button>
-              <Button variant="secondary">Secondary</Button>
-              <Button variant="destructive">Destructive</Button>
-              <Button variant="outline">Outline</Button>
-              <Button variant="ghost">Ghost</Button>
-              <Button variant="link">Link</Button>
+              <Button>{t('buttons.default')}</Button>
+              <Button variant="secondary">{t('buttons.secondary')}</Button>
+              <Button variant="destructive">{t('buttons.destructive')}</Button>
+              <Button variant="outline">{t('buttons.outline')}</Button>
+              <Button variant="ghost">{t('buttons.ghost')}</Button>
+              <Button variant="link">{t('buttons.link')}</Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm">Small</Button>
-              <Button size="default">Default</Button>
-              <Button size="lg">Large</Button>
+              <Button size="sm">{t('buttons.small')}</Button>
+              <Button size="default">{t('buttons.defaultSize')}</Button>
+              <Button size="lg">{t('buttons.large')}</Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button disabled>Disabled</Button>
+              <Button disabled>{t('buttons.disabled')}</Button>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                With Icon
+                {t('buttons.withIcon')}
               </Button>
               <Button onClick={handleLoading} disabled={loading}>
                 {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
-                Test Loading
+                {t('buttons.testLoading')}
               </Button>
             </div>
           </CardContent>
@@ -111,10 +113,8 @@ export default function TestPage() {
         {/* Form Components Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Form Components</CardTitle>
-            <CardDescription>
-              Input fields, labels, and form validation
-            </CardDescription>
+            <CardTitle>{t('forms.title')}</CardTitle>
+            <CardDescription>{t('forms.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
