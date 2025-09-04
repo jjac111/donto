@@ -35,6 +35,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FormInput, FormTextarea, FormSelect } from '@/components/ui/form-field'
 import { Toggle } from '@/components/ui/toggle'
+import { AppLayout } from '@/components/layout/app-layout'
 import {
   Users,
   Calendar,
@@ -92,7 +93,7 @@ export default function TestPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <AppLayout>
       <PageHeader
         title="Component Showcase"
         description="Testing all UI components in the design system"
@@ -466,6 +467,6 @@ export default function TestPage() {
           </CardContent>
         </Card>
       </Container>
-    </div>
+    </AppLayout>
   )
 }

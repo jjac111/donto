@@ -1,78 +1,50 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-import { useAuthStore } from '@/store'
+import { useState } from 'react'
+import { Sidebar } from './sidebar'
+import { Button } from '@/components/ui/button'
+import { Menu } from 'lucide-react'
 
 interface AppLayoutProps {
   children: React.ReactNode
+  showSidebar?: boolean
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
-  const tNav = useTranslations('navigation')
-  const tCommon = useTranslations('common')
-  const { user, logout } = useAuthStore()
+export function AppLayout({ children, showSidebar = true }: AppLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  if (!showSidebar) {
+    return <div className="min-h-screen bg-background">{children}</div>
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Donto</h1>
-            </div>
+    <div className="flex h-screen bg-background overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                {user?.firstName} {user?.lastName}
-              </span>
-              <button
-                onClick={() => logout()}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                {tCommon('logout')}
-              </button>
-            </div>
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Mobile header */}
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Open sidebar</span>
+          </Button>
+
+          <div className="flex-1 text-sm font-semibold leading-6 text-foreground">
+            Donto
           </div>
         </div>
-      </header>
 
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <a
-              href="/dashboard"
-              className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
-            >
-              {tCommon('dashboard')}
-            </a>
-            <a
-              href="/patients"
-              className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
-            >
-              {tNav('patients')}
-            </a>
-            <a
-              href="/appointments"
-              className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
-            >
-              {tNav('appointments')}
-            </a>
-            <a
-              href="/calendar"
-              className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
-            >
-              {tNav('calendar')}
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">{children}</div>
-      </main>
+        {/* Page content */}
+        <main className="flex-1 py-6">
+          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
+        </main>
+      </div>
     </div>
   )
 }
