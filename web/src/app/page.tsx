@@ -10,11 +10,5 @@ export default function Home() {
     redirect('/dashboard')
   }, [])
 
-  return (
-    <ProtectedRoute>
-      <AppLayout>
-        <div>Redirecting to dashboard...</div>
-      </AppLayout>
-    </ProtectedRoute>
-  )
+  return <div>Redirecting...</div>
 }

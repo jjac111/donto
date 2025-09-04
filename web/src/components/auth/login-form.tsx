@@ -13,16 +13,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 export function LoginForm() {
   const t = useTranslations('auth')
   const router = useRouter()
-  const { login, isLoading, error, isAuthenticated } = useAuthStore()
+  const { login, isLoading, error, isAuthenticated, needsClinicSelection } =
+    useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // Redirect to dashboard if already authenticated
+  // Redirects after auth state changes
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard')
-    }
-  }, [isAuthenticated, router])
+    if (!isAuthenticated) return
+    if (needsClinicSelection) router.replace('/select-clinic')
+    else router.replace('/dashboard')
+  }, [isAuthenticated, needsClinicSelection, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
