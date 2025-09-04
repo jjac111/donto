@@ -2,10 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
+import { SearchInput } from '@/components/ui/search-input'
 import {
-  Search,
   User,
   ChevronDown,
   Building2,
@@ -60,15 +59,7 @@ export function Header({
       {/* Center - Search */}
       {showSearch && (
         <div className="hidden lg:block flex-1 max-w-md mx-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={t('searchPlaceholder')}
-              value={searchValue}
-              onChange={e => setSearchValue(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <SearchInput value={searchValue} onChange={setSearchValue} />
         </div>
       )}
 

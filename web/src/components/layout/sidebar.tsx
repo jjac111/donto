@@ -3,9 +3,9 @@
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Input } from '@/components/ui/input'
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
 import { Logo } from '@/components/ui/logo'
+import { SearchInput } from '@/components/ui/search-input'
 import {
   Users,
   Calendar,
@@ -14,7 +14,6 @@ import {
   Stethoscope,
   DollarSign,
   FileCheck,
-  Search,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -90,13 +89,7 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
           {/* Search and Dark Mode - Hidden on desktop when shown in header */}
           <div className="p-4 space-y-4 lg:hidden">
             {/* Search Box */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={t('search', { ns: 'patients' })}
-                className="pl-10"
-              />
-            </div>
+            <SearchInput />
 
             {/* Dark Mode Toggle */}
             <DarkModeToggle />
