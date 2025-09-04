@@ -91,7 +91,7 @@ export function Sidebar({
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6">
+          <div className="flex items-center justify-between h-17.5 px-6 py-4 border-b border-border">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <Stethoscope className="h-5 w-5 text-primary-foreground" />
@@ -101,8 +101,6 @@ export function Sidebar({
               </span>
             </div>
           </div>
-
-          <Separator />
 
           {/* Search and Dark Mode - Hidden on desktop when shown in header */}
           <div className="p-4 space-y-4 lg:hidden">

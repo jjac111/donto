@@ -26,11 +26,11 @@ export function AppLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!showSidebar) {
-    return <div className="min-h-screen bg-background">{children}</div>
+    return <div className="min-h-screen">{children}</div>
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

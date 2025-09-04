@@ -47,8 +47,8 @@ export function Header({
         className
       )}
     >
-      {/* Left side - Menu, Title and Search */}
-      <div className="flex flex-1 items-center space-x-4">
+      {/* Left side - Menu and Title */}
+      <div className="flex items-center space-x-4">
         {/* Mobile menu button */}
         {onMenuClick && (
           <button
@@ -61,21 +61,22 @@ export function Header({
         )}
 
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
-
-        {showSearch && (
-          <div className="hidden lg:block flex-1 max-w-md mx-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search patients, appointments..."
-                value={searchValue}
-                onChange={e => setSearchValue(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Center - Search */}
+      {showSearch && (
+        <div className="hidden lg:block flex-1 max-w-md mx-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search patients, appointments..."
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Right side - Actions */}
       <div className="flex items-center space-x-2">

@@ -98,13 +98,6 @@ export default function TestPage() {
       isDarkMode={isDarkMode}
       onDarkModeToggle={handleDarkModeToggle}
     >
-      <div className="mb-6">
-        <Button onClick={handleLoading} disabled={loading}>
-          {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
-          Test Loading
-        </Button>
-      </div>
-
       <Container className="py-8 space-y-8">
         {/* Buttons Section */}
         <Card>
@@ -131,6 +124,10 @@ export default function TestPage() {
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 With Icon
+              </Button>
+              <Button onClick={handleLoading} disabled={loading}>
+                {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
+                Test Loading
               </Button>
             </div>
           </CardContent>
