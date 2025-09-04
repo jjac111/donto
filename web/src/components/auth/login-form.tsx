@@ -1,14 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store'
+import { Logo } from '@/components/ui/logo'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function LoginForm() {
   const t = useTranslations('auth')
-  const { login, isLoading, error } = useAuthStore()
+  const router = useRouter()
+  const { login, isLoading, error, isAuthenticated } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -16,48 +30,58 @@ export function LoginForm() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 border rounded-lg">
-      <h1 className="text-2xl font-bold mb-6 text-center">{t('login')}</h1>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center space-y-6">
+          <div className="flex justify-center">
+            <Logo size="xl" />
+          </div>
+          <CardTitle className="text-2xl">{t('login')}</CardTitle>
+        </CardHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            {t('email')}
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="email"
+                required
+              />
+            </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            {t('password')}
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{t('password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-        {error && <div className="text-red-600 text-sm">{error}</div>}
+            {error && (
+              <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
+                {error}
+              </div>
+            )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isLoading ? '...' : t('loginButton')}
-        </button>
-      </form>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full"
+              size="lg"
+            >
+              {isLoading ? 'Iniciando sesión...' : t('loginButton')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
