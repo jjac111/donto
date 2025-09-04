@@ -567,6 +567,10 @@ ALTER TABLE treatment_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE treatment_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE procedures ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tooth_conditions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cost_estimates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cost_estimate_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE patient_representatives ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for profiles table
 CREATE POLICY "Users can view own profiles" ON profiles
@@ -655,6 +659,61 @@ CREATE POLICY "Clinic isolation for procedures" ON procedures
 CREATE POLICY "Clinic isolation for tooth_conditions" ON tooth_conditions
     FOR ALL USING (
         -- Tooth conditions link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+-- RLS Policy for clinics table
+-- Users can only access clinics they have profiles for
+CREATE POLICY "Users can access assigned clinics" ON clinics
+    FOR ALL USING (
+        id IN (
+            SELECT clinic_id 
+            FROM profiles 
+            WHERE user_id = auth.uid() 
+            AND is_active = true
+        )
+    );
+
+-- RLS Policy for cost_estimates table
+-- Cost estimates are accessible via the patient's clinic
+CREATE POLICY "Clinic isolation for cost_estimates" ON cost_estimates
+    FOR ALL USING (
+        -- Cost estimates link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+-- RLS Policy for cost_estimate_items table  
+-- Cost estimate items are accessible via cost_estimate -> patient -> clinic
+CREATE POLICY "Clinic isolation for cost_estimate_items" ON cost_estimate_items
+    FOR ALL USING (
+        -- Cost estimate items link via cost_estimate -> patient
+        EXISTS (
+            SELECT 1 FROM cost_estimates ce
+            JOIN patients p ON p.id = ce.patient_id
+            WHERE ce.id = cost_estimate_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+-- RLS Policy for patient_representatives table
+-- Patient representatives are accessible via the patient's clinic
+CREATE POLICY "Clinic isolation for patient_representatives" ON patient_representatives
+    FOR ALL USING (
+        -- Patient representatives link via patient
         EXISTS (
             SELECT 1 FROM patients p 
             WHERE p.id = patient_id 

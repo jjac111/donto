@@ -280,6 +280,106 @@ describe('Clinic Isolation Tests', () => {
         .eq('clinic_id', TEST_CLINICS.clinic1)
     })
 
+    it('should only see clinics user has access to', async () => {
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      const { data: clinics, error } = await supabase
+        .from('clinics')
+        .select('*')
+
+      expect(error).toBeNull()
+      expect(clinics).toBeDefined()
+      // Should only see clinic1 since user only has access to that clinic
+      expect(clinics!.length).toBe(1)
+      expect(clinics![0].id).toBe(TEST_CLINICS.clinic1)
+    })
+
+    it('should only see cost estimates from active clinic', async () => {
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      const { data: costEstimates, error } = await supabase.from(
+        'cost_estimates'
+      ).select(`
+          *,
+          patients!inner (
+            id,
+            clinic_id
+          )
+        `)
+
+      expect(error).toBeNull()
+      expect(costEstimates).toBeDefined()
+
+      if (costEstimates && costEstimates.length > 0) {
+        costEstimates.forEach((estimate: any) => {
+          expect(estimate.patients.clinic_id).toBe(TEST_CLINICS.clinic1)
+        })
+      }
+    })
+
+    it('should only see cost estimate items from active clinic', async () => {
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      const { data: costEstimateItems, error } = await supabase.from(
+        'cost_estimate_items'
+      ).select(`
+          *,
+          cost_estimates!inner (
+            id,
+            patients!inner (
+              id,
+              clinic_id
+            )
+          )
+        `)
+
+      expect(error).toBeNull()
+      expect(costEstimateItems).toBeDefined()
+
+      if (costEstimateItems && costEstimateItems.length > 0) {
+        costEstimateItems.forEach((item: any) => {
+          expect(item.cost_estimates.patients.clinic_id).toBe(
+            TEST_CLINICS.clinic1
+          )
+        })
+      }
+    })
+
+    it('should only see patient representatives from active clinic', async () => {
+      await createFullUserSession(
+        TEST_USERS.clinic1Admin.email,
+        TEST_USERS.clinic1Admin.password
+      )
+
+      const { data: patientRepresentatives, error } = await supabase.from(
+        'patient_representatives'
+      ).select(`
+          *,
+          patients!inner (
+            id,
+            clinic_id
+          )
+        `)
+
+      expect(error).toBeNull()
+      expect(patientRepresentatives).toBeDefined()
+
+      if (patientRepresentatives && patientRepresentatives.length > 0) {
+        patientRepresentatives.forEach((rep: any) => {
+          expect(rep.patients.clinic_id).toBe(TEST_CLINICS.clinic1)
+        })
+      }
+    })
+
     it('should prevent cross-clinic data leakage in join queries', async () => {
       // Login as clinic1Admin
       await createFullUserSession(
