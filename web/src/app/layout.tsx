@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
-import { Open_Sans, Geist_Mono } from 'next/font/google'
+import { Roboto, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { QueryProvider } from '@/providers/query-provider'
 
-const openSans = Open_Sans({
-  variable: '--font-open-sans',
+const font = Roboto({
+  variable: '--font-primary',
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500', '700'],
 })
 
 const geistMono = Geist_Mono({
@@ -30,7 +30,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body className={`${openSans.className} antialiased`}>
+      <body className={`${font.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>{children}</QueryProvider>
         </NextIntlClientProvider>
