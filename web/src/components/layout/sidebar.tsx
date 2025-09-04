@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Toggle } from '@/components/ui/toggle'
 import {
   Users,
   Calendar,
@@ -14,6 +16,9 @@ import {
   FileCheck,
   Menu,
   X,
+  Search,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -22,6 +27,8 @@ interface SidebarProps {
   isOpen: boolean
   onClose: () => void
   className?: string
+  isDarkMode?: boolean
+  onDarkModeToggle?: (checked: boolean) => void
 }
 
 const navigation = [
@@ -57,7 +64,13 @@ const navigation = [
   },
 ]
 
-export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
+export function Sidebar({
+  isOpen,
+  onClose,
+  className,
+  isDarkMode,
+  onDarkModeToggle,
+}: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -100,6 +113,32 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
           </div>
 
           <Separator />
+
+          {/* Search and Dark Mode - Hidden on desktop when shown in header */}
+          <div className="p-4 space-y-4 lg:hidden">
+            {/* Search Box */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search patients, appointments..."
+                className="pl-10"
+              />
+            </div>
+
+            {/* Dark Mode Toggle */}
+            {onDarkModeToggle && (
+              <div className="flex items-center space-x-3">
+                <Sun className="h-4 w-4" />
+                <Toggle
+                  checked={isDarkMode ?? false}
+                  onCheckedChange={onDarkModeToggle}
+                />
+                <Moon className="h-4 w-4" />
+              </div>
+            )}
+          </div>
+
+          <Separator className="lg:hidden" />
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 p-4">

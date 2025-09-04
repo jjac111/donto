@@ -93,26 +93,17 @@ export default function TestPage() {
   ]
 
   return (
-    <AppLayout>
-      <PageHeader
-        title="Component Showcase"
-        description="Testing all UI components in the design system"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Sun className="h-4 w-4" />
-            <Toggle
-              checked={isDarkMode}
-              onCheckedChange={handleDarkModeToggle}
-            />
-            <Moon className="h-4 w-4" />
-          </div>
-          <Button onClick={handleLoading} disabled={loading}>
-            {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
-            Test Loading
-          </Button>
-        </div>
-      </PageHeader>
+    <AppLayout
+      title="Component Showcase"
+      isDarkMode={isDarkMode}
+      onDarkModeToggle={handleDarkModeToggle}
+    >
+      <div className="mb-6">
+        <Button onClick={handleLoading} disabled={loading}>
+          {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
+          Test Loading
+        </Button>
+      </div>
 
       <Container className="py-8 space-y-8">
         {/* Buttons Section */}
