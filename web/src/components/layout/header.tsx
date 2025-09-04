@@ -51,15 +51,13 @@ export function Header({
       <div className="flex flex-1 items-center space-x-4">
         {/* Mobile menu button */}
         {onMenuClick && (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={onMenuClick}
-            className="lg:hidden p-2"
+            className="lg:hidden p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-6 w-6" />
             <span className="sr-only">Open sidebar</span>
-          </Button>
+          </button>
         )}
 
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>

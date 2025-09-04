@@ -14,8 +14,6 @@ import {
   Stethoscope,
   DollarSign,
   FileCheck,
-  Menu,
-  X,
   Search,
   Moon,
   Sun,
@@ -102,14 +100,6 @@ export function Sidebar({
                 Donto
               </span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="lg:hidden"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           <Separator />
