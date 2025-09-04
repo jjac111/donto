@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
+import { Logo } from '@/components/ui/logo'
 import {
   Users,
   Calendar,
@@ -81,15 +82,8 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between h-17.5 px-6 py-4 border-b border-border">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Stethoscope className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-lg font-semibold text-foreground">
-                Donto
-              </span>
-            </div>
+          <div className="flex items-center justify-between h-17 px-6 py-4 border-b border-border">
+            <Logo size="lg" />
           </div>
 
           {/* Search and Dark Mode - Hidden on desktop when shown in header */}
