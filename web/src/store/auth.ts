@@ -273,6 +273,20 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true }, false, 'auth/logout/start')
 
           try {
+            // Invalidate DB-backed clinic session before signing out (RLS needs auth)
+            try {
+              const { data: authUser } = await supabase.auth.getUser()
+              const userId = authUser.user?.id
+              if (userId) {
+                await supabase
+                  .from('user_sessions')
+                  .delete()
+                  .eq('user_id', userId)
+              }
+            } catch (e) {
+              console.warn('Failed to clear user_sessions on logout:', e)
+            }
+
             await supabase.auth.signOut()
             set(
               {
