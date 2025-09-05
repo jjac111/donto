@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 
 interface HeaderProps {
   title: string
@@ -32,8 +33,16 @@ export function Header({
   const [searchValue, setSearchValue] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showClinicMenu, setShowClinicMenu] = useState(false)
-  const { user, clinicName, logout } = useAuthStore()
+  const {
+    user,
+    clinicName,
+    availableClinics,
+    selectClinic,
+    loadUserClinics,
+    logout,
+  } = useAuthStore()
   const t = useTranslations('header')
+  const router = useRouter()
 
   return (
     <header
@@ -73,18 +82,49 @@ export function Header({
         </div>
 
         {/* Clinic switcher */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowClinicMenu(!showClinicMenu)}
-            className="hidden lg:flex items-center space-x-2"
-          >
-            <Building2 className="h-4 w-4" />
-            <span>{clinicName}</span>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </div>
+        {availableClinics && availableClinics.length > 1 && (
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                if (!availableClinics || availableClinics.length === 0) {
+                  await loadUserClinics()
+                }
+                setShowClinicMenu(!showClinicMenu)
+              }}
+              className="hidden lg:flex items-center space-x-2"
+            >
+              <Building2 className="h-4 w-4" />
+              <span>{clinicName}</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+
+            {showClinicMenu && (
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-md border border-border bg-popover p-1 shadow-md">
+                {availableClinics.map(c => (
+                  <Button
+                    key={c.clinicId}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={async () => {
+                      setShowClinicMenu(false)
+                      await selectClinic(c.clinicId)
+                      router.refresh()
+                      if (typeof window !== 'undefined') {
+                        window.location.reload()
+                      }
+                    }}
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    <span className="truncate">{c.clinicName}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Notifications */}
         {/* <Button variant="ghost" size="sm" className="relative">

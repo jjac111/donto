@@ -35,6 +35,7 @@ export interface AuthState {
   clearError: () => void
   fetchUserProfile: () => Promise<void>
   selectClinic: (clinicId: string) => Promise<void>
+  loadUserClinics: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -115,7 +116,6 @@ export const useAuthStore = create<AuthState>()(
                   {
                     clinicName,
                     needsClinicSelection: false,
-                    availableClinics: null,
                   },
                   false,
                   'auth/fetchUserProfile/success'
@@ -138,6 +138,35 @@ export const useAuthStore = create<AuthState>()(
                     'auth/updateUserFromProfile'
                   )
                 }
+              }
+
+              // Also load the list of clinics for switcher UI
+              const { data: allProfiles, error: listErr } = await supabase
+                .from('profiles')
+                .select(
+                  `
+                  clinic_id,
+                  clinic:clinic_id(name),
+                  role,
+                  provider_id
+                `
+                )
+                .eq('user_id', userId)
+                .eq('is_active', true)
+
+              if (!listErr && allProfiles) {
+                const clinics = allProfiles.map(profile => ({
+                  clinicId: profile.clinic_id,
+                  clinicName: (profile as any).clinic?.name || '',
+                  role: (profile as any).role,
+                  providerId: (profile as any).provider_id,
+                }))
+
+                set(
+                  { availableClinics: clinics },
+                  false,
+                  'auth/fetchUserProfile/clinics'
+                )
               }
             } else {
               // No active clinic: fetch all profiles (array) for selection UI
@@ -210,6 +239,40 @@ export const useAuthStore = create<AuthState>()(
               false,
               'auth/selectClinic/error'
             )
+          }
+        },
+
+        loadUserClinics: async () => {
+          try {
+            const { data: authUser } = await supabase.auth.getUser()
+            const userId = authUser.user?.id
+            if (!userId) return
+
+            const { data: allProfiles, error } = await supabase
+              .from('profiles')
+              .select(
+                `
+                clinic_id,
+                clinic:clinic_id(name),
+                role,
+                provider_id
+              `
+              )
+              .eq('user_id', userId)
+              .eq('is_active', true)
+
+            if (error) return
+
+            const clinics = (allProfiles || []).map(profile => ({
+              clinicId: (profile as any).clinic_id,
+              clinicName: (profile as any).clinic?.name || '',
+              role: (profile as any).role,
+              providerId: (profile as any).provider_id,
+            }))
+
+            set({ availableClinics: clinics }, false, 'auth/loadUserClinics')
+          } catch (e) {
+            // noop
           }
         },
 
