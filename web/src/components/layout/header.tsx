@@ -108,15 +108,18 @@ export function Header({
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
               <User className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="hidden sm:block">
-              {user?.displayName || user?.firstName || t('defaultUser')}
-            </span>
             <ChevronDown className="h-4 w-4" />
           </Button>
 
           {/* User dropdown menu */}
           {showUserMenu && (
             <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-border bg-popover p-1 shadow-md">
+              {/* Signed-in email (non-interactive) */}
+              {user?.email && (
+                <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border truncate">
+                  {user.email}
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
