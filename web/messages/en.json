@@ -4,7 +4,16 @@
     "email": "Email",
     "password": "Password",
     "loginButton": "Sign In",
-    "loginError": "Login error"
+    "loginError": "Login error",
+    "clinicSelection": {
+      "title": "Select Clinic",
+      "help": "You have access to multiple clinics. Click one to continue:",
+      "role": {
+        "admin": "Administrator",
+        "provider": "Doctor",
+        "staff": "Staff"
+      }
+    }
   },
   "navigation": {
     "patients": "Patients",
@@ -47,7 +56,8 @@
     "centralClinic": "Central Clinic",
     "profile": "Profile",
     "settings": "Settings",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "defaultUser": "User"
   },
   "test": {
     "title": "Component Showcase",

@@ -38,7 +38,8 @@ INSERT INTO auth.users (
     ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530003', 'authenticated', 'authenticated', 'clinic2-admin@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
     ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530004', 'authenticated', 'authenticated', 'no-access@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
     ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530005', 'authenticated', 'authenticated', 'deactivated@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
-    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530006', 'authenticated', 'authenticated', 'empty-clinic@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', '');
+    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530006', 'authenticated', 'authenticated', 'empty-clinic@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', '550e8400-e29b-41d4-a716-446655530007', 'authenticated', 'authenticated', 'multi-clinic@test.com', crypt('testpassword123', gen_salt('bf')), current_timestamp, current_timestamp, current_timestamp, '{"provider":"email","providers":["email"]}', '{}', current_timestamp, current_timestamp, '', '', '', '');
 
 -- Create test user email identities (required for newer Supabase versions)
 INSERT INTO auth.identities (
@@ -56,7 +57,8 @@ INSERT INTO auth.identities (
     (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530003', '550e8400-e29b-41d4-a716-446655530003', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530003'::text, 'clinic2-admin@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
     (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530004', '550e8400-e29b-41d4-a716-446655530004', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530004'::text, 'no-access@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
     (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530005', '550e8400-e29b-41d4-a716-446655530005', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530005'::text, 'deactivated@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
-    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530006', '550e8400-e29b-41d4-a716-446655530006', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530006'::text, 'empty-clinic@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp);
+    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530006', '550e8400-e29b-41d4-a716-446655530006', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530006'::text, 'empty-clinic@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp),
+    (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530007', '550e8400-e29b-41d4-a716-446655530007', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530007'::text, 'multi-clinic@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp);
 
 -- Test clinics
 INSERT INTO clinics (id, name, address, phone, email) VALUES
@@ -153,7 +155,11 @@ INSERT INTO profiles (id, user_id, clinic_id, provider_id, role, is_active) VALU
     -- User with access to empty clinic
     ('550e8400-e29b-41d4-a716-446655533001', '550e8400-e29b-41d4-a716-446655530006', '550e8400-e29b-41d4-a716-446655440003', NULL, 'staff', true),
     -- User with deactivated profile (no access)
-    ('550e8400-e29b-41d4-a716-446655533002', '550e8400-e29b-41d4-a716-446655530005', '550e8400-e29b-41d4-a716-446655440003', NULL, 'staff', false);
+    ('550e8400-e29b-41d4-a716-446655533002', '550e8400-e29b-41d4-a716-446655530005', '550e8400-e29b-41d4-a716-446655440003', NULL, 'staff', false),
+    -- Multi-clinic user - admin in Clinic 1
+    ('550e8400-e29b-41d4-a716-446655534001', '550e8400-e29b-41d4-a716-446655530007', '550e8400-e29b-41d4-a716-446655440001', NULL, 'admin', true),
+    -- Multi-clinic user - provider in Clinic 2
+    ('550e8400-e29b-41d4-a716-446655534002', '550e8400-e29b-41d4-a716-446655530007', '550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655462001', 'provider', true);
 
 -- NOTE: no-access@test.com (ID 530004) intentionally has NO profiles - that's why it's "no access"
 

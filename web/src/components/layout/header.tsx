@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
 import { SearchInput } from '@/components/ui/search-input'
+import { useAuthStore } from '@/store'
 import {
   User,
   ChevronDown,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 
 interface HeaderProps {
   title: string
@@ -31,12 +33,21 @@ export function Header({
   const [searchValue, setSearchValue] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showClinicMenu, setShowClinicMenu] = useState(false)
+  const {
+    user,
+    clinicName,
+    availableClinics,
+    selectClinic,
+    loadUserClinics,
+    logout,
+  } = useAuthStore()
   const t = useTranslations('header')
+  const router = useRouter()
 
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 flex h-24 items-center justify-between border-b border-border bg-background px-6 py-4 shadow-sm sm:px-8 lg:px-10',
+        'sticky top-0 z-30 flex h-17 items-center justify-between border-b border-border bg-background px-6 py-4 shadow-sm sm:px-8 lg:px-10',
         className
       )}
     >
@@ -71,18 +82,49 @@ export function Header({
         </div>
 
         {/* Clinic switcher */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowClinicMenu(!showClinicMenu)}
-            className="hidden lg:flex items-center space-x-2"
-          >
-            <Building2 className="h-4 w-4" />
-            <span>{t('centralClinic')}</span>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </div>
+        {availableClinics && availableClinics.length > 1 && (
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                if (!availableClinics || availableClinics.length === 0) {
+                  await loadUserClinics()
+                }
+                setShowClinicMenu(!showClinicMenu)
+              }}
+              className="hidden lg:flex items-center space-x-2"
+            >
+              <Building2 className="h-4 w-4" />
+              <span>{clinicName}</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+
+            {showClinicMenu && (
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-md border border-border bg-popover p-1 shadow-md">
+                {availableClinics.map(c => (
+                  <Button
+                    key={c.clinicId}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={async () => {
+                      setShowClinicMenu(false)
+                      await selectClinic(c.clinicId)
+                      router.refresh()
+                      if (typeof window !== 'undefined') {
+                        window.location.reload()
+                      }
+                    }}
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    <span className="truncate">{c.clinicName}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Notifications */}
         {/* <Button variant="ghost" size="sm" className="relative">
@@ -106,13 +148,18 @@ export function Header({
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
               <User className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="hidden sm:block">Dr. García</span>
             <ChevronDown className="h-4 w-4" />
           </Button>
 
           {/* User dropdown menu */}
           {showUserMenu && (
             <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-border bg-popover p-1 shadow-md">
+              {/* Signed-in email (non-interactive) */}
+              {user?.email && (
+                <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border truncate">
+                  {user.email}
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -136,7 +183,10 @@ export function Header({
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start text-destructive hover:text-destructive"
-                onClick={() => setShowUserMenu(false)}
+                onClick={() => {
+                  setShowUserMenu(false)
+                  logout()
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('logout')}

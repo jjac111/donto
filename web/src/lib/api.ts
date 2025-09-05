@@ -548,3 +548,96 @@ export const proceduresApi = {
     return (data || []).map(transformProcedure)
   },
 }
+
+// Clinics API
+export const clinicsApi = {
+  getById: async (id: string): Promise<{ id: string; name: string } | null> => {
+    const { data, error } = await supabase
+      .from('clinics')
+      .select('id, name')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null // Clinic not found
+      }
+      throw new Error(`Failed to fetch clinic: ${error.message}`)
+    }
+
+    return data
+  },
+}
+
+// User Profile API
+export const profileApi = {
+  getCurrentUserProfile: async (): Promise<{
+    id: string
+    email: string
+    firstName: string
+    lastName: string
+    displayName: string
+    role: string
+    clinicId: string
+    clinicName: string
+  } | null> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(
+        `
+        id,
+        role,
+        clinic_id,
+        provider_id,
+        clinic:clinic_id(id, name),
+        provider:provider_id(
+          person:person_id(first_name, last_name)
+        )
+      `
+      )
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+      .eq('is_active', true)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null // Profile not found
+      }
+      throw new Error(`Failed to fetch user profile: ${error.message}`)
+    }
+
+    if (!data) return null
+
+    // Get user email from auth
+    const { data: authUser } = await supabase.auth.getUser()
+    const email = authUser.user?.email || ''
+
+    // Determine name from provider or use email as fallback
+    let firstName = ''
+    let lastName = ''
+    let displayName = ''
+
+    if (data.provider?.person) {
+      firstName = data.provider.person.first_name
+      lastName = data.provider.person.last_name
+      displayName = `${firstName} ${lastName}`.trim()
+    } else {
+      // For non-provider users, use email prefix as name
+      const emailPrefix = email.split('@')[0]
+      firstName = emailPrefix
+      lastName = ''
+      displayName = emailPrefix
+    }
+
+    return {
+      id: data.id,
+      email,
+      firstName,
+      lastName,
+      displayName,
+      role: data.role,
+      clinicId: data.clinic_id,
+      clinicName: data.clinic?.name || '',
+    }
+  },
+}

@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store'
 import { useTranslations } from 'next-intl'
-import { LoginForm } from './login-form'
+import { useRouter } from 'next/navigation'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isAuthenticated, isLoading, needsClinicSelection } = useAuthStore()
   const t = useTranslations('common')
   const [isHydrated, setIsHydrated] = useState(false)
+  const router = useRouter()
 
   // Handle hydration to prevent SSR mismatch
   useEffect(() => {
@@ -28,11 +29,18 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  // Show login form if not authenticated
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <LoginForm />
+    router.replace('/login')
+    return null
   }
 
-  // Show protected content if authenticated
+  // Redirect to clinic selection if needed
+  if (needsClinicSelection) {
+    router.replace('/select-clinic')
+    return null
+  }
+
+  // Show protected content if authenticated and clinic selected
   return <>{children}</>
 }
