@@ -617,9 +617,9 @@ export const profileApi = {
     let lastName = ''
     let displayName = ''
 
-    if (data.provider?.person) {
-      firstName = data.provider.person.first_name
-      lastName = data.provider.person.last_name
+    if ((data as any).provider?.person) {
+      firstName = (data as any).provider.person.first_name
+      lastName = (data as any).provider.person.last_name
       displayName = `${firstName} ${lastName}`.trim()
     } else {
       // For non-provider users, use email prefix as name
@@ -637,7 +637,7 @@ export const profileApi = {
       displayName,
       role: data.role,
       clinicId: data.clinic_id,
-      clinicName: data.clinic?.name || '',
+      clinicName: (data as any).clinic?.name || '',
     }
   },
 }

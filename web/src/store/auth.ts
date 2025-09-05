@@ -105,10 +105,11 @@ export const useAuthStore = create<AuthState>()(
               if (profileErr) throw profileErr
 
               if (activeProfile) {
-                const clinicName = activeProfile.clinic?.name || ''
+                const clinicName = (activeProfile as any).clinic?.name || ''
                 const firstName =
-                  activeProfile.provider?.person?.first_name || ''
-                const lastName = activeProfile.provider?.person?.last_name || ''
+                  (activeProfile as any).provider?.person?.first_name || ''
+                const lastName =
+                  (activeProfile as any).provider?.person?.last_name || ''
                 const displayName =
                   `${firstName} ${lastName}`.trim() || 'Usuario'
 
@@ -155,8 +156,8 @@ export const useAuthStore = create<AuthState>()(
                 .eq('is_active', true)
 
               if (!listErr && allProfiles) {
-                const clinics = allProfiles.map(profile => ({
-                  clinicId: profile.clinic_id,
+                const clinics = (allProfiles as any[]).map(profile => ({
+                  clinicId: (profile as any).clinic_id,
                   clinicName: (profile as any).clinic?.name || '',
                   role: (profile as any).role,
                   providerId: (profile as any).provider_id,
@@ -186,11 +187,11 @@ export const useAuthStore = create<AuthState>()(
               if (allErr) throw allErr
 
               if (allProfiles && allProfiles.length > 0) {
-                const clinics = allProfiles.map(profile => ({
-                  clinicId: profile.clinic_id,
-                  clinicName: profile.clinic?.name || '',
-                  role: profile.role,
-                  providerId: profile.provider_id,
+                const clinics = (allProfiles as any[]).map(profile => ({
+                  clinicId: (profile as any).clinic_id,
+                  clinicName: (profile as any).clinic?.name || '',
+                  role: (profile as any).role,
+                  providerId: (profile as any).provider_id,
                 }))
 
                 set(
