@@ -81,7 +81,12 @@
     "active": "Activo",
     "registered": "Registrado",
     "name": "Nombre",
-    "quickActions": "Acciones Rápidas"
+    "quickActions": "Acciones Rápidas",
+    "female": "Femenino",
+    "male": "Masculino",
+    "loadingError": "Error al cargar paciente",
+    "newTreatment": "Nuevo Tratamiento",
+    "viewHistory": "Ver Historial"
   },
   "appointments": {
     "newAppointment": "Nueva Cita",

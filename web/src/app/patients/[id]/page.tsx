@@ -69,12 +69,14 @@ export default function PatientDetailPage() {
             <div className="text-center">
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                {error ? 'Error al cargar paciente' : t('patientNotFound')}
+                {error ? t('loadingError') : t('patientNotFound')}
               </h2>
               <p className="text-muted-foreground mb-4">
                 {error || t('patientNotFoundDescription')}
               </p>
-              <Button onClick={() => window.history.back()}>{t('back')}</Button>
+              <Button onClick={() => window.history.back()}>
+                {tCommon('back')}
+              </Button>
             </div>
           </div>
         </AppLayout>
@@ -90,7 +92,7 @@ export default function PatientDetailPage() {
       <AppLayout>
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="space-y-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {patient.displayName}
@@ -99,12 +101,10 @@ export default function PatientDetailPage() {
                 ID: {person.nationalId} • {patient.age} años
               </p>
             </div>
-            <div className="flex space-x-3">
-              <Button variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                {t('patients.newAppointment')}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="outline" disabled>
+                {t('edit')}
               </Button>
-              <Button variant="outline">{t('patients.edit')}</Button>
             </div>
           </div>
 
@@ -115,14 +115,14 @@ export default function PatientDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <User className="h-5 w-5 mr-2" />
-                    {t('patients.personalInformation')}
+                    {t('personalInformation')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
-                        {t('patients.fullName')}
+                        {t('fullName')}
                       </label>
                       <p className="text-foreground">
                         {person.firstName} {person.lastName}
@@ -130,7 +130,7 @@ export default function PatientDetailPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
-                        {t('patients.dateOfBirth')}
+                        {t('dateOfBirth')}
                       </label>
                       <p className="text-foreground">
                         {person.dateOfBirth.toLocaleDateString('es-MX')}
@@ -138,15 +138,15 @@ export default function PatientDetailPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
-                        {t('patients.gender')}
+                        {t('gender')}
                       </label>
                       <p className="text-foreground">
-                        {person.sex === 'F' ? 'Femenino' : 'Masculino'}
+                        {person.sex === 'F' ? t('female') : t('male')}
                       </p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
-                        {t('patients.country')}
+                        {t('country')}
                       </label>
                       <p className="text-foreground">{person.country}</p>
                     </div>
@@ -183,13 +183,13 @@ export default function PatientDetailPage() {
               {(patient.medicalHistory || patient.allergies) && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>{t('patients.medicalInformation')}</CardTitle>
+                    <CardTitle>{t('medicalInformation')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {patient.medicalHistory && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">
-                          {t('patients.medicalHistory')}
+                          {t('medicalHistory')}
                         </label>
                         <p className="text-foreground mt-1">
                           {patient.medicalHistory}
@@ -199,7 +199,7 @@ export default function PatientDetailPage() {
                     {patient.allergies && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">
-                          {t('patients.allergies')}
+                          {t('allergies')}
                         </label>
                         <p className="text-foreground mt-1">
                           {patient.allergies}
@@ -215,13 +215,13 @@ export default function PatientDetailPage() {
                 patient.emergencyContactPhone) && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>{t('patients.emergencyContact')}</CardTitle>
+                    <CardTitle>{t('emergencyContact')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {patient.emergencyContactName && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">
-                          {t('patients.name')}
+                          {t('name')}
                         </label>
                         <p className="text-foreground">
                           {patient.emergencyContactName}
@@ -245,14 +245,14 @@ export default function PatientDetailPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('patients.patientStatus')}</CardTitle>
+                  <CardTitle>{t('patientStatus')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Badge variant="secondary" className="w-full justify-center">
-                    {t('patients.active')}
+                    {t('active')}
                   </Badge>
                   <div className="text-center text-sm text-muted-foreground">
-                    {t('patients.registered')}:{' '}
+                    {t('registered')}:{' '}
                     {patient.createdAt
                       ? new Date(patient.createdAt).toLocaleDateString('es-MX')
                       : 'N/A'}
@@ -262,18 +262,33 @@ export default function PatientDetailPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('patients.quickActions')}</CardTitle>
+                  <CardTitle>{t('quickActions')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full" size="sm">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    disabled
+                  >
                     <Calendar className="h-4 w-4 mr-2" />
-                    {t('patients.newAppointment')}
+                    {t('newAppointment')}
                   </Button>
-                  <Button variant="outline" className="w-full" size="sm">
-                    Nuevo Tratamiento
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    disabled
+                  >
+                    {t('newTreatment')}
                   </Button>
-                  <Button variant="outline" className="w-full" size="sm">
-                    Ver Historial
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    disabled
+                  >
+                    {t('viewHistory')}
                   </Button>
                 </CardContent>
               </Card>

@@ -9,6 +9,7 @@ let authStateListenerInitialized = false
 export interface AuthState {
   // State
   user: User | null
+  clinicId: string | null
   clinicName: string | null
   availableClinics: Array<{
     clinicId: string
@@ -25,6 +26,7 @@ export interface AuthState {
 
   // Actions
   setUser: (user: User | null) => void
+  setClinicId: (clinicId: string | null) => void
   setClinicName: (name: string | null) => void
   setAvailableClinics: (clinics: AuthState['availableClinics']) => void
   setNeedsClinicSelection: (needs: boolean) => void
@@ -44,6 +46,7 @@ export const useAuthStore = create<AuthState>()(
       (set, get) => ({
         // Initial state
         user: null,
+        clinicId: null,
         clinicName: null,
         availableClinics: null,
         needsClinicSelection: false,
@@ -56,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
         // Actions
         setUser: user =>
           set({ user, isAuthenticated: user !== null }, false, 'auth/setUser'),
+
+        setClinicId: clinicId => set({ clinicId }, false, 'auth/setClinicId'),
 
         setClinicName: clinicName =>
           set({ clinicName }, false, 'auth/setClinicName'),
@@ -115,6 +120,7 @@ export const useAuthStore = create<AuthState>()(
 
                 set(
                   {
+                    clinicId: activeProfile.clinic_id,
                     clinicName,
                     needsClinicSelection: false,
                   },
@@ -198,6 +204,7 @@ export const useAuthStore = create<AuthState>()(
                   {
                     availableClinics: clinics,
                     needsClinicSelection: true,
+                    clinicId: null,
                     clinicName: null,
                   },
                   false,
@@ -209,6 +216,7 @@ export const useAuthStore = create<AuthState>()(
                   {
                     availableClinics: [],
                     needsClinicSelection: true,
+                    clinicId: null,
                     clinicName: null,
                   },
                   false,
@@ -355,6 +363,7 @@ export const useAuthStore = create<AuthState>()(
             set(
               {
                 user: null,
+                clinicId: null,
                 clinicName: null,
                 availableClinics: null,
                 needsClinicSelection: false,
@@ -371,6 +380,7 @@ export const useAuthStore = create<AuthState>()(
             set(
               {
                 user: null,
+                clinicId: null,
                 clinicName: null,
                 availableClinics: null,
                 needsClinicSelection: false,
@@ -388,15 +398,27 @@ export const useAuthStore = create<AuthState>()(
         name: 'donto-auth', // localStorage key
         partialize: state => ({
           user: state.user,
+          clinicId: state.clinicId,
           clinicName: state.clinicName,
           needsClinicSelection: state.needsClinicSelection,
           isAuthenticated: state.isAuthenticated,
         }), // Persist user, clinic, and auth state
       }
     ),
-    { name: 'auth-store' } // DevTools name
+    {
+      name: 'auth-store',
+      enabled: process.env.NODE_ENV === 'development',
+      store: 'Auth Store',
+    }
   )
 )
+
+// Development helpers - only available in development mode
+if (process.env.NODE_ENV === 'development') {
+  if (typeof window !== 'undefined') {
+    ;(window as any).authStore = useAuthStore
+  }
+}
 
 // Initialize auth state listener
 const initializeAuthStateListener = () => {
@@ -433,6 +455,7 @@ const initializeAuthStateListener = () => {
       // User signed out - clear our store
       useAuthStore.setState({
         user: null,
+        clinicId: null,
         clinicName: null,
         availableClinics: null,
         needsClinicSelection: false,

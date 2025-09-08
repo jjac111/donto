@@ -39,20 +39,16 @@ import { patientsApi } from '@/lib/api'
 const newPatientSchema = (t: (key: string) => string) =>
   z.object({
     // Person fields
-    nationalId: z.string().min(1, t('patients.nationalIdRequired')),
-    country: z.string().min(1, t('patients.countryRequired')),
-    firstName: z.string().min(1, t('patients.firstNameRequired')),
-    lastName: z.string().min(1, t('patients.lastNameRequired')),
-    dateOfBirth: z.string().min(1, t('patients.dateOfBirthRequired')),
+    nationalId: z.string().min(1, t('nationalIdRequired')),
+    country: z.string().min(1, t('countryRequired')),
+    firstName: z.string().min(1, t('firstNameRequired')),
+    lastName: z.string().min(1, t('lastNameRequired')),
+    dateOfBirth: z.string().min(1, t('dateOfBirthRequired')),
     sex: z.enum(['M', 'F'], {
-      message: t('patients.selectValidGender'),
+      message: t('selectValidGender'),
     }),
     phone: z.string().optional(),
-    email: z
-      .string()
-      .email(t('patients.invalidEmail'))
-      .optional()
-      .or(z.literal('')),
+    email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
     address: z.string().optional(),
 
     // Patient fields
@@ -73,7 +69,8 @@ export function NewPatientForm({
   onOpenChange,
   onSuccess,
 }: NewPatientFormProps) {
-  const t = useTranslations()
+  const t = useTranslations('patients')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -144,10 +141,8 @@ export function NewPatientForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t('patients.newPatient')}</DialogTitle>
-          <DialogDescription>
-            {t('patients.newPatientDescription')}
-          </DialogDescription>
+          <DialogTitle>{t('newPatient')}</DialogTitle>
+          <DialogDescription>{t('newPatientDescription')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -155,7 +150,7 @@ export function NewPatientForm({
             {/* Personal Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-foreground border-b pb-2">
-                {t('patients.personalInformation')}
+                {t('personalInformation')}
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
@@ -164,10 +159,10 @@ export function NewPatientForm({
                   name="nationalId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.nationalId')}</FormLabel>
+                      <FormLabel>{t('nationalId')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('patients.nationalIdPlaceholder')}
+                          placeholder={t('nationalIdPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -181,16 +176,14 @@ export function NewPatientForm({
                   name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.country')}</FormLabel>
+                      <FormLabel>{t('country')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue
-                              placeholder={t('patients.selectCountry')}
-                            />
+                            <SelectValue placeholder={t('selectCountry')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -213,10 +206,10 @@ export function NewPatientForm({
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.firstName')}</FormLabel>
+                      <FormLabel>{t('firstName')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('patients.firstNamePlaceholder')}
+                          placeholder={t('firstNamePlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -230,10 +223,10 @@ export function NewPatientForm({
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.lastName')}</FormLabel>
+                      <FormLabel>{t('lastName')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('patients.lastNamePlaceholder')}
+                          placeholder={t('lastNamePlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -249,7 +242,7 @@ export function NewPatientForm({
                   name="dateOfBirth"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.dateOfBirth')}</FormLabel>
+                      <FormLabel>{t('dateOfBirth')}</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -263,16 +256,14 @@ export function NewPatientForm({
                   name="sex"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.sex')}</FormLabel>
+                      <FormLabel>{t('sex')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue
-                              placeholder={t('patients.selectGender')}
-                            />
+                            <SelectValue placeholder={t('selectGender')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -292,12 +283,9 @@ export function NewPatientForm({
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.phone')}</FormLabel>
+                      <FormLabel>{t('phone')}</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder={t('patients.phonePlaceholder')}
-                          {...field}
-                        />
+                        <Input placeholder={t('phonePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -309,11 +297,11 @@ export function NewPatientForm({
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('patients.email')}</FormLabel>
+                      <FormLabel>{t('email')}</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder={t('patients.emailPlaceholder')}
+                          placeholder={t('emailPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -328,10 +316,10 @@ export function NewPatientForm({
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('patients.address')}</FormLabel>
+                    <FormLabel>{t('address')}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder={t('patients.addressPlaceholder')}
+                        placeholder={t('addressPlaceholder')}
                         className="min-h-[80px]"
                         {...field}
                       />
@@ -345,7 +333,7 @@ export function NewPatientForm({
             {/* Medical Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-foreground border-b pb-2">
-                {t('patients.medicalInformation')}
+                {t('medicalInformation')}
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
@@ -354,12 +342,10 @@ export function NewPatientForm({
                   name="emergencyContactName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {t('patients.emergencyContactName')}
-                      </FormLabel>
+                      <FormLabel>{t('emergencyContactName')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('patients.emergencyNamePlaceholder')}
+                          placeholder={t('emergencyNamePlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -373,14 +359,9 @@ export function NewPatientForm({
                   name="emergencyContactPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        {t('patients.emergencyContactPhone')}
-                      </FormLabel>
+                      <FormLabel>{t('emergencyContactPhone')}</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder={t('patients.phonePlaceholder')}
-                          {...field}
-                        />
+                        <Input placeholder={t('phonePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -393,10 +374,10 @@ export function NewPatientForm({
                 name="medicalHistory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('patients.medicalHistory')}</FormLabel>
+                    <FormLabel>{t('medicalHistory')}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder={t('patients.medicalHistoryPlaceholder')}
+                        placeholder={t('medicalHistoryPlaceholder')}
                         className="min-h-[100px]"
                         {...field}
                       />
@@ -411,10 +392,10 @@ export function NewPatientForm({
                 name="allergies"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('patients.allergies')}</FormLabel>
+                    <FormLabel>{t('allergies')}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder={t('patients.allergiesPlaceholder')}
+                        placeholder={t('allergiesPlaceholder')}
                         className="min-h-[80px]"
                         {...field}
                       />
@@ -431,16 +412,16 @@ export function NewPatientForm({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                {t('patients.cancel')}
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('common.loading')}
+                    {tCommon('loading')}
                   </>
                 ) : (
-                  t('patients.save')
+                  t('save')
                 )}
               </Button>
             </DialogFooter>

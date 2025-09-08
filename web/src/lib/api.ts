@@ -273,7 +273,7 @@ export const patientsApi = {
       national_id: patientData.person.nationalId!,
       country: patientData.person.country!,
       clinic_id: (() => {
-        const clinicId = useAuthStore.getState().user?.clinicId
+        const clinicId = useAuthStore.getState().clinicId
         if (!clinicId) throw new Error('No clinic selected')
         return clinicId
       })(),
@@ -293,7 +293,7 @@ export const patientsApi = {
     const dbPatientData = {
       person_id: personData.id,
       clinic_id: (() => {
-        const clinicId = useAuthStore.getState().user?.clinicId
+        const clinicId = useAuthStore.getState().clinicId
         if (!clinicId) throw new Error('No clinic selected')
         return clinicId
       })(),
@@ -449,7 +449,7 @@ export const appointmentsApi = {
   ): Promise<Appointment> => {
     const dbAppointmentData = {
       clinic_id: (() => {
-        const clinicId = useAuthStore.getState().user?.clinicId
+        const clinicId = useAuthStore.getState().clinicId
         if (!clinicId) throw new Error('No clinic selected')
         return clinicId
       })(),
