@@ -12,6 +12,7 @@ import { NewPatientForm } from '@/components/patients/new-patient-form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Search, Plus } from 'lucide-react'
+import { useAuthStore } from '@/store/auth'
 
 export default function PatientsPage() {
   const t = useTranslations('patients')
@@ -24,10 +25,12 @@ export default function PatientsPage() {
   const fetchPatients = async () => {
     try {
       setIsLoading(true)
+      setError(null)
       // For now, just get recent patients - you can modify this to search
       const patientData = await patientsApi.getRecent(50)
       setPatients(patientData)
     } catch (err) {
+      console.error('Error fetching patients:', err)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
       setIsLoading(false)
@@ -35,7 +38,14 @@ export default function PatientsPage() {
   }
 
   useEffect(() => {
-    fetchPatients()
+    // Only fetch patients if we have a clinic selected
+    const clinicId = useAuthStore.getState().clinicId
+    if (clinicId) {
+      fetchPatients()
+    } else {
+      setIsLoading(false)
+      setError('No clinic selected')
+    }
   }, [])
 
   if (isLoading) {
@@ -55,7 +65,9 @@ export default function PatientsPage() {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <p className="text-destructive">
-                {t('loadingError')}: {error}
+                {error === 'No clinic selected'
+                  ? t('noClinicSelected')
+                  : `${t('loadingError')}: ${error}`}
               </p>
             </div>
           </div>

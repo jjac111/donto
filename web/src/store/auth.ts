@@ -84,9 +84,21 @@ export const useAuthStore = create<AuthState>()(
             if (!userId) return
 
             // Ask backend for current active clinic
+            console.log('🔍 fetchUserProfile: Getting current active clinic...')
             const { data: currentClinicId, error: clinicErr } =
               await supabase.rpc('get_current_active_clinic')
-            if (clinicErr) throw clinicErr
+            if (clinicErr) {
+              console.error(
+                '❌ fetchUserProfile: Error getting active clinic:',
+                clinicErr
+              )
+              throw clinicErr
+            }
+
+            console.log(
+              '🏥 fetchUserProfile: Current active clinic:',
+              currentClinicId
+            )
 
             if (currentClinicId) {
               // Fetch the profile for the active clinic only
@@ -117,6 +129,12 @@ export const useAuthStore = create<AuthState>()(
                   (activeProfile as any).provider?.person?.last_name || ''
                 const displayName =
                   `${firstName} ${lastName}`.trim() || 'Usuario'
+
+                console.log('✅ fetchUserProfile: Setting clinic info:', {
+                  clinicId: activeProfile.clinic_id,
+                  clinicName,
+                  needsClinicSelection: false,
+                })
 
                 set(
                   {
@@ -176,6 +194,10 @@ export const useAuthStore = create<AuthState>()(
                 )
               }
             } else {
+              console.log(
+                '⚠️ fetchUserProfile: No active clinic, fetching all profiles for selection'
+              )
+
               // No active clinic: fetch all profiles (array) for selection UI
               const { data: allProfiles, error: allErr } = await supabase
                 .from('profiles')
@@ -190,7 +212,18 @@ export const useAuthStore = create<AuthState>()(
                 .eq('user_id', userId)
                 .eq('is_active', true)
 
-              if (allErr) throw allErr
+              if (allErr) {
+                console.error(
+                  '❌ fetchUserProfile: Error fetching profiles:',
+                  allErr
+                )
+                throw allErr
+              }
+
+              console.log(
+                '📋 fetchUserProfile: Found profiles:',
+                allProfiles?.length || 0
+              )
 
               if (allProfiles && allProfiles.length > 0) {
                 const clinics = (allProfiles as any[]).map(profile => ({
@@ -231,18 +264,32 @@ export const useAuthStore = create<AuthState>()(
 
         selectClinic: async (clinicId: string) => {
           try {
+            console.log(
+              '🏥 selectClinic: Starting clinic selection for:',
+              clinicId
+            )
+
             // Call set_active_clinic RPC function
             const { data, error } = await supabase.rpc('set_active_clinic', {
               clinic_uuid: clinicId,
               session_duration_hours: 24,
             })
 
-            if (error) throw error
+            if (error) {
+              console.error('❌ selectClinic: RPC error:', error)
+              throw error
+            }
+
+            console.log('✅ selectClinic: Session created, token:', data)
 
             // Refresh user profile to get the selected clinic data
             await get().fetchUserProfile()
+            console.log(
+              '✅ selectClinic: Profile refreshed, current clinicId:',
+              get().clinicId
+            )
           } catch (error) {
-            console.error('Failed to select clinic:', error)
+            console.error('❌ selectClinic: Failed to select clinic:', error)
             set(
               { error: 'Error al seleccionar clínica' },
               false,

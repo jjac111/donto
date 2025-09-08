@@ -91,7 +91,8 @@
     "lastAppointment": "Última Cita",
     "noPatientsFound": "No hay pacientes registrados",
     "noPatientsFoundDescription": "Comienza agregando tu primer paciente al sistema",
-    "patientsDescription": "Gestiona la información de tus pacientes"
+    "patientsDescription": "Gestiona la información de tus pacientes",
+    "noClinicSelected": "No hay clínica seleccionada. Por favor selecciona una clínica primero."
   },
   "appointments": {
     "newAppointment": "Nueva Cita",
