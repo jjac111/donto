@@ -1,14 +1,39 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { usePatientSearch } from '@/hooks/use-patients'
+import { patientsApi } from '@/lib/api'
+import { Patient } from '@/types'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
+import { Button } from '@/components/ui/button'
+import { NewPatientForm } from '@/components/patients/new-patient-form'
 
 export default function PatientsPage() {
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
-  const { data: patients, isLoading, error } = usePatientSearch('')
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
+
+  const fetchPatients = async () => {
+    try {
+      setIsLoading(true)
+      // For now, just get recent patients - you can modify this to search
+      const patientData = await patientsApi.getRecent(50)
+      setPatients(patientData)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPatients()
+  }, [])
 
   if (isLoading) {
     return (
@@ -38,9 +63,9 @@ export default function PatientsPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               {t('patients')}
             </h1>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            <Button onClick={() => setIsNewPatientModalOpen(true)}>
               {t('newPatient')}
-            </button>
+            </Button>
           </div>
 
           <div className="mb-4">
@@ -63,25 +88,27 @@ export default function PatientsPage() {
 
             <div className="divide-y divide-gray-200">
               {patients?.map(patient => (
-                <div key={patient.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="grid grid-cols-4 gap-4">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {patient.displayName}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {patient.age} años
-                      </p>
+                <Link key={patient.id} href={`/patients/${patient.id}`}>
+                  <div className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors">
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {patient.displayName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {patient.age} años
+                        </p>
+                      </div>
+                      <div className="text-sm text-gray-900">
+                        {patient.person?.phone}
+                      </div>
+                      <div className="text-sm text-gray-900">
+                        {patient.person?.email}
+                      </div>
+                      <div className="text-sm text-gray-500">-</div>
                     </div>
-                    <div className="text-sm text-gray-900">
-                      {patient.person?.phone}
-                    </div>
-                    <div className="text-sm text-gray-900">
-                      {patient.person?.email}
-                    </div>
-                    <div className="text-sm text-gray-500">-</div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -91,6 +118,12 @@ export default function PatientsPage() {
               <p className="text-gray-500">No hay pacientes registrados</p>
             </div>
           )}
+
+          <NewPatientForm
+            open={isNewPatientModalOpen}
+            onOpenChange={setIsNewPatientModalOpen}
+            onSuccess={fetchPatients}
+          />
         </div>
       </AppLayout>
     </ProtectedRoute>

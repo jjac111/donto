@@ -1,11 +1,9 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { Patient } from '@/types'
 
 export interface AppState {
   // UI State
   sidebarOpen: boolean
-  selectedPatient: Patient | null
 
   // App State
   currentView:
@@ -18,11 +16,7 @@ export interface AppState {
   // Actions
   setSidebarOpen: (open: boolean) => void
   toggleSidebar: () => void
-  setSelectedPatient: (patient: Patient | null) => void
   setCurrentView: (view: AppState['currentView']) => void
-
-  // Computed
-  patientDisplayName: string | null
 }
 
 export const useAppStore = create<AppState>()(
@@ -30,7 +24,6 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       // Initial state
       sidebarOpen: true,
-      selectedPatient: null,
       currentView: 'dashboard',
 
       // Actions
@@ -44,19 +37,8 @@ export const useAppStore = create<AppState>()(
           'app/toggleSidebar'
         ),
 
-      setSelectedPatient: selectedPatient =>
-        set({ selectedPatient }, false, 'app/setSelectedPatient'),
-
       setCurrentView: currentView =>
         set({ currentView }, false, 'app/setCurrentView'),
-
-      // Computed
-      get patientDisplayName() {
-        const patient = get().selectedPatient
-        return patient
-          ? `${patient.person?.firstName} ${patient.person?.lastName}`
-          : null
-      },
     }),
     { name: 'app-store' }
   )

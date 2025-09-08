@@ -15,6 +15,7 @@ import {
   DbPerson,
   PaginatedResponse,
 } from '@/types'
+import { useAuthStore } from '@/store/auth'
 
 // Supabase client - will be configured with actual credentials later
 const supabaseUrl =
@@ -35,6 +36,8 @@ export const transformPatient = (
   allergies: dbPatient.allergies || undefined,
   emergencyContactName: dbPatient.emergency_contact_name || undefined,
   emergencyContactPhone: dbPatient.emergency_contact_phone || undefined,
+  createdAt: dbPatient.created_at,
+  updatedAt: dbPatient.updated_at,
 
   // Person data
   person: {
@@ -269,7 +272,11 @@ export const patientsApi = {
       address: patientData.person.address,
       national_id: patientData.person.nationalId!,
       country: patientData.person.country!,
-      clinic_id: 'clinic-1', // TODO: Get from auth store
+      clinic_id: (() => {
+        const clinicId = useAuthStore.getState().user?.clinicId
+        if (!clinicId) throw new Error('No clinic selected')
+        return clinicId
+      })(),
     }
 
     const { data: personData, error: personError } = await supabase
@@ -285,7 +292,11 @@ export const patientsApi = {
     // Then create the patient record
     const dbPatientData = {
       person_id: personData.id,
-      clinic_id: 'clinic-1', // TODO: Get from auth store
+      clinic_id: (() => {
+        const clinicId = useAuthStore.getState().user?.clinicId
+        if (!clinicId) throw new Error('No clinic selected')
+        return clinicId
+      })(),
       emergency_contact_name: patientData.emergencyContactName,
       emergency_contact_phone: patientData.emergencyContactPhone,
       medical_history: patientData.medicalHistory,
@@ -437,7 +448,11 @@ export const appointmentsApi = {
     appointmentData: Partial<Appointment>
   ): Promise<Appointment> => {
     const dbAppointmentData = {
-      clinic_id: 'clinic-1', // TODO: Get from auth store
+      clinic_id: (() => {
+        const clinicId = useAuthStore.getState().user?.clinicId
+        if (!clinicId) throw new Error('No clinic selected')
+        return clinicId
+      })(),
       patient_id: appointmentData.patientId!,
       provider_id: appointmentData.providerId!,
       appointment_date: appointmentData.appointmentDate!.toISOString(),

@@ -11,8 +11,6 @@ export const authSelectors = {
 }
 
 export const appSelectors = {
-  selectedPatient: (state: any) => state.selectedPatient,
-  patientDisplayName: (state: any) => state.patientDisplayName,
   currentView: (state: any) => state.currentView,
   sidebarOpen: (state: any) => state.sidebarOpen,
 }
