@@ -28,6 +28,7 @@
     "clinicalNotes": "Historias Clínicas"
   },
   "patients": {
+    "patients": "Pacientes",
     "newPatient": "Nuevo Paciente",
     "newPatientDescription": "Agrega la información básica del nuevo paciente al sistema.",
     "search": "Buscar paciente...",
@@ -86,7 +87,11 @@
     "male": "Masculino",
     "loadingError": "Error al cargar paciente",
     "newTreatment": "Nuevo Tratamiento",
-    "viewHistory": "Ver Historial"
+    "viewHistory": "Ver Historial",
+    "lastAppointment": "Última Cita",
+    "noPatientsFound": "No hay pacientes registrados",
+    "noPatientsFoundDescription": "Comienza agregando tu primer paciente al sistema",
+    "patientsDescription": "Gestiona la información de tus pacientes"
   },
   "appointments": {
     "newAppointment": "Nueva Cita",

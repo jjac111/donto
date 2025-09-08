@@ -9,6 +9,9 @@ import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Button } from '@/components/ui/button'
 import { NewPatientForm } from '@/components/patients/new-patient-form'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Search, Plus } from 'lucide-react'
 
 export default function PatientsPage() {
   const t = useTranslations('patients')
@@ -49,7 +52,13 @@ export default function PatientsPage() {
     return (
       <ProtectedRoute>
         <AppLayout>
-          <div>Error: {error.message}</div>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <p className="text-destructive">
+                {t('loadingError')}: {error}
+              </p>
+            </div>
+          </div>
         </AppLayout>
       </ProtectedRoute>
     )
@@ -58,66 +67,85 @@ export default function PatientsPage() {
   return (
     <ProtectedRoute>
       <AppLayout>
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {t('patients')}
-            </h1>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                {t('patients')}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {t('patientsDescription')}
+              </p>
+            </div>
             <Button onClick={() => setIsNewPatientModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               {t('newPatient')}
             </Button>
           </div>
 
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder={t('search')}
-              className="w-full p-2 border border-gray-300 rounded"
-            />
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input type="text" placeholder={t('search')} className="pl-10" />
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="grid grid-cols-4 gap-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <div>{t('firstName')}</div>
-                <div>{t('phone')}</div>
-                <div>{t('email')}</div>
-                <div>Última Cita</div>
-              </div>
-            </div>
-
-            <div className="divide-y divide-gray-200">
-              {patients?.map(patient => (
-                <Link key={patient.id} href={`/patients/${patient.id}`}>
-                  <div className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors">
-                    <div className="grid grid-cols-4 gap-4">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {patient.displayName}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {patient.age} años
-                        </p>
-                      </div>
-                      <div className="text-sm text-gray-900">
-                        {patient.person?.phone}
-                      </div>
-                      <div className="text-sm text-gray-900">
-                        {patient.person?.email}
-                      </div>
-                      <div className="text-sm text-gray-500">-</div>
-                    </div>
+          {/* Patients List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <span>{t('patients')}</span>
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({patients?.length || 0})
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {patients?.length > 0 ? (
+                <div className="space-y-1">
+                  {/* Header */}
+                  <div className="grid grid-cols-4 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
+                    <div>{t('firstName')}</div>
+                    <div>{t('phone')}</div>
+                    <div>{t('email')}</div>
+                    <div>{t('lastAppointment')}</div>
                   </div>
-                </Link>
-              ))}
-            </div>
-          </div>
 
-          {patients?.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No hay pacientes registrados</p>
-            </div>
-          )}
+                  {/* Patients */}
+                  {patients.map(patient => (
+                    <Link key={patient.id} href={`/patients/${patient.id}`}>
+                      <div className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {patient.displayName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {patient.age} años
+                          </p>
+                        </div>
+                        <div className="text-sm text-foreground">
+                          {patient.person?.phone || '-'}
+                        </div>
+                        <div className="text-sm text-foreground">
+                          {patient.person?.email || '-'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">-</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-muted-foreground">
+                    <p className="text-lg font-medium mb-2">
+                      {t('noPatientsFound')}
+                    </p>
+                    <p className="text-sm">{t('noPatientsFoundDescription')}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           <NewPatientForm
             open={isNewPatientModalOpen}
