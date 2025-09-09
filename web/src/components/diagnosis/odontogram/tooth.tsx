@@ -14,10 +14,17 @@ interface ToothProps {
 }
 
 export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
-  // Get condition colors for each surface
-  const getSurfaceColor = (surface: ToothSurfaceCondition): string => {
-    if (!surface.condition) return 'bg-green-100 border-green-300' // Healthy
-    return `bg-[${surface.condition.color}] border-gray-400`
+  // Helper to add alpha to hex color (e.g., #RRGGBB -> #RRGGBB33)
+  const withAlpha = (hex: string, alphaHex: string): string => {
+    if (hex && hex.startsWith('#') && hex.length === 7)
+      return `${hex}${alphaHex}`
+    return hex
+  }
+
+  // SVG fills
+  const getFill = (surface?: ToothSurfaceCondition): string => {
+    const color = surface?.condition?.color
+    return color ? withAlpha(color, '33') : 'transparent'
   }
 
   const getToothStatusColor = (): string => {
@@ -65,78 +72,82 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
         }}
         aria-label={`Diente ${tooth.number}`}
       >
-        {/* Tooth surface grid - 5 sections */}
-        <div className="tooth-surfaces absolute inset-0 grid grid-cols-2 grid-rows-2 p-0.5">
-          {/* Top-left: Mesial (M) */}
-          <div
-            className={cn(
-              'border border-white/20 rounded-tl',
-              getSurfaceColor(
-                tooth.surfaces.find(s => s.surface === 'M') || {
-                  surface: 'M' as const,
-                  recordedDate: new Date(),
-                }
-              )
-            )}
-            title="Mesial"
+        {/* SVG diagram with trapezoids */}
+        <svg
+          className="absolute inset-0 z-0"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          shapeRendering="crispEdges"
+        >
+          <polygon
+            points="0,0 100,0 65,35 35,35"
+            fill={getFill(tooth.surfaces.find(s => s.surface === 'M'))}
+          />
+          <polygon
+            points="0,100 100,100 65,65 35,65"
+            fill={getFill(tooth.surfaces.find(s => s.surface === 'D'))}
+          />
+          <polygon
+            points="0,0 35,35 35,65 0,100"
+            fill={getFill(tooth.surfaces.find(s => s.surface === 'B'))}
+          />
+          <polygon
+            points="100,0 65,35 65,65 100,100"
+            fill={getFill(tooth.surfaces.find(s => s.surface === 'L'))}
           />
 
-          {/* Top-right: Distal (D) */}
-          <div
-            className={cn(
-              'border border-white/20 rounded-tr',
-              getSurfaceColor(
-                tooth.surfaces.find(s => s.surface === 'D') || {
-                  surface: 'D' as const,
-                  recordedDate: new Date(),
-                }
-              )
-            )}
-            title="Distal"
+          {/* Center square */}
+          <rect
+            x="35"
+            y="35"
+            width="30"
+            height="30"
+            rx="4"
+            fill={getFill(tooth.surfaces.find(s => s.surface === 'O'))}
+            stroke={
+              tooth.surfaces.find(s => s.surface === 'O')?.condition?.color ||
+              '#9ca3af'
+            }
+            strokeOpacity="0.5"
           />
 
-          {/* Bottom-left: Buccal (B) */}
-          <div
-            className={cn(
-              'border border-white/20 rounded-bl',
-              getSurfaceColor(
-                tooth.surfaces.find(s => s.surface === 'B') || {
-                  surface: 'B' as const,
-                  recordedDate: new Date(),
-                }
-              )
-            )}
-            title="Buccal"
+          {/* Diagram diagonal lines only (avoid extra horizontals) */}
+          <line
+            x1="0"
+            y1="0"
+            x2="35"
+            y2="35"
+            stroke="#9ca3af"
+            strokeOpacity="0.5"
           />
-
-          {/* Bottom-right: Lingual (L) */}
-          <div
-            className={cn(
-              'border border-white/20 rounded-br',
-              getSurfaceColor(
-                tooth.surfaces.find(s => s.surface === 'L') || {
-                  surface: 'L' as const,
-                  recordedDate: new Date(),
-                }
-              )
-            )}
-            title="Lingual"
+          <line
+            x1="100"
+            y1="0"
+            x2="65"
+            y2="35"
+            stroke="#9ca3af"
+            strokeOpacity="0.5"
           />
-        </div>
+          <line
+            x1="0"
+            y1="100"
+            x2="35"
+            y2="65"
+            stroke="#9ca3af"
+            strokeOpacity="0.5"
+          />
+          <line
+            x1="100"
+            y1="100"
+            x2="65"
+            y2="65"
+            stroke="#9ca3af"
+            strokeOpacity="0.5"
+          />
+        </svg>
 
-        {/* Center section: Occlusal (O) */}
-        <div
-          className={cn(
-            'tooth-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 border border-white/30 rounded',
-            getSurfaceColor(
-              tooth.surfaces.find(s => s.surface === 'O') || {
-                surface: 'O' as const,
-                recordedDate: new Date(),
-              }
-            )
-          )}
-          title="Oclusal"
-        />
+        {/* Click target overlay to keep interactions the same */}
+        <div className="absolute inset-0" />
 
         {/* Missing tooth indicator */}
         {!tooth.isPresent && (
