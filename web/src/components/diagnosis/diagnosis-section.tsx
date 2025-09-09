@@ -132,7 +132,6 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription>{t('diagnosisDescription')}</CardDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled>

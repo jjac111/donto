@@ -52,15 +52,6 @@ export function Odontogram({
 
   return (
     <div className={`odontogram ${className}`}>
-      <div className="odontogram-header mb-6">
-        <h3 className="text-lg font-semibold text-foreground">
-          {t('odontogram')}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {t('odontogramDescription')}
-        </p>
-      </div>
-
       <div className="odontogram-grid space-y-8">
         {/* Upper jaw */}
         <div className="upper-jaw">
