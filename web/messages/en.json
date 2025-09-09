@@ -110,7 +110,8 @@
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Sign Out",
-    "defaultUser": "User"
+    "defaultUser": "User",
+    "switchClinic": "Switch Clinic"
   },
   "test": {
     "title": "Component Showcase",

@@ -112,7 +112,8 @@
     "profile": "Perfil",
     "settings": "Configuración",
     "logout": "Cerrar Sesión",
-    "defaultUser": "Usuario"
+    "defaultUser": "Usuario",
+    "switchClinic": "Cambiar Clínica"
   },
   "test": {
     "title": "Galería de Componentes",
