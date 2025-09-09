@@ -43,7 +43,7 @@ export interface Person {
   phone?: string
   email?: string
   address?: string
-  
+
   // Computed fields
   displayName: string // firstName + lastName
   age: number // calculated from dateOfBirth
@@ -64,10 +64,10 @@ export interface Provider {
   clinicId: string
   specialty?: string
   isActive: boolean
-  
+
   // Person data (populated via join)
   person?: Person
-  
+
   // Computed fields (from person)
   displayName: string // person.firstName + person.lastName
 }
@@ -80,10 +80,12 @@ export interface Patient {
   allergies?: string
   emergencyContactName?: string
   emergencyContactPhone?: string
-  
+  createdAt: string
+  updatedAt: string
+
   // Person data (populated via join)
   person?: Person
-  
+
   // Computed fields (from person)
   displayName: string // person.firstName + person.lastName
   age: number // calculated from person.dateOfBirth
@@ -112,11 +114,11 @@ export interface Appointment {
   appointmentType: string
   status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
   notes?: string
-  
+
   // Related entities (populated when needed)
   patient?: Patient
   provider?: Provider
-  
+
   // Computed fields
   endTime: Date // appointmentDate + duration
   isToday: boolean
@@ -134,7 +136,7 @@ export interface Procedure {
   estimatedDurationMinutes?: number
   category?: string
   isActive: boolean
-  
+
   // Computed
   displayName: string // code + name or just name
 }
@@ -145,12 +147,12 @@ export interface TreatmentPlan {
   providerId: string
   name?: string
   status: 'active' | 'completed' | 'cancelled'
-  
+
   // Related entities
   patient?: Patient
   provider?: Provider
   items?: TreatmentItem[]
-  
+
   // Computed
   totalItems: number
   completedItems: number
@@ -170,10 +172,10 @@ export interface TreatmentItem {
   providerNotes?: string
   completedDate?: Date
   completedAppointmentId?: string
-  
+
   // Related entities
   procedure?: Procedure
-  
+
   // Computed
   finalCost: number // customCost || procedure.defaultCost
   priorityColor: string // for UI styling
@@ -189,10 +191,10 @@ export interface ToothCondition {
   notes?: string
   recordedDate: Date
   recordedByProviderId?: string
-  
+
   // Related entities
   recordedByProvider?: Provider
-  
+
   // Computed
   surfaceDisplay: string // full name: "Mesial", "Distal", etc.
   conditionColor: string // for odontogram styling

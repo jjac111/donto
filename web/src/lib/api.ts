@@ -15,6 +15,7 @@ import {
   DbPerson,
   PaginatedResponse,
 } from '@/types'
+import { useAuthStore } from '@/store/auth'
 
 // Supabase client - will be configured with actual credentials later
 const supabaseUrl =
@@ -35,6 +36,8 @@ export const transformPatient = (
   allergies: dbPatient.allergies || undefined,
   emergencyContactName: dbPatient.emergency_contact_name || undefined,
   emergencyContactPhone: dbPatient.emergency_contact_phone || undefined,
+  createdAt: dbPatient.created_at,
+  updatedAt: dbPatient.updated_at,
 
   // Person data
   person: {
@@ -149,6 +152,9 @@ export const patientsApi = {
     page: number,
     pageSize: number
   ): Promise<PaginatedResponse<Patient>> => {
+    const clinicId = useAuthStore.getState().clinicId
+    if (!clinicId) throw new Error('No clinic selected')
+
     // Real Supabase implementation
     const { data, error, count } = await supabase
       .from('patients')
@@ -179,6 +185,16 @@ export const patientsApi = {
 
   // Recent patients for dashboard
   getRecent: async (limit: number = 10): Promise<Patient[]> => {
+    const clinicId = useAuthStore.getState().clinicId
+    console.log('🔍 getRecent: clinicId from store:', clinicId)
+
+    if (!clinicId) {
+      console.warn('⚠️ getRecent: No clinic selected in store')
+      throw new Error('No clinic selected')
+    }
+
+    console.log('🚀 getRecent: Fetching patients for clinic:', clinicId)
+
     const { data, error } = await supabase
       .from('patients')
       .select(
@@ -191,14 +207,41 @@ export const patientsApi = {
       .limit(limit)
 
     if (error) {
+      console.error('❌ getRecent: Supabase error:', error)
       throw new Error(`Failed to fetch recent patients: ${error.message}`)
     }
 
-    return (data || []).map((item: any) => transformPatient(item, item.person))
+    console.log(
+      '📊 getRecent: Raw data from Supabase:',
+      data?.length || 0,
+      'records'
+    )
+    if (data && data.length > 0) {
+      console.log('👤 Sample patient:', {
+        id: data[0].id,
+        clinic_id: data[0].clinic_id,
+        person_id: data[0].person_id,
+        person: data[0].person ? 'exists' : 'missing',
+      })
+    }
+
+    const transformed = (data || []).map((item: any) =>
+      transformPatient(item, item.person)
+    )
+    console.log(
+      '✨ getRecent: Transformed patients:',
+      transformed.length,
+      'records'
+    )
+
+    return transformed
   },
 
   // Frequent patients for quick access
   getFrequent: async (limit: number = 15): Promise<Patient[]> => {
+    const clinicId = useAuthStore.getState().clinicId
+    if (!clinicId) throw new Error('No clinic selected')
+
     const { data, error } = await supabase
       .from('patients')
       .select(
@@ -208,6 +251,7 @@ export const patientsApi = {
         appointments!inner(id)
       `
       )
+      .eq('clinic_id', clinicId)
       .order('appointments.count', { ascending: false })
       .limit(limit)
 
@@ -219,6 +263,9 @@ export const patientsApi = {
   },
 
   getById: async (id: string): Promise<Patient | null> => {
+    const clinicId = useAuthStore.getState().clinicId
+    if (!clinicId) throw new Error('No clinic selected')
+
     const { data, error } = await supabase
       .from('patients')
       .select(
@@ -241,9 +288,13 @@ export const patientsApi = {
   },
 
   search: async (query: string, limit: number = 20): Promise<Patient[]> => {
+    const clinicId = useAuthStore.getState().clinicId
+    if (!clinicId) throw new Error('No clinic selected')
+
     const { data, error } = await supabase.rpc('search_patients', {
       search_query: query,
       result_limit: limit,
+      clinic_id: clinicId,
     })
 
     if (error) {
@@ -269,7 +320,11 @@ export const patientsApi = {
       address: patientData.person.address,
       national_id: patientData.person.nationalId!,
       country: patientData.person.country!,
-      clinic_id: 'clinic-1', // TODO: Get from auth store
+      clinic_id: (() => {
+        const clinicId = useAuthStore.getState().clinicId
+        if (!clinicId) throw new Error('No clinic selected')
+        return clinicId
+      })(),
     }
 
     const { data: personData, error: personError } = await supabase
@@ -285,7 +340,11 @@ export const patientsApi = {
     // Then create the patient record
     const dbPatientData = {
       person_id: personData.id,
-      clinic_id: 'clinic-1', // TODO: Get from auth store
+      clinic_id: (() => {
+        const clinicId = useAuthStore.getState().clinicId
+        if (!clinicId) throw new Error('No clinic selected')
+        return clinicId
+      })(),
       emergency_contact_name: patientData.emergencyContactName,
       emergency_contact_phone: patientData.emergencyContactPhone,
       medical_history: patientData.medicalHistory,
@@ -358,9 +417,13 @@ export const patientsApi = {
     if (patientData.allergies !== undefined)
       dbPatientData.allergies = patientData.allergies
 
+    const clinicId = useAuthStore.getState().clinicId
+    if (!clinicId) throw new Error('No clinic selected')
+
     const { data, error } = await supabase
       .from('patients')
       .update(dbPatientData)
+      .eq('clinic_id', clinicId)
       .eq('id', id)
       .select(
         `
@@ -378,7 +441,14 @@ export const patientsApi = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const { error } = await supabase.from('patients').delete().eq('id', id)
+    const clinicId = useAuthStore.getState().clinicId
+    if (!clinicId) throw new Error('No clinic selected')
+
+    const { error } = await supabase
+      .from('patients')
+      .delete()
+      .eq('clinic_id', clinicId)
+      .eq('id', id)
 
     if (error) {
       throw new Error(`Failed to delete patient: ${error.message}`)
@@ -437,7 +507,11 @@ export const appointmentsApi = {
     appointmentData: Partial<Appointment>
   ): Promise<Appointment> => {
     const dbAppointmentData = {
-      clinic_id: 'clinic-1', // TODO: Get from auth store
+      clinic_id: (() => {
+        const clinicId = useAuthStore.getState().clinicId
+        if (!clinicId) throw new Error('No clinic selected')
+        return clinicId
+      })(),
       patient_id: appointmentData.patientId!,
       provider_id: appointmentData.providerId!,
       appointment_date: appointmentData.appointmentDate!.toISOString(),

@@ -1,72 +1,48 @@
 'use client'
 
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
+import { Button } from '@/components/ui/button'
+import { NewPatientForm } from '@/components/patients/new-patient-form'
 
 export default function DashboardPage() {
+  const t = useTranslations()
+  const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
+
   return (
     <ProtectedRoute>
       <AppLayout>
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 mb-2">
-                Citas de Hoy
-              </h2>
-              <p className="text-3xl font-bold text-blue-600">12</p>
-              <p className="text-sm text-gray-500">3 pendientes</p>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold text-foreground">
+                {t('dashboard.welcome')}
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                {t('dashboard.welcomeDescription')}
+              </p>
             </div>
 
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 mb-2">
-                Pacientes Nuevos
-              </h2>
-              <p className="text-3xl font-bold text-green-600">4</p>
-              <p className="text-sm text-gray-500">Esta semana</p>
-            </div>
+            <Button
+              variant="hero"
+              size="lg"
+              onClick={() => setIsNewPatientModalOpen(true)}
+              className="mx-auto"
+            >
+              {t('patients.newPatient')}
+            </Button>
 
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 mb-2">
-                Tratamientos Activos
-              </h2>
-              <p className="text-3xl font-bold text-purple-600">27</p>
-              <p className="text-sm text-gray-500">En progreso</p>
+            <div className="text-sm text-muted-foreground">
+              <p>{t('dashboard.comingSoon')}</p>
             </div>
           </div>
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Próximas Citas
-            </h2>
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-900">María González</p>
-                    <p className="text-sm text-gray-500">Limpieza dental</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">10:30</p>
-                    <p className="text-sm text-gray-500">Dr. García</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      Carlos Rodríguez
-                    </p>
-                    <p className="text-sm text-gray-500">Empaste</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">11:15</p>
-                    <p className="text-sm text-gray-500">Dr. García</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <NewPatientForm
+            open={isNewPatientModalOpen}
+            onOpenChange={setIsNewPatientModalOpen}
+          />
         </div>
       </AppLayout>
     </ProtectedRoute>

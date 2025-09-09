@@ -9,6 +9,7 @@ let authStateListenerInitialized = false
 export interface AuthState {
   // State
   user: User | null
+  clinicId: string | null
   clinicName: string | null
   availableClinics: Array<{
     clinicId: string
@@ -25,6 +26,7 @@ export interface AuthState {
 
   // Actions
   setUser: (user: User | null) => void
+  setClinicId: (clinicId: string | null) => void
   setClinicName: (name: string | null) => void
   setAvailableClinics: (clinics: AuthState['availableClinics']) => void
   setNeedsClinicSelection: (needs: boolean) => void
@@ -44,6 +46,7 @@ export const useAuthStore = create<AuthState>()(
       (set, get) => ({
         // Initial state
         user: null,
+        clinicId: null,
         clinicName: null,
         availableClinics: null,
         needsClinicSelection: false,
@@ -56,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
         // Actions
         setUser: user =>
           set({ user, isAuthenticated: user !== null }, false, 'auth/setUser'),
+
+        setClinicId: clinicId => set({ clinicId }, false, 'auth/setClinicId'),
 
         setClinicName: clinicName =>
           set({ clinicName }, false, 'auth/setClinicName'),
@@ -79,9 +84,21 @@ export const useAuthStore = create<AuthState>()(
             if (!userId) return
 
             // Ask backend for current active clinic
+            console.log('🔍 fetchUserProfile: Getting current active clinic...')
             const { data: currentClinicId, error: clinicErr } =
               await supabase.rpc('get_current_active_clinic')
-            if (clinicErr) throw clinicErr
+            if (clinicErr) {
+              console.error(
+                '❌ fetchUserProfile: Error getting active clinic:',
+                clinicErr
+              )
+              throw clinicErr
+            }
+
+            console.log(
+              '🏥 fetchUserProfile: Current active clinic:',
+              currentClinicId
+            )
 
             if (currentClinicId) {
               // Fetch the profile for the active clinic only
@@ -113,8 +130,15 @@ export const useAuthStore = create<AuthState>()(
                 const displayName =
                   `${firstName} ${lastName}`.trim() || 'Usuario'
 
+                console.log('✅ fetchUserProfile: Setting clinic info:', {
+                  clinicId: activeProfile.clinic_id,
+                  clinicName,
+                  needsClinicSelection: false,
+                })
+
                 set(
                   {
+                    clinicId: activeProfile.clinic_id,
                     clinicName,
                     needsClinicSelection: false,
                   },
@@ -170,6 +194,10 @@ export const useAuthStore = create<AuthState>()(
                 )
               }
             } else {
+              console.log(
+                '⚠️ fetchUserProfile: No active clinic, fetching all profiles for selection'
+              )
+
               // No active clinic: fetch all profiles (array) for selection UI
               const { data: allProfiles, error: allErr } = await supabase
                 .from('profiles')
@@ -184,7 +212,18 @@ export const useAuthStore = create<AuthState>()(
                 .eq('user_id', userId)
                 .eq('is_active', true)
 
-              if (allErr) throw allErr
+              if (allErr) {
+                console.error(
+                  '❌ fetchUserProfile: Error fetching profiles:',
+                  allErr
+                )
+                throw allErr
+              }
+
+              console.log(
+                '📋 fetchUserProfile: Found profiles:',
+                allProfiles?.length || 0
+              )
 
               if (allProfiles && allProfiles.length > 0) {
                 const clinics = (allProfiles as any[]).map(profile => ({
@@ -198,6 +237,7 @@ export const useAuthStore = create<AuthState>()(
                   {
                     availableClinics: clinics,
                     needsClinicSelection: true,
+                    clinicId: null,
                     clinicName: null,
                   },
                   false,
@@ -209,6 +249,7 @@ export const useAuthStore = create<AuthState>()(
                   {
                     availableClinics: [],
                     needsClinicSelection: true,
+                    clinicId: null,
                     clinicName: null,
                   },
                   false,
@@ -223,18 +264,32 @@ export const useAuthStore = create<AuthState>()(
 
         selectClinic: async (clinicId: string) => {
           try {
+            console.log(
+              '🏥 selectClinic: Starting clinic selection for:',
+              clinicId
+            )
+
             // Call set_active_clinic RPC function
             const { data, error } = await supabase.rpc('set_active_clinic', {
               clinic_uuid: clinicId,
               session_duration_hours: 24,
             })
 
-            if (error) throw error
+            if (error) {
+              console.error('❌ selectClinic: RPC error:', error)
+              throw error
+            }
+
+            console.log('✅ selectClinic: Session created, token:', data)
 
             // Refresh user profile to get the selected clinic data
             await get().fetchUserProfile()
+            console.log(
+              '✅ selectClinic: Profile refreshed, current clinicId:',
+              get().clinicId
+            )
           } catch (error) {
-            console.error('Failed to select clinic:', error)
+            console.error('❌ selectClinic: Failed to select clinic:', error)
             set(
               { error: 'Error al seleccionar clínica' },
               false,
@@ -355,6 +410,7 @@ export const useAuthStore = create<AuthState>()(
             set(
               {
                 user: null,
+                clinicId: null,
                 clinicName: null,
                 availableClinics: null,
                 needsClinicSelection: false,
@@ -371,6 +427,7 @@ export const useAuthStore = create<AuthState>()(
             set(
               {
                 user: null,
+                clinicId: null,
                 clinicName: null,
                 availableClinics: null,
                 needsClinicSelection: false,
@@ -388,15 +445,27 @@ export const useAuthStore = create<AuthState>()(
         name: 'donto-auth', // localStorage key
         partialize: state => ({
           user: state.user,
+          clinicId: state.clinicId,
           clinicName: state.clinicName,
           needsClinicSelection: state.needsClinicSelection,
           isAuthenticated: state.isAuthenticated,
         }), // Persist user, clinic, and auth state
       }
     ),
-    { name: 'auth-store' } // DevTools name
+    {
+      name: 'auth-store',
+      enabled: process.env.NODE_ENV === 'development',
+      store: 'Auth Store',
+    }
   )
 )
+
+// Development helpers - only available in development mode
+if (process.env.NODE_ENV === 'development') {
+  if (typeof window !== 'undefined') {
+    ;(window as any).authStore = useAuthStore
+  }
+}
 
 // Initialize auth state listener
 const initializeAuthStateListener = () => {
@@ -433,6 +502,7 @@ const initializeAuthStateListener = () => {
       // User signed out - clear our store
       useAuthStore.setState({
         user: null,
+        clinicId: null,
         clinicName: null,
         availableClinics: null,
         needsClinicSelection: false,
