@@ -409,7 +409,7 @@ export const useUpdateAppointmentStatus = () => {
 }
 
 // Helper function for status colors
-const getStatusColor = (status: Appointment['status']): string => {
+export const getStatusColor = (status: Appointment['status']): string => {
   const colors = {
     scheduled: 'blue',
     completed: 'green',
