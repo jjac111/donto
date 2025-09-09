@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import { Comfortaa as Font } from 'next/font/google'
-import './globals.css'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { QueryProvider } from '@/providers/query-provider'
+import './globals.css'
 
 const font = Font({
   variable: '--font-primary',
   subsets: ['latin'],
   weight: ['400'],
+  preload: false, // Disable automatic preloading to avoid conflicts
 })
 
 export const metadata: Metadata = {
