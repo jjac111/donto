@@ -535,6 +535,9 @@ const initializeAuthStateListener = () => {
         isAuthenticated: true,
         isLoading: false,
       })
+
+      // Fetch user profile data (clinic info, availableClinics)
+      useAuthStore.getState().fetchUserProfile()
     } else {
       useAuthStore.setState({
         isLoading: false,
