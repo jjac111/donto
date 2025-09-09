@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Button } from '@/components/ui/button'
 import { NewPatientForm } from '@/components/patients/new-patient-form'
+import { PatientCard } from '@/components/patients/patient-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Search, Plus } from 'lucide-react'
@@ -93,38 +94,56 @@ export default function PatientsPage() {
             </CardHeader>
             <CardContent>
               {patients && patients.length > 0 ? (
-                <div className="space-y-1">
-                  {/* Header */}
-                  <div className="grid grid-cols-4 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
-                    <div>{t('firstName')}</div>
-                    <div>{t('phone')}</div>
-                    <div>{t('email')}</div>
-                    <div>{t('lastAppointment')}</div>
+                <>
+                  {/* Desktop Table - Hidden on mobile */}
+                  <div className="hidden md:block">
+                    <div className="space-y-1">
+                      {/* Header */}
+                      <div className="grid grid-cols-4 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
+                        <div>{t('firstName')}</div>
+                        <div>{t('phone')}</div>
+                        <div>{t('email')}</div>
+                        <div>{t('lastAppointment')}</div>
+                      </div>
+
+                      {/* Patients */}
+                      {patients.map(patient => (
+                        <Link key={patient.id} href={`/patients/${patient.id}`}>
+                          <div className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {patient.displayName}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {patient.age} años
+                              </p>
+                            </div>
+                            <div className="text-sm text-foreground">
+                              {patient.person?.phone || '-'}
+                            </div>
+                            <div className="text-sm text-foreground">
+                              {patient.person?.email || '-'}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              -
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Patients */}
-                  {patients.map(patient => (
-                    <Link key={patient.id} href={`/patients/${patient.id}`}>
-                      <div className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {patient.displayName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {patient.age} años
-                          </p>
-                        </div>
-                        <div className="text-sm text-foreground">
-                          {patient.person?.phone || '-'}
-                        </div>
-                        <div className="text-sm text-foreground">
-                          {patient.person?.email || '-'}
-                        </div>
-                        <div className="text-sm text-muted-foreground">-</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                  {/* Mobile Cards - Hidden on desktop */}
+                  <div className="block md:hidden space-y-6">
+                    {patients.map(patient => (
+                      <PatientCard
+                        key={patient.id}
+                        patient={patient}
+                        className="mb-6"
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="text-muted-foreground">
