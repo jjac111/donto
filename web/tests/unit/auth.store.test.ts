@@ -5,7 +5,10 @@ import { useAuthStore } from '@/store/auth'
 vi.mock('@/lib/api', () => {
   const mockAuth = {
     getUser: vi.fn(),
-    getSession: vi.fn(),
+    getSession: vi.fn().mockResolvedValue({
+      data: { session: null },
+      error: null,
+    }),
     signInWithPassword: vi.fn(),
     signOut: vi.fn(),
     onAuthStateChange: vi.fn(() => ({
@@ -122,13 +125,13 @@ describe('Auth Store', () => {
     expect(fetchSpy).toHaveBeenCalled()
   })
 
-  it('logout clears user_sessions then signs out and resets state', async () => {
+  it('logout expires user_sessions then signs out and resets state', async () => {
     ;(supabase.auth.getUser as any).mockResolvedValue({
       data: { user: { id: 'u1' } },
     })
-    const deleteMock = vi.fn().mockResolvedValue({ error: null })
+    const eqMock = vi.fn().mockResolvedValue({ error: null })
     ;(supabase.from as any).mockReturnValue({
-      delete: () => ({ eq: deleteMock }),
+      update: vi.fn(() => ({ eq: eqMock })),
     })
     ;(supabase.auth.signOut as any).mockResolvedValue({ error: null })
 
@@ -145,7 +148,7 @@ describe('Auth Store', () => {
 
     await useAuthStore.getState().logout()
 
-    expect(deleteMock).toHaveBeenCalled()
+    expect(eqMock).toHaveBeenCalledWith('user_id', 'u1')
     expect(useAuthStore.getState().isAuthenticated).toBe(false)
     expect(useAuthStore.getState().user).toBeNull()
   })

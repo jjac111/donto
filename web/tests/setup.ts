@@ -111,7 +111,7 @@ afterEach(async () => {
   // Sign out current auth session
   await supabase.auth.signOut()
 
-  // Clean up user sessions for isolation
+  // Delete user sessions for isolation (clean test environment)
   const testUserIds = Object.values(TEST_USERS).map(user => user.id)
   await supabaseAdmin.from('user_sessions').delete().in('user_id', testUserIds)
 })
@@ -126,7 +126,7 @@ async function seedTestData() {
 }
 
 async function cleanupUserSessions() {
-  // Delete user sessions created during tests
+  // Delete user sessions created during tests (clean test environment)
   // We'll delete all sessions for our test users - this is safe since they're test-only accounts
   const testUserIds = Object.values(TEST_USERS).map(user => user.id)
 
@@ -136,9 +136,9 @@ async function cleanupUserSessions() {
     .in('user_id', testUserIds)
 
   if (error) {
-    console.warn('⚠️ Failed to cleanup user sessions:', error.message)
+    console.warn('⚠️ Failed to delete user sessions:', error.message)
   } else {
-    console.log('✅ Cleaned up user sessions')
+    console.log('✅ Deleted user sessions')
   }
 }
 

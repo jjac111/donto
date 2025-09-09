@@ -20,6 +20,19 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     setIsHydrated(true)
   }, [])
 
+  // Handle navigation redirects after render
+  useEffect(() => {
+    if (isHydrated && !isLoading && !isAuthenticated) {
+      router.replace('/login')
+    }
+  }, [isHydrated, isLoading, isAuthenticated, router])
+
+  useEffect(() => {
+    if (isHydrated && !isLoading && isAuthenticated && needsClinicSelection) {
+      router.replace('/select-clinic')
+    }
+  }, [isHydrated, isLoading, isAuthenticated, needsClinicSelection, router])
+
   // Show loading while hydrating or checking auth state
   if (!isHydrated || isLoading) {
     return (
@@ -29,18 +42,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    router.replace('/login')
-    return null
-  }
-
-  // Redirect to clinic selection if needed
-  if (needsClinicSelection) {
-    router.replace('/select-clinic')
-    return null
-  }
-
   // Show protected content if authenticated and clinic selected
-  return <>{children}</>
+  if (isAuthenticated && !needsClinicSelection) {
+    return <>{children}</>
+  }
+
+  // Return null while redirects are happening
+  return null
 }

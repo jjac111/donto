@@ -1,58 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { patientsApi } from '@/lib/api'
-import { Patient } from '@/types'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Button } from '@/components/ui/button'
 import { NewPatientForm } from '@/components/patients/new-patient-form'
+import { PatientCard } from '@/components/patients/patient-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Search, Plus } from 'lucide-react'
-import { useAuthStore } from '@/store/auth'
+import { useRecentPatients } from '@/hooks/use-patients'
 
 export default function PatientsPage() {
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
-  const [patients, setPatients] = useState<Patient[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
 
-  const fetchPatients = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      // For now, just get recent patients - you can modify this to search
-      const patientData = await patientsApi.getRecent(50)
-      setPatients(patientData)
-    } catch (err) {
-      console.error('Error fetching patients:', err)
-      setError(err instanceof Error ? err.message : 'Error desconocido')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    // Only fetch patients if we have a clinic selected
-    const clinicId = useAuthStore.getState().clinicId
-    if (clinicId) {
-      fetchPatients()
-    } else {
-      setIsLoading(false)
-      setError('No clinic selected')
-    }
-  }, [])
-
+  // Use TanStack Query hook instead of manual state management
+  const { data: patients, isLoading, error } = useRecentPatients(50)
   if (isLoading) {
     return (
       <ProtectedRoute>
         <AppLayout>
-          <div>{tCommon('loading')}</div>
+          <div className="flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-muted-foreground">{tCommon('loading')}</p>
+            </div>
+          </div>
         </AppLayout>
       </ProtectedRoute>
     )
@@ -64,10 +41,13 @@ export default function PatientsPage() {
         <AppLayout>
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <p className="text-destructive">
-                {error === 'No clinic selected'
+              <p className="text-destructive mb-4">
+                {error.message.includes('No clinic selected')
                   ? t('noClinicSelected')
-                  : `${t('loadingError')}: ${error}`}
+                  : `${t('loadingError')}: ${error.message}`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Please select a clinic to view patients.
               </p>
             </div>
           </div>
@@ -113,39 +93,57 @@ export default function PatientsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {patients?.length > 0 ? (
-                <div className="space-y-1">
-                  {/* Header */}
-                  <div className="grid grid-cols-4 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
-                    <div>{t('firstName')}</div>
-                    <div>{t('phone')}</div>
-                    <div>{t('email')}</div>
-                    <div>{t('lastAppointment')}</div>
+              {patients && patients.length > 0 ? (
+                <>
+                  {/* Desktop Table - Hidden on mobile */}
+                  <div className="hidden md:block">
+                    <div className="space-y-1">
+                      {/* Header */}
+                      <div className="grid grid-cols-4 gap-4 px-4 py-2 border-b text-sm font-medium text-muted-foreground">
+                        <div>{t('firstName')}</div>
+                        <div>{t('phone')}</div>
+                        <div>{t('email')}</div>
+                        <div>{t('lastAppointment')}</div>
+                      </div>
+
+                      {/* Patients */}
+                      {patients.map(patient => (
+                        <Link key={patient.id} href={`/patients/${patient.id}`}>
+                          <div className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {patient.displayName}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {patient.age} años
+                              </p>
+                            </div>
+                            <div className="text-sm text-foreground">
+                              {patient.person?.phone || '-'}
+                            </div>
+                            <div className="text-sm text-foreground">
+                              {patient.person?.email || '-'}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              -
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Patients */}
-                  {patients.map(patient => (
-                    <Link key={patient.id} href={`/patients/${patient.id}`}>
-                      <div className="grid grid-cols-4 gap-4 px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {patient.displayName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {patient.age} años
-                          </p>
-                        </div>
-                        <div className="text-sm text-foreground">
-                          {patient.person?.phone || '-'}
-                        </div>
-                        <div className="text-sm text-foreground">
-                          {patient.person?.email || '-'}
-                        </div>
-                        <div className="text-sm text-muted-foreground">-</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                  {/* Mobile Cards - Hidden on desktop */}
+                  <div className="block md:hidden space-y-6">
+                    {patients.map(patient => (
+                      <PatientCard
+                        key={patient.id}
+                        patient={patient}
+                        className="mb-6"
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="text-muted-foreground">
@@ -162,7 +160,6 @@ export default function PatientsPage() {
           <NewPatientForm
             open={isNewPatientModalOpen}
             onOpenChange={setIsNewPatientModalOpen}
-            onSuccess={fetchPatients}
           />
         </div>
       </AppLayout>

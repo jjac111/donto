@@ -1,12 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
-import { patientsApi } from '@/lib/api'
-import { Patient } from '@/types'
+import { usePatient } from '@/hooks/use-patients'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -24,27 +22,9 @@ export default function PatientDetailPage() {
   const patientId = params.id as string
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
-  const [patient, setPatient] = useState<Patient | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchPatient = async () => {
-      try {
-        setIsLoading(true)
-        const patientData = await patientsApi.getById(patientId)
-        setPatient(patientData)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (patientId) {
-      fetchPatient()
-    }
-  }, [patientId])
+  // Use TanStack Query hook instead of manual state management
+  const { data: patient, isLoading, error } = usePatient(patientId)
 
   if (isLoading) {
     return (
@@ -72,7 +52,7 @@ export default function PatientDetailPage() {
                 {error ? t('loadingError') : t('patientNotFound')}
               </h2>
               <p className="text-muted-foreground mb-4">
-                {error || t('patientNotFoundDescription')}
+                {error?.message || t('patientNotFoundDescription')}
               </p>
               <Button onClick={() => window.history.back()}>
                 {tCommon('back')}

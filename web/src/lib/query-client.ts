@@ -21,8 +21,8 @@ export const queryClient = new QueryClient({
         return failureCount < 3
       },
 
-      // Refetch on window focus for real-time updates
-      refetchOnWindowFocus: true,
+      // Disable refetch on window focus to prevent loading state issues
+      refetchOnWindowFocus: false,
 
       // Don't refetch on reconnect for offline scenarios
       refetchOnReconnect: false,
@@ -82,6 +82,14 @@ export const queryKeys = {
   toothConditions: ['tooth-conditions'] as const,
   toothConditionsByPatient: (patientId: string) =>
     ['tooth-conditions', 'by-patient', patientId] as const,
+
+  // Clinics
+  clinics: ['clinics'] as const,
+  clinic: (id: string) => ['clinics', id] as const,
+
+  // Profile
+  profile: ['profile'] as const,
+  currentUserProfile: () => ['profile', 'current'] as const,
 }
 
 // Utility to invalidate related queries
@@ -105,4 +113,20 @@ export const invalidateAppointmentData = () => {
   queryClient.invalidateQueries({
     queryKey: queryKeys.appointmentsByDate(today),
   })
+}
+
+export const invalidateProviderData = () => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.providers })
+}
+
+export const invalidateProcedureData = () => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.procedures })
+}
+
+export const invalidateClinicData = () => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.clinics })
+}
+
+export const invalidateProfileData = () => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.profile })
 }

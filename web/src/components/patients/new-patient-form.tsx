@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { patientsApi } from '@/lib/api'
+import { useCreatePatient } from '@/hooks/use-patients'
 
 const newPatientSchema = (t: (key: string) => string) =>
   z.object({
@@ -48,7 +48,7 @@ const newPatientSchema = (t: (key: string) => string) =>
       message: t('selectValidGender'),
     }),
     phone: z.string().optional(),
-    email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
+    email: z.email(t('invalidEmail')).optional().or(z.literal('')),
     address: z.string().optional(),
 
     // Patient fields
@@ -72,7 +72,9 @@ export function NewPatientForm({
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Use the mutation hook for creating patients
+  const createPatientMutation = useCreatePatient()
 
   const form = useForm({
     resolver: zodResolver(newPatientSchema(t)),
@@ -97,49 +99,44 @@ export function NewPatientForm({
   })
 
   const onSubmit = async (data: any) => {
-    setIsSubmitting(true)
-    try {
-      const patientData = {
-        person: {
-          nationalId: data.nationalId,
-          country: data.country,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          dateOfBirth: new Date(data.dateOfBirth),
-          sex: data.sex,
-          phone: data.phone || undefined,
-          email: data.email || undefined,
-          address: data.address || undefined,
-        } as any,
-        emergencyContactName: data.emergencyContactName || undefined,
-        emergencyContactPhone: data.emergencyContactPhone || undefined,
-        medicalHistory: data.medicalHistory || undefined,
-        allergies: data.allergies || undefined,
-      }
-
-      const newPatient = await patientsApi.create(patientData)
-
-      // Close the modal
-      onOpenChange(false)
-
-      // Reset form
-      form.reset()
-
-      // Call success callback to refresh list
-      onSuccess?.()
-
-      // Navigate to patient page
-      router.push(`/patients/${newPatient.id}`)
-    } catch (error) {
-      console.error('Error creating patient:', error)
-    } finally {
-      setIsSubmitting(false)
+    const patientData = {
+      person: {
+        nationalId: data.nationalId,
+        country: data.country,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: new Date(data.dateOfBirth),
+        sex: data.sex,
+        phone: data.phone || undefined,
+        email: data.email || undefined,
+        address: data.address || undefined,
+      } as any,
+      emergencyContactName: data.emergencyContactName || undefined,
+      emergencyContactPhone: data.emergencyContactPhone || undefined,
+      medicalHistory: data.medicalHistory || undefined,
+      allergies: data.allergies || undefined,
     }
+
+    createPatientMutation.mutate(patientData, {
+      onSuccess: newPatient => {
+        // Close the modal
+        onOpenChange(false)
+        // Reset form
+        form.reset()
+        // Call success callback
+        onSuccess?.()
+        // Navigate to patient page
+        router.push(`/patients/${newPatient.id}`)
+      },
+    })
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        blurOnly
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] lg:w-full"
+      >
         <DialogHeader>
           <DialogTitle>{t('newPatient')}</DialogTitle>
           <DialogDescription>{t('newPatientDescription')}</DialogDescription>
@@ -153,7 +150,7 @@ export function NewPatientForm({
                 {t('personalInformation')}
               </h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="nationalId"
@@ -163,6 +160,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('nationalIdPlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -200,7 +198,7 @@ export function NewPatientForm({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -210,6 +208,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('firstNamePlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -227,6 +226,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('lastNamePlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -236,7 +236,7 @@ export function NewPatientForm({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
@@ -244,7 +244,22 @@ export function NewPatientForm({
                     <FormItem>
                       <FormLabel>{t('dateOfBirth')}</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <div className="w-full overflow-hidden">
+                          <Input
+                            type="date"
+                            className="w-full max-w-full [&::-webkit-date-and-time-value]:text-xs [&::-webkit-calendar-picker-indicator]:text-xs"
+                            style={{
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'none',
+                              appearance: 'none',
+                              minWidth: '100%',
+                              maxWidth: '100%',
+                              boxSizing: 'border-box',
+                              width: '100% !important',
+                            }}
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -277,7 +292,7 @@ export function NewPatientForm({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="phone"
@@ -285,7 +300,11 @@ export function NewPatientForm({
                     <FormItem>
                       <FormLabel>{t('phone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('phonePlaceholder')} {...field} />
+                        <Input
+                          placeholder={t('phonePlaceholder')}
+                          className="w-full"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -302,6 +321,7 @@ export function NewPatientForm({
                         <Input
                           type="email"
                           placeholder={t('emailPlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -320,7 +340,7 @@ export function NewPatientForm({
                     <FormControl>
                       <Textarea
                         placeholder={t('addressPlaceholder')}
-                        className="min-h-[80px]"
+                        className="min-h-[80px] w-full"
                         {...field}
                       />
                     </FormControl>
@@ -336,7 +356,7 @@ export function NewPatientForm({
                 {t('medicalInformation')}
               </h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="emergencyContactName"
@@ -346,6 +366,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('emergencyNamePlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -361,7 +382,11 @@ export function NewPatientForm({
                     <FormItem>
                       <FormLabel>{t('emergencyContactPhone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('phonePlaceholder')} {...field} />
+                        <Input
+                          placeholder={t('phonePlaceholder')}
+                          className="w-full"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -378,7 +403,7 @@ export function NewPatientForm({
                     <FormControl>
                       <Textarea
                         placeholder={t('medicalHistoryPlaceholder')}
-                        className="min-h-[100px]"
+                        className="min-h-[100px] w-full"
                         {...field}
                       />
                     </FormControl>
@@ -396,7 +421,7 @@ export function NewPatientForm({
                     <FormControl>
                       <Textarea
                         placeholder={t('allergiesPlaceholder')}
-                        className="min-h-[80px]"
+                        className="min-h-[80px] w-full"
                         {...field}
                       />
                     </FormControl>
@@ -414,8 +439,8 @@ export function NewPatientForm({
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" disabled={createPatientMutation.isPending}>
+                {createPatientMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {tCommon('loading')}

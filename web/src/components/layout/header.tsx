@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle'
 import { SearchInput } from '@/components/ui/search-input'
@@ -33,6 +33,33 @@ export function Header({
   const [searchValue, setSearchValue] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showClinicMenu, setShowClinicMenu] = useState(false)
+
+  // Refs for dropdown containers
+  const userMenuRef = useRef<HTMLDivElement>(null)
+  const clinicMenuRef = useRef<HTMLDivElement>(null)
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowUserMenu(false)
+      }
+      if (
+        clinicMenuRef.current &&
+        !clinicMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowClinicMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   const {
     user,
     clinicName,
@@ -76,14 +103,9 @@ export function Header({
 
       {/* Right side - Actions */}
       <div className="flex items-center space-x-2">
-        {/* Dark mode toggle */}
-        <div className="hidden lg:flex">
-          <DarkModeToggle />
-        </div>
-
         {/* Clinic switcher */}
         {availableClinics && availableClinics.length > 1 && (
-          <div className="relative">
+          <div className="relative" ref={clinicMenuRef}>
             <Button
               variant="ghost"
               size="sm"
@@ -138,7 +160,7 @@ export function Header({
         </Button> */}
 
         {/* User menu */}
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <Button
             variant="ghost"
             size="sm"
@@ -178,6 +200,10 @@ export function Header({
                 <Settings className="mr-2 h-4 w-4" />
                 {t('settings')}
               </Button>
+              <hr className="my-1" />
+              <div className="px-3 py-2 flex ">
+                <DarkModeToggle />
+              </div>
               <hr className="my-1" />
               <Button
                 variant="ghost"
