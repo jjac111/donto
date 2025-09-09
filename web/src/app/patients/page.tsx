@@ -19,7 +19,6 @@ export default function PatientsPage() {
 
   // Use TanStack Query hook instead of manual state management
   const { data: patients, isLoading, error } = useRecentPatients(50)
-
   if (isLoading) {
     return (
       <ProtectedRoute>

@@ -21,8 +21,8 @@ export const queryClient = new QueryClient({
         return failureCount < 3
       },
 
-      // Refetch on window focus for real-time updates
-      refetchOnWindowFocus: true,
+      // Disable refetch on window focus to prevent loading state issues
+      refetchOnWindowFocus: false,
 
       // Don't refetch on reconnect for offline scenarios
       refetchOnReconnect: false,
