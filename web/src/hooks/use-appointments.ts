@@ -159,17 +159,18 @@ export const useTodaysAppointments = () => {
 // Create appointment mutation
 export const useCreateAppointment = () => {
   const queryClient = useQueryClient()
+  const { clinicId } = useAuthStore() // ✅ Reactive state
 
   return useMutation({
     mutationFn: async (
       appointmentData: Partial<Appointment>
     ): Promise<Appointment> => {
+      if (!clinicId) {
+        throw new Error('No clinic selected')
+      }
+
       const dbAppointmentData = {
-        clinic_id: (() => {
-          const clinicId = useAuthStore.getState().clinicId
-          if (!clinicId) throw new Error('No clinic selected')
-          return clinicId
-        })(),
+        clinic_id: clinicId,
         patient_id: appointmentData.patientId!,
         provider_id: appointmentData.providerId!,
         appointment_date: appointmentData.appointmentDate!.toISOString(),
