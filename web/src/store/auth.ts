@@ -443,22 +443,11 @@ const initializeAuthStateListener = () => {
 
   // Debug: Check current auth state
   supabase.auth.getUser().then(({ data: { user } }) => {
-    console.log('Current user from getUser():', user?.email || 'No user')
+    // Debug logging removed
   })
 
   // Listen for auth state changes (login, logout, token refresh)
   supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log(
-      'Supabase auth event:',
-      event,
-      'session exists:',
-      !!session,
-      'user exists:',
-      !!session?.user,
-      'user email:',
-      session?.user?.email
-    )
-
     const { setUser } = useAuthStore.getState()
 
     if (
@@ -500,15 +489,12 @@ const initializeAuthStateListener = () => {
       })
     } else if (event === 'TOKEN_REFRESHED') {
       // Token was refreshed - user stays logged in
-      console.log('Auth token refreshed successfully')
     } else if (event === 'INITIAL_SESSION' && !session) {
       // INITIAL_SESSION fired but session is undefined - try to recover
-      console.log('INITIAL_SESSION with no session - attempting recovery')
       supabase.auth
         .getSession()
         .then(({ data: { session: recoveredSession } }) => {
           if (recoveredSession?.user) {
-            console.log('Recovered session:', recoveredSession.user.email)
             // Trigger the session handling logic manually
             const user: User = {
               id: recoveredSession.user.id,
@@ -531,7 +517,6 @@ const initializeAuthStateListener = () => {
             // Fetch user profile data (clinic info, availableClinics)
             useAuthStore.getState().fetchUserProfile()
           } else {
-            console.log('Could not recover session')
             useAuthStore.setState({
               isLoading: false,
             })
@@ -542,12 +527,9 @@ const initializeAuthStateListener = () => {
 
   // Check for existing session on startup
   supabase.auth.getSession().then(({ data: { session } }) => {
-    console.log('getSession result:', session)
     if (session?.user) {
       // Session exists - this will trigger INITIAL_SESSION event which handles the user setup
-      console.log('Existing session found, waiting for INITIAL_SESSION event')
     } else {
-      console.log('No existing session found')
       useAuthStore.setState({
         isLoading: false,
       })
