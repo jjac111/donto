@@ -22,17 +22,9 @@ export function DarkModeToggle({
   useEffect(() => {
     setMounted(true)
 
-    // Check localStorage first, then system preference
-    const savedTheme = localStorage.getItem('theme')
-    const systemPrefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches
-
-    const shouldBeDark =
-      savedTheme === 'dark' || (!savedTheme && systemPrefersDark)
-
-    setIsDarkMode(shouldBeDark)
-    applyTheme(shouldBeDark)
+    // Check if dark class is already on html (from server-side cookie)
+    const isCurrentlyDark = document.documentElement.classList.contains('dark')
+    setIsDarkMode(isCurrentlyDark)
   }, [])
 
   const applyTheme = (dark: boolean) => {
@@ -47,8 +39,12 @@ export function DarkModeToggle({
     setIsDarkMode(checked)
     applyTheme(checked)
 
-    // Persist to localStorage
-    localStorage.setItem('theme', checked ? 'dark' : 'light')
+    // Persist using cookie (1 year)
+    try {
+      document.cookie = `theme=${
+        checked ? 'dark' : 'light'
+      }; path=/; max-age=31536000; SameSite=Lax`
+    } catch {}
   }
 
   // Prevent hydration mismatch
