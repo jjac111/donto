@@ -111,12 +111,9 @@ afterEach(async () => {
   // Sign out current auth session
   await supabase.auth.signOut()
 
-  // Expire user sessions for isolation (maintain audit trail)
+  // Delete user sessions for isolation (clean test environment)
   const testUserIds = Object.values(TEST_USERS).map(user => user.id)
-  await supabaseAdmin
-    .from('user_sessions')
-    .update({ expires_at: new Date().toISOString() })
-    .in('user_id', testUserIds)
+  await supabaseAdmin.from('user_sessions').delete().in('user_id', testUserIds)
 })
 
 async function seedTestData() {
@@ -129,19 +126,19 @@ async function seedTestData() {
 }
 
 async function cleanupUserSessions() {
-  // Expire user sessions created during tests (maintain audit trail)
-  // We'll expire all sessions for our test users - this is safe since they're test-only accounts
+  // Delete user sessions created during tests (clean test environment)
+  // We'll delete all sessions for our test users - this is safe since they're test-only accounts
   const testUserIds = Object.values(TEST_USERS).map(user => user.id)
 
   const { error } = await supabaseAdmin
     .from('user_sessions')
-    .update({ expires_at: new Date().toISOString() })
+    .delete()
     .in('user_id', testUserIds)
 
   if (error) {
-    console.warn('⚠️ Failed to expire user sessions:', error.message)
+    console.warn('⚠️ Failed to delete user sessions:', error.message)
   } else {
-    console.log('✅ Expired user sessions')
+    console.log('✅ Deleted user sessions')
   }
 }
 
