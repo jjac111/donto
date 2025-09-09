@@ -39,12 +39,7 @@ export const useAppointments = () => {
           new Date(item.appointment_date).toDateString() ===
           new Date().toDateString(),
         isPast: new Date(item.appointment_date) < new Date(),
-        statusColor: {
-          scheduled: 'blue',
-          completed: 'green',
-          cancelled: 'red',
-          no_show: 'orange',
-        }[item.status],
+        statusColor: getStatusColor(item.status as Appointment['status']),
       }))
     },
     staleTime: 30 * 1000, // 30 seconds - appointments change frequently
@@ -90,12 +85,7 @@ export const useAppointmentsByDate = (date: string) => {
           new Date(item.appointment_date).toDateString() ===
           new Date().toDateString(),
         isPast: new Date(item.appointment_date) < new Date(),
-        statusColor: {
-          scheduled: 'blue',
-          completed: 'green',
-          cancelled: 'red',
-          no_show: 'orange',
-        }[item.status],
+        statusColor: getStatusColor(item.status as Appointment['status']),
       }))
     },
     staleTime: 15 * 1000, // 15 seconds - very fresh for today's schedule
@@ -137,12 +127,7 @@ export const useAppointmentsByPatient = (patientId: string) => {
           new Date(item.appointment_date).toDateString() ===
           new Date().toDateString(),
         isPast: new Date(item.appointment_date) < new Date(),
-        statusColor: {
-          scheduled: 'blue',
-          completed: 'green',
-          cancelled: 'red',
-          no_show: 'orange',
-        }[item.status],
+        statusColor: getStatusColor(item.status as Appointment['status']),
       }))
     },
     enabled: !!patientId,
@@ -207,12 +192,7 @@ export const useCreateAppointment = () => {
           new Date(data.appointment_date).toDateString() ===
           new Date().toDateString(),
         isPast: new Date(data.appointment_date) < new Date(),
-        statusColor: {
-          scheduled: 'blue',
-          completed: 'green',
-          cancelled: 'red',
-          no_show: 'orange',
-        }[data.status],
+        statusColor: getStatusColor(data.status as Appointment['status']),
       }
     },
     onSuccess: newAppointment => {
@@ -304,12 +284,7 @@ export const useUpdateAppointment = () => {
           new Date(result.appointment_date).toDateString() ===
           new Date().toDateString(),
         isPast: new Date(result.appointment_date) < new Date(),
-        statusColor: {
-          scheduled: 'blue',
-          completed: 'green',
-          cancelled: 'red',
-          no_show: 'orange',
-        }[result.status],
+        statusColor: getStatusColor(result.status as Appointment['status']),
       }
     },
     onSuccess: updatedAppointment => {
@@ -365,12 +340,7 @@ export const useUpdateAppointmentStatus = () => {
           new Date(data.appointment_date).toDateString() ===
           new Date().toDateString(),
         isPast: new Date(data.appointment_date) < new Date(),
-        statusColor: {
-          scheduled: 'blue',
-          completed: 'green',
-          cancelled: 'red',
-          no_show: 'orange',
-        }[data.status],
+        statusColor: getStatusColor(data.status as Appointment['status']),
       }
     },
     onMutate: async ({ id, status }) => {
