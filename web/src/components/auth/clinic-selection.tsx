@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/store'
+import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/ui/logo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,8 +12,23 @@ import { Building2, User, Shield } from 'lucide-react'
 export function ClinicSelection() {
   const tAuth = useTranslations('auth')
   const tCommon = useTranslations('common')
-  const { availableClinics, selectClinic, logout, isLoading, error } =
-    useAuthStore()
+  const router = useRouter()
+  const {
+    availableClinics,
+    selectClinic,
+    logout,
+    isLoading,
+    error,
+    isAuthenticated,
+    needsClinicSelection,
+  } = useAuthStore()
+
+  // Navigate to dashboard when clinic is selected
+  useEffect(() => {
+    if (isAuthenticated && !needsClinicSelection) {
+      router.replace('/dashboard')
+    }
+  }, [isAuthenticated, needsClinicSelection, router])
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -57,24 +74,40 @@ export function ClinicSelection() {
               </p>
 
               <div className="grid gap-3">
-                {availableClinics?.map(clinic => (
-                  <div
-                    key={clinic.clinicId}
-                    onClick={() => selectClinic(clinic.clinicId)}
-                    className="flex items-center space-x-4 p-4 border rounded-lg cursor-pointer transition-colors hover:border-primary/50 hover:bg-primary/5"
-                  >
-                    <div className="flex items-center space-x-3 flex-1">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <div className="font-medium">{clinic.clinicName}</div>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          {getRoleIcon(clinic.role)}
-                          <span>{getRoleLabel(clinic.role)}</span>
+                {!availableClinics || availableClinics.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No clinics available</p>
+                    <p className="text-sm">Please contact your administrator</p>
+                  </div>
+                ) : (
+                  availableClinics.map(clinic => (
+                    <Button
+                      key={clinic.clinicId}
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await selectClinic(clinic.clinicId)
+                        } catch (error) {
+                          console.error('Failed to select clinic:', error)
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="h-auto p-4 justify-start"
+                    >
+                      <div className="flex items-center space-x-3 flex-1">
+                        <Building2 className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex-1 text-left">
+                          <div className="font-medium">{clinic.clinicName}</div>
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            {getRoleIcon(clinic.role)}
+                            <span>{getRoleLabel(clinic.role)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </Button>
+                  ))
+                )}
               </div>
             </div>
 
