@@ -4,7 +4,10 @@ import { useAuthStore } from '@/store/auth'
 // Mock supabase module used by the store
 vi.mock('@/lib/api', () => {
   const mockAuth = {
-    getUser: vi.fn(),
+    getUser: vi.fn().mockResolvedValue({
+      data: { user: null },
+      error: null,
+    }),
     getSession: vi.fn().mockResolvedValue({
       data: { session: null },
       error: null,

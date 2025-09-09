@@ -32,11 +32,9 @@ export function Header({
 }: HeaderProps) {
   const [searchValue, setSearchValue] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showClinicMenu, setShowClinicMenu] = useState(false)
 
   // Refs for dropdown containers
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const clinicMenuRef = useRef<HTMLDivElement>(null)
 
   // Handle click outside to close dropdowns
   useEffect(() => {
@@ -47,12 +45,6 @@ export function Header({
       ) {
         setShowUserMenu(false)
       }
-      if (
-        clinicMenuRef.current &&
-        !clinicMenuRef.current.contains(event.target as Node)
-      ) {
-        setShowClinicMenu(false)
-      }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
@@ -60,14 +52,8 @@ export function Header({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
-  const {
-    user,
-    clinicName,
-    availableClinics,
-    selectClinic,
-    loadUserClinics,
-    logout,
-  } = useAuthStore()
+  const { user, clinicName, availableClinics, selectClinic, logout } =
+    useAuthStore()
   const t = useTranslations('header')
   const router = useRouter()
 
@@ -91,7 +77,9 @@ export function Header({
           </button>
         )}
 
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+        <h1 className="text-lg font-semibold text-foreground">
+          {clinicName || title}
+        </h1>
       </div>
 
       {/* Center - Search */}
@@ -103,51 +91,6 @@ export function Header({
 
       {/* Right side - Actions */}
       <div className="flex items-center space-x-2">
-        {/* Clinic switcher */}
-        {availableClinics && availableClinics.length > 1 && (
-          <div className="relative" ref={clinicMenuRef}>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                if (!availableClinics || availableClinics.length === 0) {
-                  await loadUserClinics()
-                }
-                setShowClinicMenu(!showClinicMenu)
-              }}
-              className="hidden lg:flex items-center space-x-2"
-            >
-              <Building2 className="h-4 w-4" />
-              <span>{clinicName}</span>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-
-            {showClinicMenu && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-md border border-border bg-popover p-1 shadow-md">
-                {availableClinics.map(c => (
-                  <Button
-                    key={c.clinicId}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={async () => {
-                      setShowClinicMenu(false)
-                      await selectClinic(c.clinicId)
-                      router.refresh()
-                      if (typeof window !== 'undefined') {
-                        window.location.reload()
-                      }
-                    }}
-                  >
-                    <Building2 className="mr-2 h-4 w-4" />
-                    <span className="truncate">{c.clinicName}</span>
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Notifications */}
         {/* <Button variant="ghost" size="sm" className="relative">
           <Bell className="h-4 w-4" />
@@ -175,13 +118,45 @@ export function Header({
 
           {/* User dropdown menu */}
           {showUserMenu && (
-            <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-border bg-popover p-1 shadow-md">
+            <div className="absolute right-0 top-full mt-2 w-56 rounded-md border border-border bg-popover p-1 shadow-md">
               {/* Signed-in email (non-interactive) */}
               {user?.email && (
                 <div className="px-3 py-2 text-xs text-muted-foreground border-b border-border truncate">
                   {user.email}
                 </div>
               )}
+
+              {/* Clinic Selection */}
+              {availableClinics && availableClinics.length > 1 && (
+                <>
+                  <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
+                    {t('switchClinic')}
+                  </div>
+                  <div className="space-y-1">
+                    {availableClinics.map(c => (
+                      <Button
+                        key={c.clinicId}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={async () => {
+                          setShowUserMenu(false)
+                          await selectClinic(c.clinicId)
+                          router.refresh()
+                          if (typeof window !== 'undefined') {
+                            window.location.reload()
+                          }
+                        }}
+                      >
+                        <Building2 className="mr-2 h-4 w-4" />
+                        <span className="truncate">{c.clinicName}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  <hr className="my-1" />
+                </>
+              )}
+
               <Button
                 variant="ghost"
                 size="sm"
