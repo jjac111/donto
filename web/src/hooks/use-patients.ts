@@ -97,9 +97,16 @@ export const useRecentPatients = (limit: number = 10) => {
   return useQuery({
     queryKey: queryKeys.recentPatients(limit),
     queryFn: async (): Promise<Patient[]> => {
+      console.log('🔍 useRecentPatients: Starting query...')
       const clinicId = useAuthStore.getState().clinicId
-      if (!clinicId) throw new Error('No clinic selected')
+      console.log('🏥 Clinic ID:', clinicId)
 
+      if (!clinicId) {
+        console.warn('⚠️ No clinic selected, skipping patients fetch')
+        return [] // Return empty array instead of throwing
+      }
+
+      console.log('📡 Fetching patients from Supabase...')
       const { data, error } = await supabase
         .from('patients')
         .select(
@@ -112,14 +119,17 @@ export const useRecentPatients = (limit: number = 10) => {
         .limit(limit)
 
       if (error) {
+        console.error('❌ Supabase error:', error)
         throw new Error(`Failed to fetch recent patients: ${error.message}`)
       }
 
+      console.log('✅ Patients fetched:', data?.length || 0)
       return (data || []).map((item: any) =>
         transformPatient(item, item.person)
       )
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - recent patients change occasionally
+    enabled: !!useAuthStore.getState().clinicId, // Only run if clinic is selected
   })
 }
 
