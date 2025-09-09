@@ -80,67 +80,68 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
           shapeRendering="crispEdges"
         >
           <polygon
-            points="0,0 100,0 65,35 35,35"
+            points="0,0 100,0 71,29 29,29"
             fill={getFill(tooth.surfaces.find(s => s.surface === 'M'))}
           />
           <polygon
-            points="0,100 100,100 65,65 35,65"
+            points="0,100 100,100 71,71 29,71"
             fill={getFill(tooth.surfaces.find(s => s.surface === 'D'))}
           />
           <polygon
-            points="0,0 35,35 35,65 0,100"
+            points="0,0 29,29 29,71 0,100"
             fill={getFill(tooth.surfaces.find(s => s.surface === 'B'))}
           />
           <polygon
-            points="100,0 65,35 65,65 100,100"
+            points="100,0 71,29 71,71 100,100"
             fill={getFill(tooth.surfaces.find(s => s.surface === 'L'))}
           />
 
-          {/* Center square */}
+          {/* Center square (larger) */}
           <rect
-            x="35"
-            y="35"
-            width="30"
-            height="30"
-            rx="4"
+            x="29"
+            y="29"
+            width="42"
+            height="42"
+            rx="6"
             fill={getFill(tooth.surfaces.find(s => s.surface === 'O'))}
             stroke={
               tooth.surfaces.find(s => s.surface === 'O')?.condition?.color ||
               '#9ca3af'
             }
-            strokeOpacity="0.5"
+            strokeOpacity="0.65"
+            strokeWidth="1.25"
           />
 
           {/* Diagram diagonal lines only (avoid extra horizontals) */}
           <line
             x1="0"
             y1="0"
-            x2="35"
-            y2="35"
+            x2="29"
+            y2="29"
             stroke="#9ca3af"
             strokeOpacity="0.5"
           />
           <line
             x1="100"
             y1="0"
-            x2="65"
-            y2="35"
+            x2="71"
+            y2="29"
             stroke="#9ca3af"
             strokeOpacity="0.5"
           />
           <line
             x1="0"
             y1="100"
-            x2="35"
-            y2="65"
+            x2="29"
+            y2="71"
             stroke="#9ca3af"
             strokeOpacity="0.5"
           />
           <line
             x1="100"
             y1="100"
-            x2="65"
-            y2="65"
+            x2="71"
+            y2="71"
             stroke="#9ca3af"
             strokeOpacity="0.5"
           />
