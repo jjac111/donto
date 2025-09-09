@@ -133,7 +133,8 @@ export function NewPatientForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 z-50 bg-transparent backdrop-blur-sm" />
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] lg:w-full">
         <DialogHeader>
           <DialogTitle>{t('newPatient')}</DialogTitle>
           <DialogDescription>{t('newPatientDescription')}</DialogDescription>
@@ -157,6 +158,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('nationalIdPlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -204,6 +206,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('firstNamePlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -221,6 +224,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('lastNamePlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -238,7 +242,22 @@ export function NewPatientForm({
                     <FormItem>
                       <FormLabel>{t('dateOfBirth')}</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <div className="w-full overflow-hidden">
+                          <Input
+                            type="date"
+                            className="w-full max-w-full [&::-webkit-date-and-time-value]:text-xs [&::-webkit-calendar-picker-indicator]:text-xs"
+                            style={{
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'none',
+                              appearance: 'none',
+                              minWidth: '100%',
+                              maxWidth: '100%',
+                              boxSizing: 'border-box',
+                              width: '100% !important',
+                            }}
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -279,7 +298,11 @@ export function NewPatientForm({
                     <FormItem>
                       <FormLabel>{t('phone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('phonePlaceholder')} {...field} />
+                        <Input
+                          placeholder={t('phonePlaceholder')}
+                          className="w-full"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,6 +319,7 @@ export function NewPatientForm({
                         <Input
                           type="email"
                           placeholder={t('emailPlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -314,7 +338,7 @@ export function NewPatientForm({
                     <FormControl>
                       <Textarea
                         placeholder={t('addressPlaceholder')}
-                        className="min-h-[80px]"
+                        className="min-h-[80px] w-full"
                         {...field}
                       />
                     </FormControl>
@@ -340,6 +364,7 @@ export function NewPatientForm({
                       <FormControl>
                         <Input
                           placeholder={t('emergencyNamePlaceholder')}
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -355,7 +380,11 @@ export function NewPatientForm({
                     <FormItem>
                       <FormLabel>{t('emergencyContactPhone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('phonePlaceholder')} {...field} />
+                        <Input
+                          placeholder={t('phonePlaceholder')}
+                          className="w-full"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -372,7 +401,7 @@ export function NewPatientForm({
                     <FormControl>
                       <Textarea
                         placeholder={t('medicalHistoryPlaceholder')}
-                        className="min-h-[100px]"
+                        className="min-h-[100px] w-full"
                         {...field}
                       />
                     </FormControl>
@@ -390,7 +419,7 @@ export function NewPatientForm({
                     <FormControl>
                       <Textarea
                         placeholder={t('allergiesPlaceholder')}
-                        className="min-h-[80px]"
+                        className="min-h-[80px] w-full"
                         {...field}
                       />
                     </FormControl>
