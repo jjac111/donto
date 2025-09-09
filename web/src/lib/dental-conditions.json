@@ -1,0 +1,326 @@
+{
+  "ortodoncia": [
+    {
+      "id": "maloclusion_clase_i",
+      "name": "Maloclusión Clase I",
+      "description": "Relación molar normal con apiñamiento dental",
+      "color": "#FFD700",
+      "severity": "medio"
+    },
+    {
+      "id": "maloclusion_clase_ii",
+      "name": "Maloclusión Clase II",
+      "description": "Mandíbula retruida con sobremordida",
+      "color": "#FFA500",
+      "severity": "medio"
+    },
+    {
+      "id": "maloclusion_clase_iii",
+      "name": "Maloclusión Clase III",
+      "description": "Mandíbula protrusiva",
+      "color": "#FF6347",
+      "severity": "alto"
+    },
+    {
+      "id": "diastema",
+      "name": "Diastema",
+      "description": "Espacio anormal entre dientes",
+      "color": "#98FB98",
+      "severity": "bajo"
+    },
+    {
+      "id": "apinamiento",
+      "name": "Apiñamiento Dental",
+      "description": "Dientes superpuestos o mal alineados",
+      "color": "#87CEEB",
+      "severity": "medio"
+    }
+  ],
+  "cirugia": [
+    {
+      "id": "extraccion_indicada",
+      "name": "Extracción Indicada",
+      "description": "Diente requiere extracción quirúrgica",
+      "color": "#FF6B6B",
+      "severity": "alto"
+    },
+    {
+      "id": "extraccion_completa",
+      "name": "Extracción Completa",
+      "description": "Diente ya extraído",
+      "color": "#DC143C",
+      "severity": "critico"
+    },
+    {
+      "id": "tercer_molar_impactado",
+      "name": "Tercer Molar Impactado",
+      "description": "Muela del juicio retenida en hueso",
+      "color": "#B22222",
+      "severity": "alto"
+    },
+    {
+      "id": "quiste_dentigero",
+      "name": "Quiste Dentígero",
+      "description": "Quiste asociado a diente retenido",
+      "color": "#8B0000",
+      "severity": "critico"
+    },
+    {
+      "id": "fractura_radicular",
+      "name": "Fractura Radicular",
+      "description": "Fractura en la raíz del diente",
+      "color": "#FF4500",
+      "severity": "alto"
+    }
+  ],
+  "endodoncia": [
+    {
+      "id": "necrosis_pulpar",
+      "name": "Necrosis Pulpar",
+      "description": "Muerte del tejido pulpar",
+      "color": "#4ECDC4",
+      "severity": "alto"
+    },
+    {
+      "id": "pulpotomia",
+      "name": "Pulpotomía",
+      "description": "Extirpación parcial del tejido pulpar",
+      "color": "#26A69A",
+      "severity": "medio"
+    },
+    {
+      "id": "tratamiento_endodontico",
+      "name": "Tratamiento Endodóntico",
+      "description": "Conducto radicular completado",
+      "color": "#00897B",
+      "severity": "bajo"
+    },
+    {
+      "id": "retratamiento_endodontico",
+      "name": "Retratamiento Endodóntico",
+      "description": "Reintervención de conducto previo",
+      "color": "#00695C",
+      "severity": "medio"
+    },
+    {
+      "id": "perforacion_radicular",
+      "name": "Perforación Radicular",
+      "description": "Perforación accidental durante tratamiento",
+      "color": "#004D40",
+      "severity": "critico"
+    }
+  ],
+  "general": [
+    {
+      "id": "caries",
+      "name": "Caries Dental",
+      "description": "Lesión cariosa activa",
+      "color": "#FF8C00",
+      "severity": "medio"
+    },
+    {
+      "id": "caries_arresto",
+      "name": "Caries Arrestada",
+      "description": "Lesión cariosa detenida",
+      "color": "#D2691E",
+      "severity": "bajo"
+    },
+    {
+      "id": "restauracion",
+      "name": "Restauración",
+      "description": "Obturación o corona existente",
+      "color": "#98D8C8",
+      "severity": "bajo"
+    },
+    {
+      "id": "restauracion_defectuosa",
+      "name": "Restauración Defectuosa",
+      "description": "Obturación con filtración o fractura",
+      "color": "#66B2A8",
+      "severity": "medio"
+    },
+    {
+      "id": "erosion_dental",
+      "name": "Erosión Dental",
+      "description": "Pérdida de estructura dental por ácidos",
+      "color": "#FF69B4",
+      "severity": "medio"
+    },
+    {
+      "id": "abrasion_dental",
+      "name": "Abrasión Dental",
+      "description": "Pérdida de estructura por trauma mecánico",
+      "color": "#DA70D6",
+      "severity": "medio"
+    },
+    {
+      "id": "fractura_coronal",
+      "name": "Fractura Coronaria",
+      "description": "Fractura en la corona del diente",
+      "color": "#BA55D3",
+      "severity": "alto"
+    },
+    {
+      "id": "hipoplasia_amelar",
+      "name": "Hipoplasia del Esmalte",
+      "description": "Desarrollo incompleto del esmalte",
+      "color": "#9370DB",
+      "severity": "bajo"
+    }
+  ],
+  "periodoncia": [
+    {
+      "id": "gingivitis",
+      "name": "Gingivitis",
+      "description": "Inflamación de las encías",
+      "color": "#FFB6C1",
+      "severity": "medio"
+    },
+    {
+      "id": "periodontitis_leve",
+      "name": "Periodontitis Leve",
+      "description": "Pérdida ósea < 3mm",
+      "color": "#FF1493",
+      "severity": "medio"
+    },
+    {
+      "id": "periodontitis_moderada",
+      "name": "Periodontitis Moderada",
+      "description": "Pérdida ósea 3-5mm",
+      "color": "#C71585",
+      "severity": "alto"
+    },
+    {
+      "id": "periodontitis_avanzada",
+      "name": "Periodontitis Avanzada",
+      "description": "Pérdida ósea > 5mm",
+      "color": "#8B008B",
+      "severity": "critico"
+    },
+    {
+      "id": "movilidad_dental",
+      "name": "Movilidad Dental",
+      "description": "Movimiento anormal del diente",
+      "color": "#9932CC",
+      "severity": "alto"
+    },
+    {
+      "id": "recesion_gingival",
+      "name": "Recesión Gingival",
+      "description": "Exposición de la raíz por retracción de encía",
+      "color": "#8A2BE2",
+      "severity": "medio"
+    }
+  ],
+  "protesis": [
+    {
+      "id": "corona_definitiva",
+      "name": "Corona Definitiva",
+      "description": "Corona dental permanente",
+      "color": "#DDA0DD",
+      "severity": "bajo"
+    },
+    {
+      "id": "corona_temporal",
+      "name": "Corona Temporal",
+      "description": "Corona provisional",
+      "color": "#EE82EE",
+      "severity": "bajo"
+    },
+    {
+      "id": "puente_fijo",
+      "name": "Puente Fijo",
+      "description": "Prótesis fija sobre implantes o dientes",
+      "color": "#DA70D6",
+      "severity": "bajo"
+    },
+    {
+      "id": "implante_dental",
+      "name": "Implante Dental",
+      "description": "Implante osteointegrado",
+      "color": "#BA55D3",
+      "severity": "bajo"
+    },
+    {
+      "id": "protesis_removible",
+      "name": "Prótesis Removible",
+      "description": "Dentadura postiza removible",
+      "color": "#9932CC",
+      "severity": "medio"
+    },
+    {
+      "id": "protesis_total",
+      "name": "Prótesis Total",
+      "description": "Dentadura completa superior o inferior",
+      "color": "#8A2BE2",
+      "severity": "medio"
+    }
+  ],
+  "pediatria": [
+    {
+      "id": "diente_deciduo",
+      "name": "Diente Deciduo",
+      "description": "Diente de leche presente",
+      "color": "#F0E68C",
+      "severity": "bajo"
+    },
+    {
+      "id": "diente_permanente_erupcionando",
+      "name": "Diente Permanente Erupcionando",
+      "description": "Diente adulto emergiendo",
+      "color": "#FFD700",
+      "severity": "bajo"
+    },
+    {
+      "id": "diente_retenido",
+      "name": "Diente Retenido",
+      "description": "Diente que no erupciona normalmente",
+      "color": "#FFA500",
+      "severity": "medio"
+    },
+    {
+      "id": "diente_ectopico",
+      "name": "Diente Ectópico",
+      "description": "Diente en posición anormal",
+      "color": "#FF8C00",
+      "severity": "medio"
+    }
+  ],
+  "urgencias": [
+    {
+      "id": "absceso_periapical",
+      "name": "Absceso Periapical",
+      "description": "Infección en el ápice radicular",
+      "color": "#FF0000",
+      "severity": "critico"
+    },
+    {
+      "id": "absceso_periodontal",
+      "name": "Absceso Periodontal",
+      "description": "Infección en las encías",
+      "color": "#DC143C",
+      "severity": "critico"
+    },
+    {
+      "id": "trauma_dental",
+      "name": "Trauma Dental",
+      "description": "Lesión por trauma",
+      "color": "#B22222",
+      "severity": "critico"
+    },
+    {
+      "id": "luxacion_dental",
+      "name": "Luxación Dental",
+      "description": "Diente desplazado de su alveolo",
+      "color": "#8B0000",
+      "severity": "critico"
+    },
+    {
+      "id": "avulsion_dental",
+      "name": "Avulsión Dental",
+      "description": "Diente completamente arrancado",
+      "color": "#FF6347",
+      "severity": "critico"
+    }
+  ]
+}

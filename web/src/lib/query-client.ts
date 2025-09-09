@@ -80,8 +80,10 @@ export const queryKeys = {
 
   // Tooth Conditions
   toothConditions: ['tooth-conditions'] as const,
-  toothConditionsByPatient: (patientId: string) =>
-    ['tooth-conditions', 'by-patient', patientId] as const,
+  patientToothConditions: (patientId: string) =>
+    ['tooth-conditions', 'patient', patientId] as const,
+  toothConditions: (patientId: string, toothNumber: string) =>
+    ['tooth-conditions', patientId, toothNumber] as const,
 
   // Clinics
   clinics: ['clinics'] as const,
@@ -102,7 +104,7 @@ export const invalidatePatientData = (patientId: string) => {
     queryKey: queryKeys.treatmentPlansByPatient(patientId),
   })
   queryClient.invalidateQueries({
-    queryKey: queryKeys.toothConditionsByPatient(patientId),
+    queryKey: queryKeys.patientToothConditions(patientId),
   })
 }
 
