@@ -5,7 +5,10 @@ import { useAuthStore } from '@/store/auth'
 vi.mock('@/lib/api', () => {
   const mockAuth = {
     getUser: vi.fn(),
-    getSession: vi.fn(),
+    getSession: vi.fn().mockResolvedValue({
+      data: { session: null },
+      error: null,
+    }),
     signInWithPassword: vi.fn(),
     signOut: vi.fn(),
     onAuthStateChange: vi.fn(() => ({
