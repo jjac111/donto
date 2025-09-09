@@ -27,11 +27,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [isHydrated, isLoading, isAuthenticated, router])
 
-  useEffect(() => {
-    if (isHydrated && !isLoading && isAuthenticated && needsClinicSelection) {
-      router.replace('/select-clinic')
-    }
-  }, [isHydrated, isLoading, isAuthenticated, needsClinicSelection, router])
+  // Clinic selection is now handled by individual pages
 
   // Show loading while hydrating or checking auth state
   if (!isHydrated || isLoading) {
@@ -42,8 +38,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  // Show protected content if authenticated and clinic selected
-  if (isAuthenticated && !needsClinicSelection) {
+  // Show protected content if authenticated (clinic selection will be handled by the page itself)
+  if (isAuthenticated) {
     return <>{children}</>
   }
 

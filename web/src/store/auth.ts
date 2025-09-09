@@ -441,14 +441,31 @@ const initializeAuthStateListener = () => {
 
   authStateListenerInitialized = true
 
+  // Debug: Check current auth state
+  supabase.auth.getUser().then(({ data: { user } }) => {
+    console.log('Current user from getUser():', user?.email || 'No user')
+  })
+
   // Listen for auth state changes (login, logout, token refresh)
   supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('Supabase auth event:', event, session?.user?.email)
+    console.log(
+      'Supabase auth event:',
+      event,
+      'session exists:',
+      !!session,
+      'user exists:',
+      !!session?.user,
+      'user email:',
+      session?.user?.email
+    )
 
     const { setUser } = useAuthStore.getState()
 
-    if (event === 'SIGNED_IN' && session?.user) {
-      // User signed in - update our store
+    if (
+      (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') &&
+      session?.user
+    ) {
+      // User signed in or initial session loaded - update our store
       const user: User = {
         id: session.user.id,
         email: session.user.email!,
@@ -466,6 +483,9 @@ const initializeAuthStateListener = () => {
         isLoading: false,
         error: null,
       })
+
+      // Fetch user profile data (clinic info, availableClinics) for both SIGNED_IN and INITIAL_SESSION
+      useAuthStore.getState().fetchUserProfile()
     } else if (event === 'SIGNED_OUT') {
       // User signed out - clear our store
       useAuthStore.setState({
@@ -481,32 +501,53 @@ const initializeAuthStateListener = () => {
     } else if (event === 'TOKEN_REFRESHED') {
       // Token was refreshed - user stays logged in
       console.log('Auth token refreshed successfully')
+    } else if (event === 'INITIAL_SESSION' && !session) {
+      // INITIAL_SESSION fired but session is undefined - try to recover
+      console.log('INITIAL_SESSION with no session - attempting recovery')
+      supabase.auth
+        .getSession()
+        .then(({ data: { session: recoveredSession } }) => {
+          if (recoveredSession?.user) {
+            console.log('Recovered session:', recoveredSession.user.email)
+            // Trigger the session handling logic manually
+            const user: User = {
+              id: recoveredSession.user.id,
+              email: recoveredSession.user.email!,
+              firstName: recoveredSession.user.user_metadata?.first_name,
+              lastName: recoveredSession.user.user_metadata?.last_name,
+              role: recoveredSession.user.user_metadata?.role,
+              clinicId: recoveredSession.user.user_metadata?.clinic_id,
+              displayName:
+                `${recoveredSession.user.user_metadata?.first_name} ${recoveredSession.user.user_metadata?.last_name}`.trim(),
+            }
+
+            useAuthStore.setState({
+              user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            })
+
+            // Fetch user profile data (clinic info, availableClinics)
+            useAuthStore.getState().fetchUserProfile()
+          } else {
+            console.log('Could not recover session')
+            useAuthStore.setState({
+              isLoading: false,
+            })
+          }
+        })
     }
   })
 
   // Check for existing session on startup
   supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('getSession result:', session)
     if (session?.user) {
-      const user: User = {
-        id: session.user.id,
-        email: session.user.email!,
-        firstName: session.user.user_metadata?.first_name,
-        lastName: session.user.user_metadata?.last_name,
-        role: session.user.user_metadata?.role,
-        clinicId: session.user.user_metadata?.clinic_id,
-        displayName:
-          `${session.user.user_metadata?.first_name} ${session.user.user_metadata?.last_name}`.trim(),
-      }
-
-      useAuthStore.setState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-      })
-
-      // Fetch user profile data (clinic info, availableClinics)
-      useAuthStore.getState().fetchUserProfile()
+      // Session exists - this will trigger INITIAL_SESSION event which handles the user setup
+      console.log('Existing session found, waiting for INITIAL_SESSION event')
     } else {
+      console.log('No existing session found')
       useAuthStore.setState({
         isLoading: false,
       })
