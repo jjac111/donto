@@ -120,11 +120,6 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
-                  {item.name === t('patients') && (
-                    <Badge variant="secondary" className="ml-auto">
-                      12
-                    </Badge>
-                  )}
                 </Link>
               )
             })}
