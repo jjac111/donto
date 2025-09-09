@@ -247,6 +247,7 @@
     "selectConditionsForSurfaces": "Selecciona condiciones para las superficies del diente",
     "toothSurfaces": "Superficies del Diente",
     "condition": "Condición",
+    "conditionFor": "Condición para",
     "selectCondition": "Seleccionar condición",
     "noCondition": "Sin condición",
     "notes": "Notas",

@@ -245,6 +245,7 @@
     "selectConditionsForSurfaces": "Select conditions for tooth surfaces",
     "toothSurfaces": "Tooth Surfaces",
     "condition": "Condition",
+    "conditionFor": "Condition for",
     "selectCondition": "Select condition",
     "noCondition": "No condition",
     "notes": "Notes",

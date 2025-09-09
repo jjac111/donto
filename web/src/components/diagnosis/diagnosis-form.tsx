@@ -114,11 +114,11 @@ export function DiagnosisForm({
     resolver: zodResolver(diagnosisSchema(t)),
     defaultValues: {
       surfaces: {
-        M: { conditionId: '', notes: '' },
-        D: { conditionId: '', notes: '' },
-        B: { conditionId: '', notes: '' },
-        L: { conditionId: '', notes: '' },
-        O: { conditionId: '', notes: '' },
+        M: { conditionId: undefined, notes: '' },
+        D: { conditionId: undefined, notes: '' },
+        B: { conditionId: undefined, notes: '' },
+        L: { conditionId: undefined, notes: '' },
+        O: { conditionId: undefined, notes: '' },
       },
       generalNotes: '',
     },
@@ -129,11 +129,11 @@ export function DiagnosisForm({
     if (open && toothNumber && existingConditions.length > 0) {
       const existingValues: Partial<DiagnosisFormValues> = {
         surfaces: {
-          M: { conditionId: '', notes: '' },
-          D: { conditionId: '', notes: '' },
-          B: { conditionId: '', notes: '' },
-          L: { conditionId: '', notes: '' },
-          O: { conditionId: '', notes: '' },
+          M: { conditionId: undefined, notes: '' },
+          D: { conditionId: undefined, notes: '' },
+          B: { conditionId: undefined, notes: '' },
+          L: { conditionId: undefined, notes: '' },
+          O: { conditionId: undefined, notes: '' },
         },
         generalNotes: '',
       }
@@ -160,11 +160,11 @@ export function DiagnosisForm({
       // Reset form for new diagnosis
       form.reset({
         surfaces: {
-          M: { conditionId: '', notes: '' },
-          D: { conditionId: '', notes: '' },
-          B: { conditionId: '', notes: '' },
-          L: { conditionId: '', notes: '' },
-          O: { conditionId: '', notes: '' },
+          M: { conditionId: undefined, notes: '' },
+          D: { conditionId: undefined, notes: '' },
+          B: { conditionId: undefined, notes: '' },
+          L: { conditionId: undefined, notes: '' },
+          O: { conditionId: undefined, notes: '' },
         },
         generalNotes: '',
       })
@@ -287,42 +287,57 @@ export function DiagnosisForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t('condition')}</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t('selectCondition')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="">{t('noCondition')}</SelectItem>
-                            {getAllConditions().map(condition => (
-                              <SelectItem
-                                key={condition.id}
-                                value={condition.id}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className="w-3 h-3 rounded"
-                                    style={{ backgroundColor: condition.color }}
-                                  />
-                                  <span>{condition.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    (
-                                    {
-                                      CONDITION_CATEGORY_LABELS[
-                                        condition.category
-                                      ]
-                                    }
-                                    )
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={t('selectCondition')}
+                                />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {getAllConditions().map(condition => (
+                                <SelectItem
+                                  key={condition.id}
+                                  value={condition.id}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-3 h-3 rounded"
+                                      style={{
+                                        backgroundColor: condition.color,
+                                      }}
+                                    />
+                                    <span>{condition.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      (
+                                      {
+                                        CONDITION_CATEGORY_LABELS[
+                                          condition.category
+                                        ]
+                                      }
+                                      )
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => field.onChange(undefined)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
