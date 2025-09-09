@@ -76,11 +76,6 @@ export function Header({
 
       {/* Right side - Actions */}
       <div className="flex items-center space-x-2">
-        {/* Dark mode toggle */}
-        <div className="hidden lg:flex">
-          <DarkModeToggle />
-        </div>
-
         {/* Clinic switcher */}
         {availableClinics && availableClinics.length > 1 && (
           <div className="relative">
@@ -178,6 +173,10 @@ export function Header({
                 <Settings className="mr-2 h-4 w-4" />
                 {t('settings')}
               </Button>
+              <hr className="my-1" />
+              <div className="px-3 py-2 flex ">
+                <DarkModeToggle />
+              </div>
               <hr className="my-1" />
               <Button
                 variant="ghost"
