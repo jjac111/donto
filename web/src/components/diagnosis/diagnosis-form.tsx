@@ -36,6 +36,8 @@ import { Separator } from '@/components/ui/separator'
 import {
   DentalCondition,
   DentalConditionsData,
+  DentalConditionCategory,
+  DentalConditionSeverity,
   DiagnosisFormData,
   SURFACE_LABELS,
   CONDITION_CATEGORY_LABELS,
@@ -93,7 +95,20 @@ export function DiagnosisForm({
     'M' | 'D' | 'B' | 'L' | 'O' | null
   >(null)
 
-  const dentalConditions: DentalConditionsData = dentalConditionsData
+  // Transform JSON data to match TypeScript interface
+  const dentalConditions: DentalConditionsData = Object.entries(
+    dentalConditionsData
+  ).reduce(
+    (acc, [category, conditions]) => ({
+      ...acc,
+      [category]: conditions.map(condition => ({
+        ...condition,
+        category: category as DentalConditionCategory,
+        severity: condition.severity as DentalConditionSeverity,
+      })),
+    }),
+    {} as DentalConditionsData
+  )
 
   const form = useForm<DiagnosisFormValues>({
     resolver: zodResolver(diagnosisSchema(t)),

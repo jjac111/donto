@@ -82,7 +82,7 @@ export const queryKeys = {
   toothConditions: ['tooth-conditions'] as const,
   patientToothConditions: (patientId: string) =>
     ['tooth-conditions', 'patient', patientId] as const,
-  toothConditions: (patientId: string, toothNumber: string) =>
+  toothConditionsByTooth: (patientId: string, toothNumber: string) =>
     ['tooth-conditions', patientId, toothNumber] as const,
 
   // Clinics

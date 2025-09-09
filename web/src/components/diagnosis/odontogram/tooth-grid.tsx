@@ -1,8 +1,9 @@
 'use client'
 
 import React from 'react'
-import { Tooth } from './tooth'
+
 import { ToothWithConditions } from '@/types/dental-conditions'
+import { Tooth } from './tooth'
 
 interface ToothGridProps {
   teeth: ToothWithConditions[]

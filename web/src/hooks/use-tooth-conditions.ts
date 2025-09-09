@@ -44,13 +44,15 @@ const transformToothConditions = (
     const toothConditions = conditionsByTooth[tooth.number] || []
 
     const surfacesWithConditions = tooth.surfaces.map(surface => {
-      const condition = toothConditions.find(c => c.surface === surface.surface)
+      const condition = toothConditions.find(
+        (c: any) => c.surface === surface.surface
+      )
       if (condition) {
         return {
           ...surface,
           condition: {
             id: condition.condition_type,
-            category: 'general', // Will be determined from condition type
+            category: 'general' as const, // Will be determined from condition type
             name: condition.condition_type,
             description: '',
             color: '#FF8C00', // Default orange for caries
@@ -71,7 +73,9 @@ const transformToothConditions = (
         toothConditions.length > 0
           ? new Date(
               Math.max(
-                ...toothConditions.map(c => new Date(c.created_at).getTime())
+                ...toothConditions.map((c: any) =>
+                  new Date(c.created_at).getTime()
+                )
               )
             )
           : undefined,
@@ -107,7 +111,7 @@ export const usePatientToothConditions = (patientId: string) => {
 // Get tooth conditions for a specific tooth
 export const useToothConditions = (patientId: string, toothNumber: string) => {
   return useQuery({
-    queryKey: queryKeys.toothConditions(patientId, toothNumber),
+    queryKey: queryKeys.toothConditionsByTooth(patientId, toothNumber),
     queryFn: async (): Promise<any[]> => {
       const clinicId = useAuthStore.getState().clinicId
       if (!clinicId) throw new Error('No clinic selected')
@@ -188,7 +192,7 @@ export const useSaveToothDiagnosis = () => {
         queryKey: queryKeys.patientToothConditions(patientId),
       })
       queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditions(patientId, ''),
+        queryKey: queryKeys.toothConditionsByTooth(patientId, ''),
       })
     },
   })
@@ -222,7 +226,7 @@ export const useUpdateToothCondition = () => {
     onSuccess: () => {
       // Invalidate tooth conditions queries
       queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditions('', ''),
+        queryKey: queryKeys.toothConditionsByTooth('', ''),
       })
     },
   })
@@ -246,7 +250,7 @@ export const useDeleteToothCondition = () => {
     onSuccess: () => {
       // Invalidate tooth conditions queries
       queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditions('', ''),
+        queryKey: queryKeys.toothConditionsByTooth('', ''),
       })
     },
   })

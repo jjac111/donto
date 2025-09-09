@@ -24,12 +24,14 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
   // SVG fills
   const getFill = (surface?: ToothSurfaceCondition): string => {
     const color = surface?.condition?.color
-    return color ? withAlpha(color, '33') : 'transparent'
+    return color ? withAlpha(color, '33') : 'white'
   }
 
   const getToothStatusColor = (): string => {
-    // Check if tooth has any conditions
-    const hasConditions = tooth.surfaces.some(surface => surface.condition)
+    // Check if tooth has conditions without specific surfaces (general tooth conditions)
+    const hasGeneralConditions = tooth.surfaces.some(
+      surface => surface.condition && !surface.surface
+    )
     const hasUrgentConditions = tooth.surfaces.some(
       surface =>
         surface.condition?.severity === 'critico' ||
@@ -38,8 +40,8 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
 
     if (!tooth.isPresent) return 'border-gray-800 bg-gray-200'
     if (hasUrgentConditions) return 'border-red-500 bg-red-50'
-    if (hasConditions) return 'border-orange-500 bg-orange-50'
-    return 'border-green-500 bg-green-50'
+    if (hasGeneralConditions) return 'border-orange-500 bg-orange-50'
+    return 'border-gray-300 bg-white' // Neutral border for healthy teeth
   }
 
   return (

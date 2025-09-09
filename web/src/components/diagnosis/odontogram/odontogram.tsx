@@ -2,9 +2,9 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { Tooth } from './tooth'
-import { ToothGrid } from './tooth-grid'
+
 import { ToothWithConditions } from '@/types/dental-conditions'
+import { ToothGrid } from './tooth-grid'
 
 interface OdontogramProps {
   teeth: ToothWithConditions[]
@@ -41,14 +41,14 @@ export function Odontogram({
       const num = parseInt(tooth.number)
       return num >= 31 && num <= 38
     })
-    .sort((a, b) => parseInt(a.number) - parseInt(b.number)) // Left to right
+    .sort((a, b) => parseInt(b.number) - parseInt(a.number)) // Right to left (31-38)
 
   const lowerRightTeeth = teeth
     .filter(tooth => {
       const num = parseInt(tooth.number)
       return num >= 41 && num <= 48
     })
-    .sort((a, b) => parseInt(b.number) - parseInt(a.number)) // Right to left
+    .sort((a, b) => parseInt(a.number) - parseInt(b.number)) // Left to right (48-41)
 
   return (
     <div className={`odontogram ${className}`}>
@@ -69,12 +69,13 @@ export function Odontogram({
               {t('maxillary')}
             </span>
           </div>
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-12">
             <ToothGrid
               teeth={upperRightTeeth}
               onToothClick={onToothClick}
               selectedTooth={selectedTooth}
             />
+            <div className="w-2" /> {/* Separation */}
             <ToothGrid
               teeth={upperLeftTeeth}
               onToothClick={onToothClick}
@@ -90,12 +91,13 @@ export function Odontogram({
               {t('mandibular')}
             </span>
           </div>
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-12">
             <ToothGrid
               teeth={lowerLeftTeeth}
               onToothClick={onToothClick}
               selectedTooth={selectedTooth}
             />
+            <div className="w-2" /> {/* Separation */}
             <ToothGrid
               teeth={lowerRightTeeth}
               onToothClick={onToothClick}
