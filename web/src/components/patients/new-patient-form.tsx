@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { patientsApi } from '@/lib/api'
+import { useCreatePatient } from '@/hooks/use-patients'
 
 const newPatientSchema = (t: (key: string) => string) =>
   z.object({
@@ -48,7 +48,7 @@ const newPatientSchema = (t: (key: string) => string) =>
       message: t('selectValidGender'),
     }),
     phone: z.string().optional(),
-    email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
+    email: z.email(t('invalidEmail')).optional().or(z.literal('')),
     address: z.string().optional(),
 
     // Patient fields
@@ -72,7 +72,9 @@ export function NewPatientForm({
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Use the mutation hook for creating patients
+  const createPatientMutation = useCreatePatient()
 
   const form = useForm({
     resolver: zodResolver(newPatientSchema(t)),
@@ -97,44 +99,36 @@ export function NewPatientForm({
   })
 
   const onSubmit = async (data: any) => {
-    setIsSubmitting(true)
-    try {
-      const patientData = {
-        person: {
-          nationalId: data.nationalId,
-          country: data.country,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          dateOfBirth: new Date(data.dateOfBirth),
-          sex: data.sex,
-          phone: data.phone || undefined,
-          email: data.email || undefined,
-          address: data.address || undefined,
-        } as any,
-        emergencyContactName: data.emergencyContactName || undefined,
-        emergencyContactPhone: data.emergencyContactPhone || undefined,
-        medicalHistory: data.medicalHistory || undefined,
-        allergies: data.allergies || undefined,
-      }
-
-      const newPatient = await patientsApi.create(patientData)
-
-      // Close the modal
-      onOpenChange(false)
-
-      // Reset form
-      form.reset()
-
-      // Call success callback to refresh list
-      onSuccess?.()
-
-      // Navigate to patient page
-      router.push(`/patients/${newPatient.id}`)
-    } catch (error) {
-      console.error('Error creating patient:', error)
-    } finally {
-      setIsSubmitting(false)
+    const patientData = {
+      person: {
+        nationalId: data.nationalId,
+        country: data.country,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: new Date(data.dateOfBirth),
+        sex: data.sex,
+        phone: data.phone || undefined,
+        email: data.email || undefined,
+        address: data.address || undefined,
+      } as any,
+      emergencyContactName: data.emergencyContactName || undefined,
+      emergencyContactPhone: data.emergencyContactPhone || undefined,
+      medicalHistory: data.medicalHistory || undefined,
+      allergies: data.allergies || undefined,
     }
+
+    createPatientMutation.mutate(patientData, {
+      onSuccess: newPatient => {
+        // Close the modal
+        onOpenChange(false)
+        // Reset form
+        form.reset()
+        // Call success callback
+        onSuccess?.()
+        // Navigate to patient page
+        router.push(`/patients/${newPatient.id}`)
+      },
+    })
   }
 
   return (
@@ -414,8 +408,8 @@ export function NewPatientForm({
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
+              <Button type="submit" disabled={createPatientMutation.isPending}>
+                {createPatientMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {tCommon('loading')}
