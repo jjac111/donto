@@ -32,8 +32,8 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
     const hasConditions = tooth.surfaces.some(surface => surface.condition)
     const hasUrgentConditions = tooth.surfaces.some(
       surface =>
-        surface.condition?.severity === 'critico' ||
-        surface.condition?.severity === 'alto'
+        surface.condition?.severity === 'critical' ||
+        surface.condition?.severity === 'high'
     )
 
     if (!tooth.isPresent) return 'border-gray-800 bg-gray-200'

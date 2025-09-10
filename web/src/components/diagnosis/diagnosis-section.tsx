@@ -76,8 +76,8 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const urgentConditionsCount = teeth.filter(tooth =>
     tooth.surfaces.some(
       surface =>
-        surface.condition?.severity === 'critico' ||
-        surface.condition?.severity === 'alto'
+        surface.condition?.severity === 'critical' ||
+        surface.condition?.severity === 'high'
     )
   ).length
 
@@ -179,7 +179,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                 {
                   teeth.filter(tooth =>
                     tooth.surfaces.some(
-                      surface => surface.condition?.severity === 'medio'
+                      surface => surface.condition?.severity === 'medium'
                     )
                   ).length
                 }

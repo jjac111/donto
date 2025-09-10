@@ -57,7 +57,7 @@ const transformToothConditions = (
             name: condition.condition_type,
             description: '',
             color: '#FF8C00', // Default orange for caries
-            severity: 'medio' as const,
+            severity: 'medium' as const,
           },
           notes: condition.notes,
           recordedDate: new Date(condition.recorded_date),

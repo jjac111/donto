@@ -1,16 +1,16 @@
 // Dental condition types and interfaces
 
 export type DentalConditionCategory =
-  | 'ortodoncia'
-  | 'cirugia'
-  | 'endodoncia'
+  | 'orthodontics'
+  | 'surgery'
+  | 'endodontics'
   | 'general'
-  | 'periodoncia'
-  | 'protesis'
-  | 'pediatria'
-  | 'urgencias'
+  | 'periodontics'
+  | 'prosthetics'
+  | 'pediatrics'
+  | 'emergencies'
 
-export type DentalConditionSeverity = 'bajo' | 'medio' | 'alto' | 'critico'
+export type DentalConditionSeverity = 'low' | 'medium' | 'high' | 'critical'
 
 export interface DentalCondition {
   id: string
@@ -65,47 +65,47 @@ export interface LegacyDiagnosisFormData {
   generalNotes?: string
 }
 
-// Category display names in Spanish
+// Category display names (i18n keys)
 export const CONDITION_CATEGORY_LABELS: Record<
   DentalConditionCategory,
   string
 > = {
-  ortodoncia: 'Ortodoncia',
-  cirugia: 'Cirugía',
-  endodoncia: 'Endodoncia',
-  general: 'General',
-  periodoncia: 'Periodoncia',
-  protesis: 'Prótesis',
-  pediatria: 'Pediatría',
-  urgencias: 'Urgencias',
+  orthodontics: 'categories.orthodontics',
+  surgery: 'categories.surgery',
+  endodontics: 'categories.endodontics',
+  general: 'categories.general',
+  periodontics: 'categories.periodontics',
+  prosthetics: 'categories.prosthetics',
+  pediatrics: 'categories.pediatrics',
+  emergencies: 'categories.emergencies',
 }
 
-// Severity display names in Spanish
+// Severity display names (i18n keys)
 export const CONDITION_SEVERITY_LABELS: Record<
   DentalConditionSeverity,
   string
 > = {
-  bajo: 'Bajo',
-  medio: 'Medio',
-  alto: 'Alto',
-  critico: 'Crítico',
+  low: 'severity.low',
+  medium: 'severity.medium',
+  high: 'severity.high',
+  critical: 'severity.critical',
 }
 
-// Surface display names in Spanish
+// Surface display names (i18n keys)
 export const SURFACE_LABELS: Record<'M' | 'D' | 'B' | 'L' | 'O', string> = {
-  M: 'Mesial',
-  D: 'Distal',
-  B: 'Buccal',
-  L: 'Lingual',
-  O: 'Oclusal',
+  M: 'surfaces.mesial',
+  D: 'surfaces.distal',
+  B: 'surfaces.buccal',
+  L: 'surfaces.lingual',
+  O: 'surfaces.occlusal',
 }
 
-// FDI tooth numbering quadrants
+// FDI tooth numbering quadrants (i18n keys)
 export const FDI_QUADRANTS = {
-  upperRight: { range: [11, 18], label: 'Superior Derecha' },
-  upperLeft: { range: [21, 28], label: 'Superior Izquierda' },
-  lowerLeft: { range: [31, 38], label: 'Inferior Izquierda' },
-  lowerRight: { range: [41, 48], label: 'Inferior Derecha' },
+  upperRight: { range: [11, 18], label: 'quadrants.upperRight' },
+  upperLeft: { range: [21, 28], label: 'quadrants.upperLeft' },
+  lowerLeft: { range: [31, 38], label: 'quadrants.lowerLeft' },
+  lowerRight: { range: [41, 48], label: 'quadrants.lowerRight' },
 } as const
 
 // Helper function to get all tooth numbers
