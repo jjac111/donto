@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
-import { Loader2, X } from 'lucide-react'
+import { Loader2, X, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -55,28 +55,17 @@ interface DiagnosisFormProps {
 
 const diagnosisSchema = (t: (key: string) => string) =>
   z.object({
-    surfaces: z.object({
-      M: z.object({
-        conditionId: z.string().optional(),
-        notes: z.string().optional(),
-      }),
-      D: z.object({
-        conditionId: z.string().optional(),
-        notes: z.string().optional(),
-      }),
-      B: z.object({
-        conditionId: z.string().optional(),
-        notes: z.string().optional(),
-      }),
-      L: z.object({
-        conditionId: z.string().optional(),
-        notes: z.string().optional(),
-      }),
-      O: z.object({
-        conditionId: z.string().optional(),
-        notes: z.string().optional(),
-      }),
-    }),
+    conditions: z
+      .array(
+        z.object({
+          conditionId: z.string().min(1, t('condition') + ' ' + t('required')),
+          surfaces: z
+            .array(z.enum(['M', 'D', 'B', 'L', 'O']))
+            .min(1, t('surfaces') + ' ' + t('required')),
+          notes: z.string().optional(),
+        })
+      )
+      .min(1, t('atLeastOneCondition')),
     generalNotes: z.string().optional(),
   })
 
@@ -91,9 +80,6 @@ export function DiagnosisForm({
   isLoading = false,
 }: DiagnosisFormProps) {
   const t = useTranslations('diagnosis')
-  const [selectedSurface, setSelectedSurface] = useState<
-    'M' | 'D' | 'B' | 'L' | 'O' | null
-  >(null)
 
   // Transform JSON data to match TypeScript interface
   const dentalConditions: DentalConditionsData = Object.entries(
@@ -113,13 +99,7 @@ export function DiagnosisForm({
   const form = useForm<DiagnosisFormValues>({
     resolver: zodResolver(diagnosisSchema(t)),
     defaultValues: {
-      surfaces: {
-        M: { conditionId: undefined, notes: '' },
-        D: { conditionId: undefined, notes: '' },
-        B: { conditionId: undefined, notes: '' },
-        L: { conditionId: undefined, notes: '' },
-        O: { conditionId: undefined, notes: '' },
-      },
+      conditions: [],
       generalNotes: '',
     },
   })
@@ -127,45 +107,44 @@ export function DiagnosisForm({
   // Load existing conditions when dialog opens
   useEffect(() => {
     if (open && toothNumber && existingConditions.length > 0) {
-      const existingValues: Partial<DiagnosisFormValues> = {
-        surfaces: {
-          M: { conditionId: undefined, notes: '' },
-          D: { conditionId: undefined, notes: '' },
-          B: { conditionId: undefined, notes: '' },
-          L: { conditionId: undefined, notes: '' },
-          O: { conditionId: undefined, notes: '' },
-        },
-        generalNotes: '',
-      }
-
-      // Populate form with existing conditions
-      existingConditions.forEach((condition: any) => {
-        if (
-          existingValues.surfaces &&
-          existingValues.surfaces[
-            condition.surface as keyof typeof existingValues.surfaces
-          ]
-        ) {
-          existingValues.surfaces[
-            condition.surface as keyof typeof existingValues.surfaces
-          ] = {
-            conditionId: condition.condition_type,
-            notes: condition.notes || '',
+      // Group conditions by condition_type and collect surfaces
+      const conditionsByType = existingConditions.reduce(
+        (acc, condition: any) => {
+          const key = condition.condition_type
+          if (!acc[key]) {
+            acc[key] = {
+              conditionId: condition.condition_type,
+              surfaces: [],
+              notes: condition.notes || '',
+            }
           }
-        }
-      })
+          // Add surfaces from this condition (handle both old single surface and new array format)
+          if (condition.surfaces && Array.isArray(condition.surfaces)) {
+            acc[key].surfaces.push(...condition.surfaces)
+          } else if (condition.surface) {
+            acc[key].surfaces.push(condition.surface)
+          }
+          return acc
+        },
+        {} as Record<
+          string,
+          { conditionId: string; surfaces: string[]; notes: string }
+        >
+      )
+
+      // Extract general notes from first condition (they should be the same)
+      const generalNotes = existingConditions[0]?.notes || ''
+
+      const existingValues: Partial<DiagnosisFormValues> = {
+        conditions: Object.values(conditionsByType),
+        generalNotes,
+      }
 
       form.reset(existingValues)
     } else if (open) {
       // Reset form for new diagnosis
       form.reset({
-        surfaces: {
-          M: { conditionId: undefined, notes: '' },
-          D: { conditionId: undefined, notes: '' },
-          B: { conditionId: undefined, notes: '' },
-          L: { conditionId: undefined, notes: '' },
-          O: { conditionId: undefined, notes: '' },
-        },
+        conditions: [],
         generalNotes: '',
       })
     }
@@ -176,7 +155,7 @@ export function DiagnosisForm({
 
     const diagnosisData: DiagnosisFormData = {
       toothNumber,
-      surfaces: data.surfaces,
+      conditions: data.conditions,
       generalNotes: data.generalNotes,
     }
 
@@ -198,6 +177,41 @@ export function DiagnosisForm({
     return Object.values(dentalConditions).flat()
   }
 
+  const addCondition = () => {
+    const currentConditions = form.getValues('conditions')
+    form.setValue('conditions', [
+      ...currentConditions,
+      {
+        conditionId: '',
+        surfaces: [],
+        notes: '',
+      },
+    ])
+  }
+
+  const removeCondition = (index: number) => {
+    const currentConditions = form.getValues('conditions')
+    form.setValue(
+      'conditions',
+      currentConditions.filter((_, i) => i !== index)
+    )
+  }
+
+  const toggleSurface = (
+    conditionIndex: number,
+    surface: 'M' | 'D' | 'B' | 'L' | 'O'
+  ) => {
+    const currentConditions = form.getValues('conditions')
+    const condition = currentConditions[conditionIndex]
+    const surfaces = condition.surfaces
+
+    const newSurfaces = surfaces.includes(surface)
+      ? surfaces.filter(s => s !== surface)
+      : [...surfaces, surface]
+
+    form.setValue(`conditions.${conditionIndex}.surfaces`, newSurfaces)
+  }
+
   if (!toothNumber) return null
 
   return (
@@ -214,155 +228,180 @@ export function DiagnosisForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Surface selection grid */}
-            <div className="surface-grid">
-              <h4 className="text-sm font-medium text-foreground mb-3">
-                {t('toothSurfaces')}
-              </h4>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {(['M', 'D', 'B', 'L', 'O'] as const).map(surface => {
-                  const conditionId = form.watch(
-                    `surfaces.${surface}.conditionId`
-                  )
-                  const condition = conditionId
-                    ? getConditionById(conditionId)
-                    : undefined
-
-                  return (
-                    <button
-                      key={surface}
-                      type="button"
-                      className={`p-3 border rounded-lg text-center transition-colors ${
-                        selectedSurface === surface
-                          ? 'border-primary bg-primary/5'
-                          : 'border-muted hover:border-primary/50'
-                      }`}
-                      onClick={() =>
-                        setSelectedSurface(
-                          selectedSurface === surface ? null : surface
-                        )
-                      }
-                      style={{
-                        backgroundColor: condition
-                          ? `${condition.color}20`
-                          : undefined,
-                        borderColor: condition ? condition.color : undefined,
-                      }}
-                    >
-                      <div className="text-sm font-medium">
-                        {SURFACE_LABELS[surface]}
-                      </div>
-                      {condition && (
-                        <div className="text-xs text-muted-foreground mt-1 truncate">
-                          {condition.name}
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
+            {/* Conditions List */}
+            <div className="conditions-list">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-foreground">
+                  {t('conditions')}
+                </h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCondition}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('addCondition')}
+                </Button>
               </div>
-            </div>
 
-            {/* Selected surface details */}
-            {selectedSurface && (
-              <div className="surface-details p-4 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium">
-                    {t('conditionFor')} {SURFACE_LABELS[selectedSurface]}
-                  </h4>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedSurface(null)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name={`surfaces.${selectedSurface}.conditionId`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('condition')}</FormLabel>
-                        <div className="flex gap-2">
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || undefined}
+              <FormField
+                control={form.control}
+                name="conditions"
+                render={() => (
+                  <div className="space-y-4">
+                    {form.watch('conditions').map((_, conditionIndex) => (
+                      <div
+                        key={conditionIndex}
+                        className="condition-item p-4 border rounded-lg bg-muted/30"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <h5 className="text-sm font-medium">
+                            {t('condition')} {conditionIndex + 1}
+                          </h5>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCondition(conditionIndex)}
                           >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={t('selectCondition')}
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {getAllConditions().map(condition => (
-                                <SelectItem
-                                  key={condition.id}
-                                  value={condition.id}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className="w-3 h-3 rounded"
-                                      style={{
-                                        backgroundColor: condition.color,
-                                      }}
-                                    />
-                                    <span>{condition.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      (
-                                      {
-                                        CONDITION_CATEGORY_LABELS[
-                                          condition.category
-                                        ]
-                                      }
-                                      )
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {field.value && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => field.onChange(undefined)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <FormField
-                    control={form.control}
-                    name={`surfaces.${selectedSurface}.notes`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('notes')}</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder={t('surfaceNotesPlaceholder')}
-                            className="min-h-[80px]"
-                            {...field}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Condition Selection */}
+                          <FormField
+                            control={form.control}
+                            name={`conditions.${conditionIndex}.conditionId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('condition')}</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue
+                                        placeholder={t('selectCondition')}
+                                      />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {getAllConditions().map(condition => (
+                                      <SelectItem
+                                        key={condition.id}
+                                        value={condition.id}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            className="w-3 h-3 rounded"
+                                            style={{
+                                              backgroundColor: condition.color,
+                                            }}
+                                          />
+                                          <span>{condition.name}</span>
+                                          <span className="text-xs text-muted-foreground">
+                                            (
+                                            {
+                                              CONDITION_CATEGORY_LABELS[
+                                                condition.category
+                                              ]
+                                            }
+                                            )
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+
+                          {/* Notes */}
+                          <FormField
+                            control={form.control}
+                            name={`conditions.${conditionIndex}.notes`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('notes')}</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder={t('surfaceNotesPlaceholder')}
+                                    className="min-h-[80px]"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Surface Selection */}
+                        <div className="mt-4">
+                          <FormLabel className="text-sm font-medium mb-2 block">
+                            {t('toothSurfaces')}
+                          </FormLabel>
+                          <div className="grid grid-cols-5 gap-2">
+                            {(['M', 'D', 'B', 'L', 'O'] as const).map(
+                              surface => {
+                                const isSelected = form
+                                  .watch(
+                                    `conditions.${conditionIndex}.surfaces`
+                                  )
+                                  .includes(surface)
+
+                                return (
+                                  <button
+                                    key={surface}
+                                    type="button"
+                                    className={`p-2 border rounded text-center text-sm transition-colors ${
+                                      isSelected
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-muted hover:border-primary/50'
+                                    }`}
+                                    onClick={() =>
+                                      toggleSurface(conditionIndex, surface)
+                                    }
+                                  >
+                                    {SURFACE_LABELS[surface]}
+                                  </button>
+                                )
+                              }
+                            )}
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name={`conditions.${conditionIndex}.surfaces`}
+                            render={() => <FormMessage />}
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    {form.watch('conditions').length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>{t('noConditionsAdded')}</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={addCondition}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          {t('addFirstCondition')}
+                        </Button>
+                      </div>
                     )}
-                  />
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
+              />
+            </div>
 
             <Separator />
 

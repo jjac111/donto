@@ -186,18 +186,19 @@ export interface ToothCondition {
   id: string
   patientId: string
   toothNumber: string
-  surface: 'M' | 'D' | 'B' | 'L' | 'O'
+  surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[] // Array of surfaces that this condition applies to
   conditionType: string
   notes?: string
   recordedDate: Date
-  recordedByProviderId?: string
+  recordedByProfileId?: string
 
   // Related entities
-  recordedByProvider?: Provider
+  recordedByProfile?: Profile
 
   // Computed
-  surfaceDisplay: string // full name: "Mesial", "Distal", etc.
+  surfacesDisplay: string[] // full names: ["Mesial", "Distal", etc.]
   conditionColor: string // for odontogram styling
+  appliesToAllSurfaces: boolean // true if condition applies to all surfaces (or none specified)
 }
 
 // Odontogram-specific types

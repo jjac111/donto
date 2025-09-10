@@ -144,11 +144,11 @@ export interface DbToothCondition {
   id: string
   patient_id: string
   tooth_number: string
-  surface: 'M' | 'D' | 'B' | 'L' | 'O' // mesial, distal, buccal, lingual, occlusal
+  surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[] // Array of surfaces: mesial, distal, buccal, lingual, occlusal
   condition_type: string
   notes: string | null
   recorded_date: string
-  recorded_by_provider_id: string | null
+  recorded_by_profile_id: string | null
   created_at: string
   updated_at: string
 }

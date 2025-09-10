@@ -30,7 +30,7 @@ export interface ToothSurfaceCondition {
   condition?: DentalCondition
   notes?: string
   recordedDate: Date
-  recordedByProviderId?: string
+  recordedByProfileId?: string
 }
 
 // Extended entity types for odontogram
@@ -42,8 +42,19 @@ export interface ToothWithConditions {
   lastUpdated?: Date
 }
 
-// Form data for diagnosis entry
+// Form data for diagnosis entry (new multi-surface approach)
 export interface DiagnosisFormData {
+  toothNumber: string
+  conditions: {
+    conditionId: string
+    surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[] // Array of surfaces this condition applies to
+    notes?: string
+  }[]
+  generalNotes?: string
+}
+
+// Legacy form data structure (for backward compatibility during transition)
+export interface LegacyDiagnosisFormData {
   toothNumber: string
   surfaces: {
     [surface in 'M' | 'D' | 'B' | 'L' | 'O']: {

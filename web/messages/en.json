@@ -264,6 +264,12 @@
     "noRecentActivity": "No recent activity",
     "loading": "Loading diagnosis...",
     "loadingError": "Error loading diagnosis",
-    "viewHistory": "View History"
+    "viewHistory": "View History",
+    "addCondition": "Add Condition",
+    "noConditionsAdded": "No conditions added yet",
+    "addFirstCondition": "Add First Condition",
+    "atLeastOneCondition": "At least one condition is required",
+    "surfaces": "surfaces",
+    "required": "is required"
   }
 }

@@ -266,6 +266,12 @@
     "noRecentActivity": "No hay actividad reciente",
     "loading": "Cargando diagnóstico...",
     "loadingError": "Error al cargar diagnóstico",
-    "viewHistory": "Ver Historial"
+    "viewHistory": "Ver Historial",
+    "addCondition": "Agregar Condición",
+    "noConditionsAdded": "No se han agregado condiciones",
+    "addFirstCondition": "Agregar Primera Condición",
+    "atLeastOneCondition": "Debe agregar al menos una condición",
+    "surfaces": "superficies",
+    "required": "es obligatorio"
   }
 }

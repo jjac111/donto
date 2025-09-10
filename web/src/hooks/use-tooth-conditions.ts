@@ -44,8 +44,9 @@ const transformToothConditions = (
     const toothConditions = conditionsByTooth[tooth.number] || []
 
     const surfacesWithConditions = tooth.surfaces.map(surface => {
+      // Find condition that applies to this surface
       const condition = toothConditions.find(
-        (c: any) => c.surface === surface.surface
+        (c: any) => c.surfaces && c.surfaces.includes(surface.surface)
       )
       if (condition) {
         return {
@@ -60,7 +61,7 @@ const transformToothConditions = (
           },
           notes: condition.notes,
           recordedDate: new Date(condition.recorded_date),
-          recordedByProviderId: condition.recorded_by_provider_id,
+          recordedByProfileId: condition.recorded_by_profile_id,
         }
       }
       return surface
@@ -149,17 +150,39 @@ export const useSaveToothDiagnosis = () => {
       const clinicId = useAuthStore.getState().clinicId
       if (!clinicId) throw new Error('No clinic selected')
 
-      // Prepare conditions to save
-      const conditionsToSave = Object.entries(diagnosisData.surfaces)
-        .filter(([_, surfaceData]) => surfaceData.conditionId)
-        .map(([surface, surfaceData]) => ({
+      // Get current user profile for recording
+      const { data: authUser } = await supabase.auth.getUser()
+      const userId = authUser.user?.id
+      if (!userId) throw new Error('No authenticated user found')
+
+      // Get the user's profile for the current clinic
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('clinic_id', clinicId)
+        .eq('is_active', true)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Could not find user profile')
+      }
+
+      const profileId = profile.id
+
+      // Prepare conditions to save (new multi-surface format)
+      const conditionsToSave = diagnosisData.conditions
+        .filter(
+          condition => condition.conditionId && condition.surfaces.length > 0
+        )
+        .map(condition => ({
           patient_id: patientId,
           tooth_number: diagnosisData.toothNumber,
-          surface: surface as 'M' | 'D' | 'B' | 'L' | 'O',
-          condition_type: surfaceData.conditionId!,
-          notes: surfaceData.notes || null,
+          surfaces: condition.surfaces,
+          condition_type: condition.conditionId,
+          notes: condition.notes || null,
           recorded_date: new Date().toISOString().split('T')[0],
-          recorded_by_provider_id: null, // Will be set from auth context
+          recorded_by_profile_id: profileId,
         }))
 
       // First, delete existing conditions for this tooth
@@ -209,6 +232,7 @@ export const useUpdateToothCondition = () => {
     }: {
       conditionId: string
       updates: Partial<{
+        surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[]
         condition_type: string
         notes: string
         recorded_date: string
