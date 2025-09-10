@@ -208,21 +208,34 @@ CREATE TABLE cost_estimate_items (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tooth conditions/odontogram data
-CREATE TABLE tooth_conditions (
+
+-- Tooth diagnosis history - simple audit log for diagnosis sessions
+CREATE TABLE tooth_diagnosis_histories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    recorded_by_profile_id UUID REFERENCES profiles(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tooth diagnosis information per patient with current conditions
+CREATE TABLE tooth_diagnoses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     tooth_number VARCHAR(10) NOT NULL, -- e.g., "11", "14", "21"
-    surfaces TEXT[] DEFAULT ARRAY[]::TEXT[], -- Array of surfaces: "M", "D", "B", "L", "O" (mesial, distal, buccal, lingual, occlusal)
-    condition_type VARCHAR(50) NOT NULL, -- "healthy", "caries", "filling", "crown", "missing", etc.
-    notes TEXT,
-    recorded_date DATE DEFAULT CURRENT_DATE,
-    recorded_by_profile_id UUID REFERENCES profiles(id),
+    is_present BOOLEAN DEFAULT true, -- false if tooth is missing
+    is_treated BOOLEAN DEFAULT false, -- true if tooth has been treated
+    requires_extraction BOOLEAN DEFAULT false, -- true if tooth needs to be extracted
+    general_notes TEXT, -- General notes about the tooth
+    tooth_conditions JSONB DEFAULT '[]'::jsonb, -- Array of condition objects with diagnosis history
+    -- tooth_conditions structure: [{"surfaces": ["M","D","B","L","O"], "condition_type": "caries", "notes": "text", "diagnosis_date": "2024-01-01", "recorded_by_profile_id": "uuid", "created_at": "timestamp"}]
+    history_id UUID REFERENCES tooth_diagnosis_histories(id) ON DELETE CASCADE, -- Reference to the diagnosis history that created this tooth record
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
-    UNIQUE(patient_id, tooth_number, condition_type)
+    UNIQUE(patient_id, tooth_number) -- One tooth record per patient per tooth number
 );
+
 
 -- Basic indexes for performance
 CREATE INDEX idx_persons_clinic ON persons(clinic_id);
@@ -237,9 +250,11 @@ CREATE INDEX idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX idx_appointments_provider ON appointments(provider_id);
 CREATE INDEX idx_treatment_items_plan ON treatment_items(treatment_plan_id);
 CREATE INDEX idx_treatment_items_procedure ON treatment_items(procedure_id);
-CREATE INDEX idx_tooth_conditions_patient ON tooth_conditions(patient_id);
-CREATE INDEX idx_tooth_conditions_surfaces ON tooth_conditions USING GIN(surfaces);
-CREATE INDEX idx_tooth_conditions_profile ON tooth_conditions(recorded_by_profile_id);
+CREATE INDEX idx_tooth_diagnoses_patient ON tooth_diagnoses(patient_id);
+CREATE INDEX idx_tooth_diagnoses_tooth_number ON tooth_diagnoses(patient_id, tooth_number);
+CREATE INDEX idx_tooth_diagnoses_history_id ON tooth_diagnoses(history_id);
+CREATE INDEX idx_tooth_diagnosis_histories_patient ON tooth_diagnosis_histories(patient_id);
+CREATE INDEX idx_tooth_diagnosis_histories_profile ON tooth_diagnosis_histories(recorded_by_profile_id);
 CREATE INDEX idx_clinical_notes_patient ON clinical_notes(patient_id);
 CREATE INDEX idx_procedures_clinic ON procedures(clinic_id);
 
@@ -571,7 +586,8 @@ ALTER TABLE clinical_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE treatment_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE treatment_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE procedures ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tooth_conditions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tooth_diagnoses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tooth_diagnosis_histories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clinics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cost_estimates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cost_estimate_items ENABLE ROW LEVEL SECURITY;
@@ -661,9 +677,21 @@ CREATE POLICY "Clinic isolation for procedures" ON procedures
         get_current_active_clinic() IS NOT NULL
     );
 
-CREATE POLICY "Clinic isolation for tooth_conditions" ON tooth_conditions
+CREATE POLICY "Clinic isolation for tooth_diagnoses" ON tooth_diagnoses
     FOR ALL USING (
-        -- Tooth conditions link via patient
+        -- Tooth diagnoses link via patient
+        EXISTS (
+            SELECT 1 FROM patients p 
+            WHERE p.id = patient_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for tooth_diagnosis_histories" ON tooth_diagnosis_histories
+    FOR ALL USING (
+        -- Tooth diagnosis histories link via patient
         EXISTS (
             SELECT 1 FROM patients p 
             WHERE p.id = patient_id 
