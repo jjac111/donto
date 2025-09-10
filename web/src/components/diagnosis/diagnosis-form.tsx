@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { useForm } from 'react-hook-form'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
@@ -80,6 +80,8 @@ export function DiagnosisForm({
   const tConditions = useTranslations('conditions')
   const tSurfaces = useTranslations('surfaces')
 
+  const isInitializingRef = useRef(false)
+
   // Transform JSON data to match TypeScript interface
   const dentalConditions: DentalConditionsData = useMemo(
     () =>
@@ -104,13 +106,17 @@ export function DiagnosisForm({
     },
   })
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'conditions',
+  })
+
   const onSubmit = async (data: DiagnosisFormValues) => {
     if (!toothNumber) return
 
     const diagnosisData: DiagnosisFormData = {
       toothNumber,
       conditions: data.conditions,
-      generalNotes: '', // Remove general notes since data model doesn't support it
     }
 
     await onSave(diagnosisData)
@@ -147,7 +153,12 @@ export function DiagnosisForm({
 
   const handleCategoryChange = useMemo(
     () => (conditionIndex: number, category: string) => {
-      // Only clear condition if it's a user-initiated change (not loading existing data)
+      // Don't interfere during form initialization
+      if (isInitializingRef.current) {
+        form.setValue(`conditions.${conditionIndex}.selectedCategory`, category)
+        return
+      }
+
       const currentConditionId = form.getValues(
         `conditions.${conditionIndex}.conditionId`
       )
@@ -155,8 +166,13 @@ export function DiagnosisForm({
         `conditions.${conditionIndex}.selectedCategory`
       )
 
-      // If category is changing and we have a condition selected, clear it
-      if (currentConditionId && currentCategory !== category) {
+      // Only clear condition if it's a user-initiated change
+      // Check if the category is actually changing from a non-empty value
+      if (
+        currentConditionId &&
+        currentCategory &&
+        currentCategory !== category
+      ) {
         form.setValue(`conditions.${conditionIndex}.conditionId`, '')
       }
 
@@ -168,10 +184,23 @@ export function DiagnosisForm({
   // Load existing conditions when dialog opens
   useEffect(() => {
     if (open && toothNumber) {
+      isInitializingRef.current = true
+
       if (existingConditions.length > 0) {
         // Convert to array while preserving order
         const conditionsArray = existingConditions.map(condition => {
-          const conditionData = getConditionById(condition.condition_type)
+          // Inline the getConditionById logic to avoid dependency issues
+          let conditionData: any = undefined
+          for (const category of Object.values(dentalConditions)) {
+            const found = category.find(
+              (c: any) => c.id === condition.condition_type
+            )
+            if (found) {
+              conditionData = found
+              break
+            }
+          }
+
           return {
             conditionId: condition.condition_type,
             surfaces:
@@ -199,28 +228,25 @@ export function DiagnosisForm({
           ],
         })
       }
+
+      // Clear initialization flag after a short delay to allow form to settle
+      setTimeout(() => {
+        isInitializingRef.current = false
+      }, 100)
     }
-  }, [open, toothNumber, existingConditions, form, getConditionById])
+  }, [open, toothNumber, existingConditions, dentalConditions, form])
 
   const addCondition = () => {
-    const currentConditions = form.getValues('conditions')
-    form.setValue('conditions', [
-      ...currentConditions,
-      {
-        conditionId: '',
-        surfaces: [],
-        notes: '',
-        selectedCategory: '', // Add selected category tracking
-      },
-    ])
+    append({
+      conditionId: '',
+      surfaces: [],
+      notes: '',
+      selectedCategory: '',
+    })
   }
 
   const removeCondition = (index: number) => {
-    const currentConditions = form.getValues('conditions')
-    form.setValue(
-      'conditions',
-      currentConditions.filter((_, i) => i !== index)
-    )
+    remove(index)
   }
 
   const toggleSurface = (
@@ -298,216 +324,196 @@ export function DiagnosisForm({
                 </Button>
               </div>
 
-              <FormField
-                control={form.control}
-                name="conditions"
-                render={() => (
-                  <div className="space-y-4">
-                    {form.watch('conditions').map((_, conditionIndex) => (
-                      <div
-                        key={conditionIndex}
-                        className="condition-item p-4 border rounded-lg bg-muted/30"
+              <div className="space-y-4">
+                {fields.map((fieldItem, conditionIndex) => (
+                  <div
+                    key={fieldItem.id}
+                    className="condition-item p-4 border rounded-lg bg-muted/30"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <h5 className="text-sm font-medium">
+                        {t('condition')} {conditionIndex + 1}
+                      </h5>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCondition(conditionIndex)}
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <h5 className="text-sm font-medium">
-                            {t('condition')} {conditionIndex + 1}
-                          </h5>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeCondition(conditionIndex)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-                        <div className="space-y-4">
-                          {/* Category and Condition Row */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Category Selection */}
-                            <FormField
-                              control={form.control}
-                              name={`conditions.${conditionIndex}.selectedCategory`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>{t('category')}</FormLabel>
-                                  <Select
-                                    onValueChange={value =>
-                                      handleCategoryChange(
-                                        conditionIndex,
-                                        value
-                                      )
-                                    }
-                                    value={field.value}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue
-                                          placeholder={t('selectCategory')}
-                                        />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {getAllCategories.map(category => (
-                                        <SelectItem
-                                          key={category}
-                                          value={category}
-                                        >
-                                          {tCategories(category)}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            {/* Condition Selection */}
-                            <FormField
-                              control={form.control}
-                              name={`conditions.${conditionIndex}.conditionId`}
-                              render={({ field }) => {
-                                const selectedCategory = form.watch(
-                                  `conditions.${conditionIndex}.selectedCategory`
-                                )
-                                const conditionsForCategory =
-                                  getConditionsForCategory(selectedCategory)
-
-                                return (
-                                  <FormItem>
-                                    <FormLabel>{t('condition')}</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      value={field.value}
-                                      disabled={!selectedCategory}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue
-                                            placeholder={
-                                              selectedCategory
-                                                ? t('selectCondition')
-                                                : t('selectCategoryFirst')
-                                            }
-                                          />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        {conditionsForCategory.map(
-                                          condition => (
-                                            <SelectItem
-                                              key={condition.id}
-                                              value={condition.id}
-                                            >
-                                              <div className="flex items-center gap-2">
-                                                <div
-                                                  className="w-3 h-3 rounded"
-                                                  style={{
-                                                    backgroundColor:
-                                                      condition.color,
-                                                  }}
-                                                />
-                                                <span>
-                                                  {tConditions(condition.name, {
-                                                    defaultValue:
-                                                      condition.name,
-                                                  })}
-                                                </span>
-                                              </div>
-                                            </SelectItem>
-                                          )
-                                        )}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )
-                              }}
-                            />
-                          </div>
-
-                          {/* Notes */}
-                          <FormField
-                            control={form.control}
-                            name={`conditions.${conditionIndex}.notes`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('notes')}</FormLabel>
+                    <div className="space-y-4">
+                      {/* Category and Condition Row */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Category Selection */}
+                        <FormField
+                          control={form.control}
+                          name={`conditions.${conditionIndex}.selectedCategory`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('category')}</FormLabel>
+                              <Select
+                                onValueChange={value =>
+                                  handleCategoryChange(conditionIndex, value)
+                                }
+                                value={field.value}
+                              >
                                 <FormControl>
-                                  <Textarea
-                                    placeholder={t('surfaceNotesPlaceholder')}
-                                    className="min-h-[80px]"
-                                    {...field}
-                                  />
+                                  <SelectTrigger>
+                                    <SelectValue
+                                      placeholder={t('selectCategory')}
+                                    />
+                                  </SelectTrigger>
                                 </FormControl>
+                                <SelectContent>
+                                  {getAllCategories.map(category => (
+                                    <SelectItem key={category} value={category}>
+                                      {tCategories(category)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Condition Selection */}
+                        <FormField
+                          control={form.control}
+                          name={`conditions.${conditionIndex}.conditionId`}
+                          render={({ field }) => {
+                            const selectedCategory = form.watch(
+                              `conditions.${conditionIndex}.selectedCategory`
+                            )
+                            const conditionsForCategory =
+                              getConditionsForCategory(selectedCategory)
+
+                            return (
+                              <FormItem>
+                                <FormLabel>{t('condition')}</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  disabled={!selectedCategory}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue
+                                        placeholder={
+                                          selectedCategory
+                                            ? t('selectCondition')
+                                            : t('selectCategoryFirst')
+                                        }
+                                      />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {conditionsForCategory.map(condition => (
+                                      <SelectItem
+                                        key={condition.id}
+                                        value={condition.id}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            className="w-3 h-3 rounded"
+                                            style={{
+                                              backgroundColor: condition.color,
+                                            }}
+                                          />
+                                          <span>
+                                            {tConditions(condition.name, {
+                                              defaultValue: condition.name,
+                                            })}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
-                            )}
-                          />
-                        </div>
+                            )
+                          }}
+                        />
+                      </div>
 
-                        {/* Surface Selection */}
-                        <div className="mt-4">
-                          <FormLabel className="text-sm font-medium mb-2 block">
-                            {t('toothSurfaces')}
-                          </FormLabel>
-                          <div className="grid grid-cols-5 gap-2">
-                            {(['M', 'D', 'B', 'L', 'O'] as const).map(
-                              surface => {
-                                const isSelected = form
-                                  .watch(
-                                    `conditions.${conditionIndex}.surfaces`
-                                  )
-                                  .includes(surface)
+                      {/* Notes */}
+                      <FormField
+                        control={form.control}
+                        name={`conditions.${conditionIndex}.notes`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('notes')}</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder={t('surfaceNotesPlaceholder')}
+                                className="min-h-[80px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                                return (
-                                  <button
-                                    key={surface}
-                                    type="button"
-                                    className={`p-2 border rounded text-center text-sm transition-colors ${
-                                      isSelected
-                                        ? 'border-primary bg-primary/10 text-primary'
-                                        : 'border-muted hover:border-primary/50'
-                                    }`}
-                                    onClick={() =>
-                                      toggleSurface(conditionIndex, surface)
-                                    }
-                                  >
-                                    {tSurfaces(surface.toLowerCase())}
-                                  </button>
-                                )
+                    {/* Surface Selection */}
+                    <div className="mt-4">
+                      <FormLabel className="text-sm font-medium mb-2 block">
+                        {t('toothSurfaces')}
+                      </FormLabel>
+                      <div className="grid grid-cols-5 gap-2">
+                        {(['M', 'D', 'B', 'L', 'O'] as const).map(surface => {
+                          const isSelected = form
+                            .watch(`conditions.${conditionIndex}.surfaces`)
+                            .includes(surface)
+
+                          return (
+                            <button
+                              key={surface}
+                              type="button"
+                              className={`p-2 border rounded text-center text-sm transition-colors ${
+                                isSelected
+                                  ? 'border-primary bg-primary/10 text-primary'
+                                  : 'border-muted hover:border-primary/50'
+                              }`}
+                              onClick={() =>
+                                toggleSurface(conditionIndex, surface)
                               }
-                            )}
-                          </div>
-                          <FormField
-                            control={form.control}
-                            name={`conditions.${conditionIndex}.surfaces`}
-                            render={() => <FormMessage />}
-                          />
-                        </div>
+                            >
+                              {tSurfaces(surface.toLowerCase())}
+                            </button>
+                          )
+                        })}
                       </div>
-                    ))}
+                      <FormField
+                        control={form.control}
+                        name={`conditions.${conditionIndex}.surfaces`}
+                        render={() => <FormMessage />}
+                      />
+                    </div>
+                  </div>
+                ))}
 
-                    {form.watch('conditions').length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>{t('noConditionsAdded')}</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          onClick={addCondition}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          {t('addFirstCondition')}
-                        </Button>
-                      </div>
-                    )}
+                {fields.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>{t('noConditionsAdded')}</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={addCondition}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('addFirstCondition')}
+                    </Button>
                   </div>
                 )}
-              />
+              </div>
             </div>
 
             <DialogFooter>
