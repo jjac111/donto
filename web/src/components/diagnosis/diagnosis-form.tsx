@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -83,18 +83,20 @@ export function DiagnosisForm({
   const t = useTranslations('diagnosis')
 
   // Transform JSON data to match TypeScript interface
-  const dentalConditions: DentalConditionsData = Object.entries(
-    dentalConditionsData
-  ).reduce(
-    (acc, [category, conditions]) => ({
-      ...acc,
-      [category]: conditions.map(condition => ({
-        ...condition,
-        category: category as DentalConditionCategory,
-        severity: condition.severity as DentalConditionSeverity,
-      })),
-    }),
-    {} as DentalConditionsData
+  const dentalConditions: DentalConditionsData = useMemo(
+    () =>
+      Object.entries(dentalConditionsData).reduce(
+        (acc, [category, conditions]) => ({
+          ...acc,
+          [category]: conditions.map(condition => ({
+            ...condition,
+            category: category as DentalConditionCategory,
+            severity: condition.severity as DentalConditionSeverity,
+          })),
+        }),
+        {} as DentalConditionsData
+      ),
+    []
   )
 
   const form = useForm<DiagnosisFormValues>({
@@ -105,29 +107,66 @@ export function DiagnosisForm({
     },
   })
 
-  // Load existing conditions when dialog opens
-  useEffect(() => {
-    if (open && toothNumber && existingConditions.length > 0) {
-      // Helper function to get condition by ID
-      const getConditionByIdLocal = (
-        conditionId: string
-      ): DentalCondition | undefined => {
+  const onSubmit = async (data: DiagnosisFormValues) => {
+    if (!toothNumber) return
+
+    const diagnosisData: DiagnosisFormData = {
+      toothNumber,
+      conditions: data.conditions,
+      generalNotes: data.generalNotes,
+    }
+
+    await onSave(diagnosisData)
+    onOpenChange(false)
+  }
+
+  const getConditionById = useMemo(
+    () =>
+      (conditionId: string): DentalCondition | undefined => {
         for (const category of Object.values(dentalConditions)) {
           const condition = category.find(c => c.id === conditionId)
           if (condition) return condition
         }
         return undefined
-      }
+      },
+    [dentalConditions]
+  )
 
+  const getAllConditions = useMemo((): DentalCondition[] => {
+    return Object.values(dentalConditions).flat()
+  }, [dentalConditions])
+
+  const getConditionsForCategory = useMemo(
+    () =>
+      (category: string | undefined): DentalCondition[] => {
+        return category ? dentalConditions[category] || [] : []
+      },
+    [dentalConditions]
+  )
+
+  const getAllCategories = useMemo((): DentalConditionCategory[] => {
+    return Object.keys(dentalConditions) as DentalConditionCategory[]
+  }, [dentalConditions])
+
+  const handleCategoryChange = useMemo(
+    () => (conditionIndex: number, category: string) => {
+      // Clear the condition selection when category changes
+      form.setValue(`conditions.${conditionIndex}.conditionId`, '')
+      form.setValue(`conditions.${conditionIndex}.selectedCategory`, category)
+    },
+    [form]
+  )
+
+  // Load existing conditions when dialog opens
+  useEffect(() => {
+    if (open && toothNumber && existingConditions.length > 0) {
       // Group conditions by condition_type and collect surfaces
       const conditionsByType = existingConditions.reduce(
         (acc, condition: any) => {
           const key = condition.condition_type
           if (!acc[key]) {
             // Find the category for this condition
-            const conditionData = getConditionByIdLocal(
-              condition.condition_type
-            )
+            const conditionData = getConditionById(condition.condition_type)
             const category = conditionData?.category || ''
 
             acc[key] = {
@@ -172,50 +211,7 @@ export function DiagnosisForm({
         generalNotes: '',
       })
     }
-  }, [open, toothNumber, existingConditions, form, dentalConditions])
-
-  const onSubmit = async (data: DiagnosisFormValues) => {
-    if (!toothNumber) return
-
-    const diagnosisData: DiagnosisFormData = {
-      toothNumber,
-      conditions: data.conditions,
-      generalNotes: data.generalNotes,
-    }
-
-    await onSave(diagnosisData)
-    onOpenChange(false)
-  }
-
-  const getConditionById = (
-    conditionId: string
-  ): DentalCondition | undefined => {
-    for (const category of Object.values(dentalConditions)) {
-      const condition = category.find(c => c.id === conditionId)
-      if (condition) return condition
-    }
-    return undefined
-  }
-
-  const getAllConditions = (): DentalCondition[] => {
-    return Object.values(dentalConditions).flat()
-  }
-
-  const getConditionsForCategory = (
-    category: string | undefined
-  ): DentalCondition[] => {
-    return category ? dentalConditions[category] || [] : []
-  }
-
-  const getAllCategories = (): DentalConditionCategory[] => {
-    return Object.keys(dentalConditions) as DentalConditionCategory[]
-  }
-
-  const handleCategoryChange = (conditionIndex: number, category: string) => {
-    // Clear the condition selection when category changes
-    form.setValue(`conditions.${conditionIndex}.conditionId`, '')
-    form.setValue(`conditions.${conditionIndex}.selectedCategory`, category)
-  }
+  }, [open, toothNumber, existingConditions, form, getConditionById])
 
   const addCondition = () => {
     const currentConditions = form.getValues('conditions')
@@ -332,7 +328,7 @@ export function DiagnosisForm({
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {getAllCategories().map(category => (
+                                    {getAllCategories.map(category => (
                                       <SelectItem
                                         key={category}
                                         value={category}
