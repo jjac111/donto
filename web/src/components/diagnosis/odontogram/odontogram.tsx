@@ -22,14 +22,14 @@ export function Odontogram({
   const t = useTranslations('diagnosis')
 
   // Organize teeth by quadrants for proper dental layout
-  const upperRightTeeth = teeth
+  const upperLeftTeeth = teeth
     .filter(tooth => {
       const num = parseInt(tooth.number)
       return num >= 11 && num <= 18
     })
     .sort((a, b) => parseInt(b.number) - parseInt(a.number)) // Right to left
 
-  const upperLeftTeeth = teeth
+  const upperRightTeeth = teeth
     .filter(tooth => {
       const num = parseInt(tooth.number)
       return num >= 21 && num <= 28
@@ -61,16 +61,21 @@ export function Odontogram({
             </span>
           </div>
           <div className="flex justify-center gap-12">
+            
+          <ToothGrid
+              teeth={upperLeftTeeth}
+              onToothClick={onToothClick}
+              selectedTooth={selectedTooth}
+              jaw="upper"
+              side="left"
+            />
+            <div className="w-2" /> {/* Separation */}
             <ToothGrid
               teeth={upperRightTeeth}
               onToothClick={onToothClick}
               selectedTooth={selectedTooth}
-            />
-            <div className="w-2" /> {/* Separation */}
-            <ToothGrid
-              teeth={upperLeftTeeth}
-              onToothClick={onToothClick}
-              selectedTooth={selectedTooth}
+              jaw="upper"
+              side="right"
             />
           </div>
         </div>
@@ -87,12 +92,16 @@ export function Odontogram({
               teeth={lowerLeftTeeth}
               onToothClick={onToothClick}
               selectedTooth={selectedTooth}
+              jaw="lower"
+              side="left"
             />
             <div className="w-2" /> {/* Separation */}
             <ToothGrid
               teeth={lowerRightTeeth}
               onToothClick={onToothClick}
               selectedTooth={selectedTooth}
+              jaw="lower"
+              side="right"
             />
           </div>
         </div>

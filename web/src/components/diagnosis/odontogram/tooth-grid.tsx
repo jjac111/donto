@@ -9,12 +9,16 @@ interface ToothGridProps {
   teeth: ToothWithConditions[]
   onToothClick: (toothNumber: string) => void
   selectedTooth?: string
+  jaw: 'upper' | 'lower'
+  side: 'left' | 'right'
 }
 
 export function ToothGrid({
   teeth,
   onToothClick,
   selectedTooth,
+  jaw,
+  side,
 }: ToothGridProps) {
   return (
     <div className="tooth-grid flex gap-1">
@@ -24,6 +28,8 @@ export function ToothGrid({
           tooth={tooth}
           onClick={() => onToothClick(tooth.number)}
           isSelected={selectedTooth === tooth.number}
+          jaw={jaw}
+          side={side}
         />
       ))}
     </div>

@@ -3,14 +3,17 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
 import { ToothWithConditions, ToothCondition } from '@/types/dental-conditions'
+import dentalConditionsData from '@/lib/dental-conditions.json'
 
 interface ToothProps {
   tooth: ToothWithConditions
   onClick: () => void
   isSelected?: boolean
+  jaw: 'upper' | 'lower'
+  side: 'left' | 'right'
 }
 
-export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
+export function Tooth({ tooth, onClick, isSelected, jaw, side }: ToothProps) {
   // Helper to add alpha to hex color (e.g., #RRGGBB -> #RRGGBB33)
   const withAlpha = (hex: string, alphaHex: string): string => {
     if (hex && hex.startsWith('#') && hex.length === 7)
@@ -18,22 +21,52 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
     return hex
   }
 
-  // Get condition for a specific surface
+  // Map condition surface (M, D, B, L, O) to visual surface (up, down, left, right, center)
+  const getVisualSurface = (
+    conditionSurface: 'M' | 'D' | 'B' | 'L' | 'O'
+  ): 'up' | 'down' | 'left' | 'right' | 'center' => {
+    if (conditionSurface === 'O') return 'center'
+
+    // Map based on jaw and side orientation
+    if (conditionSurface === 'M') {
+      // Mesial
+      return side === 'left' ? 'right' : 'left'
+    }
+    if (conditionSurface === 'D') {
+      // Distal
+      return side === 'left' ? 'left' : 'right'
+    }
+    if (conditionSurface === 'B') {
+      // Buccal
+      return jaw === 'upper' ? 'up' : 'down'
+    }
+    if (conditionSurface === 'L') {
+      // Lingual
+      return jaw === 'upper' ? 'down' : 'up'
+    }
+
+    return 'center'
+  }
+
+  // Get condition for a specific visual surface
   const getConditionForSurface = (
-    surface: 'M' | 'D' | 'B' | 'L' | 'O'
+    visualSurface: 'up' | 'down' | 'left' | 'right' | 'center'
   ): ToothCondition | undefined => {
     return tooth.conditions.find(condition =>
-      condition.surfaces.includes(surface)
+      condition.surfaces.some(
+        surface => getVisualSurface(surface) === visualSurface
+      )
     )
   }
 
   // SVG fills
-  const getFill = (surface: 'M' | 'D' | 'B' | 'L' | 'O'): string => {
-    const condition = getConditionForSurface(surface)
+  const getFill = (
+    visualSurface: 'up' | 'down' | 'left' | 'right' | 'center'
+  ): string => {
+    const condition = getConditionForSurface(visualSurface)
     if (condition) {
       // Get condition details from dental-conditions.json
-      const dentalConditions = require('@/lib/dental-conditions.json')
-      for (const category of Object.values(dentalConditions)) {
+      for (const category of Object.values(dentalConditionsData)) {
         const conditionDetails = (category as any[]).find(
           c => c.id === condition.conditionType
         )
@@ -50,8 +83,7 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
     const hasConditions = tooth.conditions.length > 0
     const hasUrgentConditions = tooth.conditions.some(condition => {
       // Get severity from dental-conditions.json
-      const dentalConditions = require('@/lib/dental-conditions.json')
-      for (const category of Object.values(dentalConditions)) {
+      for (const category of Object.values(dentalConditionsData)) {
         const conditionDetails = (category as any[]).find(
           c => c.id === condition.conditionType
         )
@@ -108,10 +140,10 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
           preserveAspectRatio="none"
           shapeRendering="crispEdges"
         >
-          <polygon points="0,0 100,0 71,29 29,29" fill={getFill('M')} />
-          <polygon points="0,100 100,100 71,71 29,71" fill={getFill('D')} />
-          <polygon points="0,0 29,29 29,71 0,100" fill={getFill('B')} />
-          <polygon points="100,0 71,29 71,71 100,100" fill={getFill('L')} />
+          <polygon points="0,0 100,0 71,29 29,29" fill={getFill('up')} />
+          <polygon points="0,100 100,100 71,71 29,71" fill={getFill('down')} />
+          <polygon points="0,0 29,29 29,71 0,100" fill={getFill('left')} />
+          <polygon points="100,0 71,29 71,71 100,100" fill={getFill('right')} />
 
           {/* Center square (larger) */}
           <rect
@@ -120,12 +152,11 @@ export function Tooth({ tooth, onClick, isSelected }: ToothProps) {
             width="42"
             height="42"
             rx="6"
-            fill={getFill('O')}
+            fill={getFill('center')}
             stroke={(() => {
-              const condition = getConditionForSurface('O')
+              const condition = getConditionForSurface('center')
               if (condition) {
-                const dentalConditions = require('@/lib/dental-conditions.json')
-                for (const category of Object.values(dentalConditions)) {
+                for (const category of Object.values(dentalConditionsData)) {
                   const conditionDetails = (category as any[]).find(
                     c => c.id === condition.conditionType
                   )

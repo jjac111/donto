@@ -264,6 +264,21 @@ export function DiagnosisForm({
     form.setValue(`conditions.${conditionIndex}.surfaces`, newSurfaces)
   }
 
+  // Helper to determine jaw and side from tooth number
+  const getToothOrientation = (toothNum: string) => {
+    const num = parseInt(toothNum)
+    if (num >= 11 && num <= 18)
+      return { jaw: 'upper' as const, side: 'left' as const }
+    if (num >= 21 && num <= 28)
+      return { jaw: 'upper' as const, side: 'right' as const }
+    if (num >= 31 && num <= 38)
+      return { jaw: 'lower' as const, side: 'left' as const }
+    if (num >= 41 && num <= 48)
+      return { jaw: 'lower' as const, side: 'right' as const }
+    // Default fallback
+    return { jaw: 'upper' as const, side: 'right' as const }
+  }
+
   if (!toothNumber) return null
 
   return (
@@ -302,6 +317,7 @@ export function DiagnosisForm({
             }}
             onClick={() => {}} // No-op since this is just for visualization
             isSelected={true}
+            {...getToothOrientation(toothNumber!)}
           />
         </div>
 
