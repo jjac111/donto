@@ -58,6 +58,8 @@ const transformToothDiagnoses = (rows: any[]): ToothWithConditions[] => {
       ...tooth,
       isPresent: row?.is_present ?? true,
       hasTreatments: row?.is_treated ?? false,
+      requiresExtraction: row?.requires_extraction ?? false,
+      generalNotes: row?.general_notes || undefined,
       conditions,
       lastUpdated,
     }
@@ -200,10 +202,10 @@ export const useSaveToothDiagnosis = () => {
           [
             {
               tooth_number: diagnosisData.toothNumber,
-              is_present: true,
-              is_treated: false,
-              requires_extraction: false,
-              general_notes: null,
+              is_present: diagnosisData.isPresent ?? true,
+              is_treated: diagnosisData.isTreated ?? false,
+              requires_extraction: diagnosisData.requiresExtraction ?? false,
+              general_notes: diagnosisData.generalNotes || null,
               tooth_conditions: toothConditions,
               history_id: historyId,
             },

@@ -273,7 +273,14 @@
     "required": "is required",
     "category": "Category",
     "selectCategory": "Select category",
-    "selectCategoryFirst": "Select a category first"
+    "selectCategoryFirst": "Select a category first",
+    "toothStatus": "Tooth Status",
+    "toothPresent": "Tooth Present",
+    "toothPresentDescription": "Tooth is present in the mouth",
+    "toothTreated": "Tooth Treated",
+    "toothTreatedDescription": "Tooth has been treated/restored",
+    "requiresExtraction": "Requires Extraction",
+    "requiresExtractionDescription": "Tooth needs to be extracted"
   },
   "categories": {
     "orthodontics": "Orthodontics",

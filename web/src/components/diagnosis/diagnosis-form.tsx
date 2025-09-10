@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Toggle } from '@/components/ui/toggle'
 import {
   DentalCondition,
   DentalConditionsData,
@@ -49,6 +50,12 @@ interface DiagnosisFormProps {
   onOpenChange: (open: boolean) => void
   toothNumber: string | null
   existingConditions?: any[] // Will be typed later
+  existingToothData?: {
+    isPresent?: boolean
+    isTreated?: boolean
+    requiresExtraction?: boolean
+    generalNotes?: string
+  }
   onSave: (data: DiagnosisFormData) => Promise<void>
   isLoading?: boolean
 }
@@ -63,6 +70,10 @@ const diagnosisSchema = (t: (key: string) => string) =>
         selectedCategory: z.string().optional(),
       })
     ),
+    isPresent: z.boolean(),
+    isTreated: z.boolean(),
+    requiresExtraction: z.boolean(),
+    generalNotes: z.string().optional(),
   })
 
 type DiagnosisFormValues = z.infer<ReturnType<typeof diagnosisSchema>>
@@ -72,6 +83,7 @@ export function DiagnosisForm({
   onOpenChange,
   toothNumber,
   existingConditions = [],
+  existingToothData,
   onSave,
   isLoading = false,
 }: DiagnosisFormProps) {
@@ -103,6 +115,10 @@ export function DiagnosisForm({
     resolver: zodResolver(diagnosisSchema(t)),
     defaultValues: {
       conditions: [],
+      isPresent: true,
+      isTreated: false,
+      requiresExtraction: false,
+      generalNotes: '',
     },
   })
 
@@ -117,6 +133,10 @@ export function DiagnosisForm({
     const diagnosisData: DiagnosisFormData = {
       toothNumber,
       conditions: data.conditions,
+      isPresent: data.isPresent,
+      isTreated: data.isTreated,
+      requiresExtraction: data.requiresExtraction,
+      generalNotes: data.generalNotes,
     }
 
     await onSave(diagnosisData)
@@ -214,18 +234,19 @@ export function DiagnosisForm({
         // Reset form with existing values
         form.reset({
           conditions: conditionsArray,
+          isPresent: existingToothData?.isPresent ?? true,
+          isTreated: existingToothData?.isTreated ?? false,
+          requiresExtraction: existingToothData?.requiresExtraction ?? false,
+          generalNotes: existingToothData?.generalNotes || '',
         })
       } else {
-        // No existing conditions - automatically add an empty condition
+        // No existing conditions - start with empty conditions array
         form.reset({
-          conditions: [
-            {
-              conditionId: '',
-              surfaces: [],
-              notes: '',
-              selectedCategory: '',
-            },
-          ],
+          conditions: [],
+          isPresent: existingToothData?.isPresent ?? true,
+          isTreated: existingToothData?.isTreated ?? false,
+          requiresExtraction: existingToothData?.requiresExtraction ?? false,
+          generalNotes: '',
         })
       }
 
@@ -234,7 +255,14 @@ export function DiagnosisForm({
         isInitializingRef.current = false
       }, 100)
     }
-  }, [open, toothNumber, existingConditions, dentalConditions, form])
+  }, [
+    open,
+    toothNumber,
+    existingConditions,
+    existingToothData,
+    dentalConditions,
+    form,
+  ])
 
   const addCondition = () => {
     append({
@@ -301,8 +329,8 @@ export function DiagnosisForm({
           <Tooth
             tooth={{
               number: toothNumber!,
-              isPresent: true,
-              hasTreatments: false,
+              isPresent: form.watch('isPresent'),
+              hasTreatments: form.watch('isTreated'),
               conditions: form
                 .watch('conditions')
                 .map((condition, index) => ({
@@ -323,12 +351,99 @@ export function DiagnosisForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Tooth Status */}
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <h4 className="text-sm font-medium text-foreground">
+                {t('toothStatus')}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="isPresent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Toggle
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className={field.value ? 'bg-primary' : ''}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-medium">
+                          {t('toothPresent')}
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isTreated"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Toggle
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className={field.value ? 'bg-primary' : ''}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-medium">
+                          {t('toothTreated')}
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="requiresExtraction"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Toggle
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className={field.value ? 'bg-destructive' : ''}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-medium">
+                          {t('requiresExtraction')}
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* General Notes */}
+            <FormField
+              control={form.control}
+              name="generalNotes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">
+                    {t('generalNotes')}
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder={t('generalNotesPlaceholder')}
+                      className="min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Conditions List */}
             <div className="conditions-list">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  {t('conditions')}
-                </h4>
                 <Button
                   type="button"
                   variant="outline"

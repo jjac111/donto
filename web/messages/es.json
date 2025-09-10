@@ -275,7 +275,14 @@
     "required": "es obligatorio",
     "category": "Categoría",
     "selectCategory": "Seleccionar categoría",
-    "selectCategoryFirst": "Primero selecciona una categoría"
+    "selectCategoryFirst": "Primero selecciona una categoría",
+    "toothStatus": "Estado del Diente",
+    "toothPresent": "Diente Presente",
+    "toothPresentDescription": "El diente está presente en la boca",
+    "toothTreated": "Diente Tratado",
+    "toothTreatedDescription": "El diente ha sido tratado/restaurado",
+    "requiresExtraction": "Requiere Extracción",
+    "requiresExtractionDescription": "El diente necesita ser extraído"
   },
   "categories": {
     "orthodontics": "Ortodoncia",

@@ -49,6 +49,11 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
     selectedTooth || ''
   )
 
+  // Get selected tooth data for status fields
+  const selectedToothData = selectedTooth
+    ? teeth.find(tooth => tooth.number === selectedTooth)
+    : null
+
   // Save diagnosis mutation
   const saveDiagnosisMutation = useSaveToothDiagnosis()
 
@@ -268,6 +273,16 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
         onOpenChange={handleCloseDiagnosisDialog}
         toothNumber={selectedTooth}
         existingConditions={selectedToothConditions}
+        existingToothData={
+          selectedToothData
+            ? {
+                isPresent: selectedToothData.isPresent,
+                isTreated: selectedToothData.hasTreatments,
+                requiresExtraction: selectedToothData.requiresExtraction,
+                generalNotes: selectedToothData.generalNotes,
+              }
+            : undefined
+        }
         onSave={handleSaveDiagnosis}
         isLoading={saveDiagnosisMutation.isPending}
       />

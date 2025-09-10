@@ -41,6 +41,8 @@ export interface ToothWithConditions {
   conditions: ToothCondition[]
   isPresent: boolean
   hasTreatments?: boolean
+  requiresExtraction?: boolean
+  generalNotes?: string
   lastUpdated?: Date
 }
 
@@ -52,6 +54,10 @@ export interface DiagnosisFormData {
     surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[] // Array of surfaces this condition applies to
     notes?: string
   }[]
+  isPresent?: boolean
+  isTreated?: boolean
+  requiresExtraction?: boolean
+  generalNotes?: string
 }
 
 // Category display names (i18n keys)
