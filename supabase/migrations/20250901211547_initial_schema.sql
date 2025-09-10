@@ -178,15 +178,15 @@ CREATE TABLE tooth_conditions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     tooth_number VARCHAR(10) NOT NULL, -- e.g., "11", "14", "21"
-    surface VARCHAR(10) NOT NULL, -- "M", "D", "B", "L", "O" (mesial, distal, buccal, lingual, occlusal)
+    surfaces TEXT[] DEFAULT ARRAY[]::TEXT[], -- Array of surfaces: "M", "D", "B", "L", "O" (mesial, distal, buccal, lingual, occlusal)
     condition_type VARCHAR(50) NOT NULL, -- "healthy", "caries", "filling", "crown", "missing", etc.
     notes TEXT,
     recorded_date DATE DEFAULT CURRENT_DATE,
-    recorded_by_provider_id UUID REFERENCES providers(id),
+    recorded_by_profile_id UUID REFERENCES profiles(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(patient_id, tooth_number, surface)
+
+    UNIQUE(patient_id, tooth_number, condition_type)
 );
 
 -- Basic indexes for performance
@@ -203,6 +203,8 @@ CREATE INDEX idx_appointments_provider ON appointments(provider_id);
 CREATE INDEX idx_treatment_items_plan ON treatment_items(treatment_plan_id);
 CREATE INDEX idx_treatment_items_procedure ON treatment_items(procedure_id);
 CREATE INDEX idx_tooth_conditions_patient ON tooth_conditions(patient_id);
+CREATE INDEX idx_tooth_conditions_surfaces ON tooth_conditions USING GIN(surfaces);
+CREATE INDEX idx_tooth_conditions_profile ON tooth_conditions(recorded_by_profile_id);
 CREATE INDEX idx_clinical_notes_patient ON clinical_notes(patient_id);
 CREATE INDEX idx_procedures_clinic ON procedures(clinic_id);
 
