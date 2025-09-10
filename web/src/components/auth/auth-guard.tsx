@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -12,9 +12,21 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, needsClinicSelection, isLoading } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
+  const [hasInitialized, setHasInitialized] = useState(false)
+
+  // Track when auth has been initialized to prevent flash
+  useEffect(() => {
+    if (!isLoading && !hasInitialized) {
+      // Add a small delay to prevent flash during auth state resolution
+      const timer = setTimeout(() => {
+        setHasInitialized(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading, hasInitialized])
 
   useEffect(() => {
-    if (isLoading) return // Wait for auth state to load
+    if (isLoading || !hasInitialized) return // Wait for auth state to load and initialize
 
     // Define public routes that don't require authentication
     const publicRoutes = ['/login', '/select-clinic']
@@ -45,10 +57,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
       router.replace('/dashboard')
       return
     }
-  }, [isAuthenticated, needsClinicSelection, isLoading, router, pathname])
+  }, [
+    isAuthenticated,
+    needsClinicSelection,
+    isLoading,
+    hasInitialized,
+    router,
+    pathname,
+  ])
 
   // Show loading spinner while auth state is being determined
-  if (isLoading) {
+  if (isLoading || !hasInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

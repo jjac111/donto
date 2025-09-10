@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthState>()(
         clinicName: null,
         availableClinics: null,
         needsClinicSelection: false,
-        isLoading: false,
+        isLoading: true, // Start with loading true to prevent flash
         error: null,
 
         // Computed - moved out of getter to fix persistence issues
