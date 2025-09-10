@@ -272,7 +272,10 @@
     "addFirstCondition": "Agregar Primera Condición",
     "atLeastOneCondition": "Debe agregar al menos una condición",
     "surfaces": "superficies",
-    "required": "es obligatorio"
+    "required": "es obligatorio",
+    "category": "Categoría",
+    "selectCategory": "Seleccionar categoría",
+    "selectCategoryFirst": "Primero selecciona una categoría"
   },
   "categories": {
     "orthodontics": "Ortodoncia",

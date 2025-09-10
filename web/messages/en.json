@@ -270,7 +270,10 @@
     "addFirstCondition": "Add First Condition",
     "atLeastOneCondition": "At least one condition is required",
     "surfaces": "surfaces",
-    "required": "is required"
+    "required": "is required",
+    "category": "Category",
+    "selectCategory": "Select category",
+    "selectCategoryFirst": "Select a category first"
   },
   "categories": {
     "orthodontics": "Orthodontics",

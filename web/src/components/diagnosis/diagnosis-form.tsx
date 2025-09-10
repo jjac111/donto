@@ -63,6 +63,7 @@ const diagnosisSchema = (t: (key: string) => string) =>
             .array(z.enum(['M', 'D', 'B', 'L', 'O']))
             .min(1, t('surfaces') + ' ' + t('required')),
           notes: z.string().optional(),
+          selectedCategory: z.string().optional(),
         })
       )
       .min(1, t('atLeastOneCondition')),
@@ -107,15 +108,33 @@ export function DiagnosisForm({
   // Load existing conditions when dialog opens
   useEffect(() => {
     if (open && toothNumber && existingConditions.length > 0) {
+      // Helper function to get condition by ID
+      const getConditionByIdLocal = (
+        conditionId: string
+      ): DentalCondition | undefined => {
+        for (const category of Object.values(dentalConditions)) {
+          const condition = category.find(c => c.id === conditionId)
+          if (condition) return condition
+        }
+        return undefined
+      }
+
       // Group conditions by condition_type and collect surfaces
       const conditionsByType = existingConditions.reduce(
         (acc, condition: any) => {
           const key = condition.condition_type
           if (!acc[key]) {
+            // Find the category for this condition
+            const conditionData = getConditionByIdLocal(
+              condition.condition_type
+            )
+            const category = conditionData?.category || ''
+
             acc[key] = {
               conditionId: condition.condition_type,
               surfaces: [],
               notes: condition.notes || '',
+              selectedCategory: category,
             }
           }
           // Add surfaces from this condition (handle both old single surface and new array format)
@@ -128,7 +147,12 @@ export function DiagnosisForm({
         },
         {} as Record<
           string,
-          { conditionId: string; surfaces: string[]; notes: string }
+          {
+            conditionId: string
+            surfaces: string[]
+            notes: string
+            selectedCategory: string
+          }
         >
       )
 
@@ -148,7 +172,7 @@ export function DiagnosisForm({
         generalNotes: '',
       })
     }
-  }, [open, toothNumber, existingConditions, form])
+  }, [open, toothNumber, existingConditions, form, dentalConditions])
 
   const onSubmit = async (data: DiagnosisFormValues) => {
     if (!toothNumber) return
@@ -177,6 +201,22 @@ export function DiagnosisForm({
     return Object.values(dentalConditions).flat()
   }
 
+  const getConditionsForCategory = (
+    category: string | undefined
+  ): DentalCondition[] => {
+    return category ? dentalConditions[category] || [] : []
+  }
+
+  const getAllCategories = (): DentalConditionCategory[] => {
+    return Object.keys(dentalConditions) as DentalConditionCategory[]
+  }
+
+  const handleCategoryChange = (conditionIndex: number, category: string) => {
+    // Clear the condition selection when category changes
+    form.setValue(`conditions.${conditionIndex}.conditionId`, '')
+    form.setValue(`conditions.${conditionIndex}.selectedCategory`, category)
+  }
+
   const addCondition = () => {
     const currentConditions = form.getValues('conditions')
     form.setValue('conditions', [
@@ -185,6 +225,7 @@ export function DiagnosisForm({
         conditionId: '',
         surfaces: [],
         notes: '',
+        selectedCategory: '', // Add selected category tracking
       },
     ])
   }
@@ -269,49 +310,34 @@ export function DiagnosisForm({
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Condition Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Category Selection */}
                           <FormField
                             control={form.control}
-                            name={`conditions.${conditionIndex}.conditionId`}
+                            name={`conditions.${conditionIndex}.selectedCategory`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('condition')}</FormLabel>
+                                <FormLabel>{t('category')}</FormLabel>
                                 <Select
-                                  onValueChange={field.onChange}
+                                  onValueChange={value =>
+                                    handleCategoryChange(conditionIndex, value)
+                                  }
                                   value={field.value}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue
-                                        placeholder={t('selectCondition')}
+                                        placeholder={t('selectCategory')}
                                       />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {getAllConditions().map(condition => (
+                                    {getAllCategories().map(category => (
                                       <SelectItem
-                                        key={condition.id}
-                                        value={condition.id}
+                                        key={category}
+                                        value={category}
                                       >
-                                        <div className="flex items-center gap-2">
-                                          <div
-                                            className="w-3 h-3 rounded"
-                                            style={{
-                                              backgroundColor: condition.color,
-                                            }}
-                                          />
-                                          <span>{condition.name}</span>
-                                          <span className="text-xs text-muted-foreground">
-                                            (
-                                            {
-                                              CONDITION_CATEGORY_LABELS[
-                                                condition.category
-                                              ]
-                                            }
-                                            )
-                                          </span>
-                                        </div>
+                                        {CONDITION_CATEGORY_LABELS[category]}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -319,6 +345,66 @@ export function DiagnosisForm({
                                 <FormMessage />
                               </FormItem>
                             )}
+                          />
+
+                          {/* Condition Selection */}
+                          <FormField
+                            control={form.control}
+                            name={`conditions.${conditionIndex}.conditionId`}
+                            render={({ field }) => {
+                              const selectedCategory = form.watch(
+                                `conditions.${conditionIndex}.selectedCategory`
+                              )
+                              const conditionsForCategory =
+                                getConditionsForCategory(selectedCategory)
+
+                              return (
+                                <FormItem>
+                                  <FormLabel>{t('condition')}</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                    disabled={!selectedCategory}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue
+                                          placeholder={
+                                            selectedCategory
+                                              ? t('selectCondition')
+                                              : t('selectCategoryFirst')
+                                          }
+                                        />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {conditionsForCategory.map(condition => (
+                                        <SelectItem
+                                          key={condition.id}
+                                          value={condition.id}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <div
+                                              className="w-3 h-3 rounded"
+                                              style={{
+                                                backgroundColor:
+                                                  condition.color,
+                                              }}
+                                            />
+                                            <span>
+                                              {t(condition.name, {
+                                                defaultValue: condition.name,
+                                              })}
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )
+                            }}
                           />
 
                           {/* Notes */}
