@@ -256,7 +256,10 @@ export function DiagnosisForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        blurOnly
+        className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] lg:w-full"
+      >
         <DialogHeader>
           <DialogTitle>
             {t('diagnosisForTooth')} {toothNumber}
