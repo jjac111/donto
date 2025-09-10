@@ -25,6 +25,7 @@ import {
   DiagnosisFormData,
   ToothWithConditions,
 } from '@/types/dental-conditions'
+import dentalConditionsData from '@/lib/dental-conditions.json'
 
 interface DiagnosisSectionProps {
   patientId: string
@@ -75,8 +76,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
 
   // Helper function to get condition severity
   const getConditionSeverity = (conditionType: string): string => {
-    const dentalConditions = require('@/lib/dental-conditions.json')
-    for (const category of Object.values(dentalConditions)) {
+    for (const category of Object.values(dentalConditionsData)) {
       const conditionDetails = (category as any[]).find(
         c => c.id === conditionType
       )

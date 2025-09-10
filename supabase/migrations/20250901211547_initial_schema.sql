@@ -221,7 +221,6 @@ CREATE TABLE tooth_diagnosis_histories (
 -- Tooth diagnosis information per patient with current conditions
 CREATE TABLE tooth_diagnoses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     tooth_number VARCHAR(10) NOT NULL, -- e.g., "11", "14", "21"
     is_present BOOLEAN DEFAULT true, -- false if tooth is missing
     is_treated BOOLEAN DEFAULT false, -- true if tooth has been treated
@@ -233,7 +232,7 @@ CREATE TABLE tooth_diagnoses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
-    UNIQUE(patient_id, tooth_number) -- One tooth record per patient per tooth number
+    UNIQUE(history_id, tooth_number) -- One tooth record per history per tooth number
 );
 
 
@@ -250,8 +249,7 @@ CREATE INDEX idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX idx_appointments_provider ON appointments(provider_id);
 CREATE INDEX idx_treatment_items_plan ON treatment_items(treatment_plan_id);
 CREATE INDEX idx_treatment_items_procedure ON treatment_items(procedure_id);
-CREATE INDEX idx_tooth_diagnoses_patient ON tooth_diagnoses(patient_id);
-CREATE INDEX idx_tooth_diagnoses_tooth_number ON tooth_diagnoses(patient_id, tooth_number);
+CREATE INDEX idx_tooth_diagnoses_tooth_number ON tooth_diagnoses(tooth_number);
 CREATE INDEX idx_tooth_diagnoses_history_id ON tooth_diagnoses(history_id);
 CREATE INDEX idx_tooth_diagnosis_histories_patient ON tooth_diagnosis_histories(patient_id);
 CREATE INDEX idx_tooth_diagnosis_histories_profile ON tooth_diagnosis_histories(recorded_by_profile_id);
@@ -679,10 +677,11 @@ CREATE POLICY "Clinic isolation for procedures" ON procedures
 
 CREATE POLICY "Clinic isolation for tooth_diagnoses" ON tooth_diagnoses
     FOR ALL USING (
-        -- Tooth diagnoses link via patient
+        -- Tooth diagnoses link via history -> patient
         EXISTS (
-            SELECT 1 FROM patients p 
-            WHERE p.id = patient_id 
+            SELECT 1 FROM tooth_diagnosis_histories tdh
+            JOIN patients p ON p.id = tdh.patient_id
+            WHERE tdh.id = history_id 
             AND p.clinic_id = get_current_active_clinic()
         )
         AND 

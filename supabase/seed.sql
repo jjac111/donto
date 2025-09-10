@@ -172,34 +172,34 @@ INSERT INTO tooth_diagnosis_histories (id, patient_id, recorded_by_profile_id) V
     ('550e8400-e29b-41d4-a716-446655501004', '550e8400-e29b-41d4-a716-446655452002', '550e8400-e29b-41d4-a716-446655534002');
 
 -- Test tooth diagnoses with conditions in JSONB
-INSERT INTO tooth_diagnoses (id, patient_id, tooth_number, is_present, is_treated, requires_extraction, general_notes, tooth_conditions, history_id) VALUES
+INSERT INTO tooth_diagnoses (id, tooth_number, is_present, is_treated, requires_extraction, general_notes, tooth_conditions, history_id) VALUES
     -- Patient 1 (María González) - Tooth 16 with caries
-    ('550e8400-e29b-41d4-a716-446655502001', '550e8400-e29b-41d4-a716-446655451001', '16', true, false, false, 'Deep caries requiring immediate attention', 
+    ('550e8400-e29b-41d4-a716-446655502001', '16', true, false, false, 'Deep caries requiring immediate attention', 
      '[{"surfaces": ["O"], "condition_type": "dental_caries", "notes": "Deep caries on occlusal surface", "diagnosis_date": "2024-01-15", "recorded_by_profile_id": "550e8400-e29b-41d4-a716-446655531001", "created_at": "2024-01-15T10:00:00Z"}]'::jsonb,
      '550e8400-e29b-41d4-a716-446655501001'),
     
     -- Patient 1 (María González) - Tooth 17 with restoration
-    ('550e8400-e29b-41d4-a716-446655502002', '550e8400-e29b-41d4-a716-446655451001', '17', true, true, false, 'Amalgam restoration in good condition',
+    ('550e8400-e29b-41d4-a716-446655502002', '17', true, true, false, 'Amalgam restoration in good condition',
      '[{"surfaces": ["M"], "condition_type": "restoration", "notes": "Amalgam restoration in good condition", "diagnosis_date": "2024-01-15", "recorded_by_profile_id": "550e8400-e29b-41d4-a716-446655531001", "created_at": "2024-01-15T10:15:00Z"}]'::jsonb,
      '550e8400-e29b-41d4-a716-446655501001'),
     
     -- Patient 1 (María González) - Tooth 14 with fracture
-    ('550e8400-e29b-41d4-a716-446655502003', '550e8400-e29b-41d4-a716-446655451001', '14', true, false, false, 'Crown fracture affecting multiple surfaces',
+    ('550e8400-e29b-41d4-a716-446655502003', '14', true, false, false, 'Crown fracture affecting multiple surfaces',
      '[{"surfaces": ["M", "D", "O"], "condition_type": "coronal_fracture", "notes": "Crown fracture affecting mesial, distal, and occlusal surfaces", "diagnosis_date": "2024-01-15", "recorded_by_profile_id": "550e8400-e29b-41d4-a716-446655531001", "created_at": "2024-01-15T10:30:00Z"}]'::jsonb,
      '550e8400-e29b-41d4-a716-446655501001'),
     
     -- Patient 2 (Carlos Rodríguez) - Tooth 21 with caries
-    ('550e8400-e29b-41d4-a716-446655502004', '550e8400-e29b-41d4-a716-446655451002', '21', true, false, false, 'Early proximal caries lesion',
+    ('550e8400-e29b-41d4-a716-446655502004', '21', true, false, false, 'Early proximal caries lesion',
      '[{"surfaces": ["L"], "condition_type": "dental_caries", "notes": "Early proximal caries lesion", "diagnosis_date": "2024-01-20", "recorded_by_profile_id": "550e8400-e29b-41d4-a716-446655531002", "created_at": "2024-01-20T14:00:00Z"}]'::jsonb,
      '550e8400-e29b-41d4-a716-446655501002'),
     
     -- Patient 4 (María Jiménez - Clinic 2) - Tooth 36 with gingivitis
-    ('550e8400-e29b-41d4-a716-446655502005', '550e8400-e29b-41d4-a716-446655452001', '36', true, false, false, 'Localized gingivitis on buccal and lingual surfaces',
+    ('550e8400-e29b-41d4-a716-446655502005', '36', true, false, false, 'Localized gingivitis on buccal and lingual surfaces',
      '[{"surfaces": ["B", "L"], "condition_type": "gingivitis", "notes": "Localized gingivitis on buccal and lingual surfaces", "diagnosis_date": "2024-01-25", "recorded_by_profile_id": "550e8400-e29b-41d4-a716-446655534002", "created_at": "2024-01-25T09:30:00Z"}]'::jsonb,
      '550e8400-e29b-41d4-a716-446655501003'),
     
     -- Patient 5 (Luis Pérez - Clinic 2) - Tooth 11 with enamel hypoplasia
-    ('550e8400-e29b-41d4-a716-446655502006', '550e8400-e29b-41d4-a716-446655452002', '11', true, false, false, 'Developmental enamel defect on anterior surfaces',
+    ('550e8400-e29b-41d4-a716-446655502006', '11', true, false, false, 'Developmental enamel defect on anterior surfaces',
      '[{"surfaces": ["M", "D"], "condition_type": "enamel_hypoplasia", "notes": "Developmental enamel defect on anterior surfaces", "diagnosis_date": "2024-01-28", "recorded_by_profile_id": "550e8400-e29b-41d4-a716-446655534002", "created_at": "2024-01-28T11:15:00Z"}]'::jsonb,
      '550e8400-e29b-41d4-a716-446655501004');
 

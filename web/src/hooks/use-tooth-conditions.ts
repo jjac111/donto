@@ -1,5 +1,5 @@
-// TanStack Query hooks for tooth conditions
-// Handles tooth condition data fetching, mutations, and cache management
+// TanStack Query hooks for the new tooth diagnoses structure
+// Handles fetching aggregated tooth data and saving diagnoses using the new tables
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-client'
@@ -12,10 +12,8 @@ import {
   getAllToothNumbers,
 } from '@/types/dental-conditions'
 
-// Transform database tooth conditions to frontend format
-const transformToothConditions = (
-  dbConditions: any[]
-): ToothWithConditions[] => {
+// Transform rows from tooth_diagnoses (JSONB tooth_conditions) to ToothWithConditions
+const transformToothDiagnoses = (rows: any[]): ToothWithConditions[] => {
   const allTeeth = getAllToothNumbers().map(number => ({
     number,
     conditions: [] as ToothCondition[],
@@ -23,50 +21,50 @@ const transformToothConditions = (
     hasTreatments: false,
   }))
 
-  // Group conditions by tooth
-  const conditionsByTooth = dbConditions.reduce((acc, condition) => {
-    const toothNumber = condition.tooth_number
-    if (!acc[toothNumber]) {
-      acc[toothNumber] = []
+  const byToothNumber = rows.reduce((acc, row) => {
+    // Only set if we don't have this tooth number yet (first occurrence is the latest due to ORDER BY updated_at DESC)
+    if (!acc[row.tooth_number]) {
+      acc[row.tooth_number] = row
     }
-    acc[toothNumber].push(condition)
     return acc
-  }, {} as Record<string, any[]>)
+  }, {} as Record<string, any>)
 
-  // Update teeth with actual conditions
   return allTeeth.map(tooth => {
-    const toothConditions = conditionsByTooth[tooth.number] || []
+    const row = byToothNumber[tooth.number]
+    const jsonbConditions: any[] = row?.tooth_conditions || []
 
-    // Convert database conditions to frontend format
-    const conditions: ToothCondition[] = toothConditions.map(
-      (condition: any) => ({
-        id: condition.id,
-        conditionType: condition.condition_type,
-        surfaces: condition.surfaces || [],
-        notes: condition.notes,
-        recordedDate: new Date(condition.recorded_date),
-        recordedByProfileId: condition.recorded_by_profile_id,
+    const conditions: ToothCondition[] = jsonbConditions.map(
+      (c: any, index: number) => ({
+        id: `${row?.tooth_number || tooth.number}-${index}`,
+        conditionType: c.condition_type,
+        surfaces: Array.isArray(c.surfaces) ? (c.surfaces as any[]) : [],
+        notes: c.notes ?? undefined,
+        recordedDate: new Date(c.diagnosis_date || c.created_at || Date.now()),
+        recordedByProfileId: c.recorded_by_profile_id || '',
       })
     )
 
+    const lastUpdated = (() => {
+      const times: number[] = []
+      if (row?.updated_at) times.push(new Date(row.updated_at).getTime())
+      for (const c of jsonbConditions) {
+        const ts = c.created_at || c.diagnosis_date
+        if (ts) times.push(new Date(ts).getTime())
+      }
+      return times.length ? new Date(Math.max(...times)) : undefined
+    })()
+
     return {
       ...tooth,
+      isPresent: row?.is_present ?? true,
+      hasTreatments: row?.is_treated ?? false,
       conditions,
-      lastUpdated:
-        toothConditions.length > 0
-          ? new Date(
-              Math.max(
-                ...toothConditions.map((c: any) =>
-                  new Date(c.created_at).getTime()
-                )
-              )
-            )
-          : undefined,
+      lastUpdated,
     }
   })
 }
 
-// Get tooth conditions for a patient
+// Get aggregated tooth diagnoses for a patient (for odontogram and summaries)
 export const usePatientToothConditions = (patientId: string) => {
   return useQuery({
     queryKey: queryKeys.patientToothConditions(patientId),
@@ -75,23 +73,28 @@ export const usePatientToothConditions = (patientId: string) => {
       if (!clinicId) throw new Error('No clinic selected')
 
       const { data, error } = await supabase
-        .from('tooth_conditions')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('recorded_date', { ascending: false })
+        .from('tooth_diagnoses')
+        .select(
+          `
+          *,
+          tooth_diagnosis_histories!inner(patient_id)
+        `
+        )
+        .eq('tooth_diagnosis_histories.patient_id', patientId)
+        .order('updated_at', { ascending: false })
 
       if (error) {
-        throw new Error(`Failed to fetch tooth conditions: ${error.message}`)
+        throw new Error(`Failed to fetch tooth diagnoses: ${error.message}`)
       }
 
-      return transformToothConditions(data || [])
+      return transformToothDiagnoses(data || [])
     },
     enabled: !!patientId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   })
 }
 
-// Get tooth conditions for a specific tooth
+// Get raw JSONB conditions for a specific tooth (for editing in the form)
 export const useToothConditions = (patientId: string, toothNumber: string) => {
   return useQuery({
     queryKey: queryKeys.toothConditionsByTooth(patientId, toothNumber),
@@ -100,24 +103,30 @@ export const useToothConditions = (patientId: string, toothNumber: string) => {
       if (!clinicId) throw new Error('No clinic selected')
 
       const { data, error } = await supabase
-        .from('tooth_conditions')
-        .select('*')
-        .eq('patient_id', patientId)
+        .from('tooth_diagnoses')
+        .select(
+          `
+          tooth_conditions,
+          tooth_diagnosis_histories!inner(patient_id)
+        `
+        )
+        .eq('tooth_diagnosis_histories.patient_id', patientId)
         .eq('tooth_number', toothNumber)
-        .order('recorded_date', { ascending: false })
+        .limit(1)
 
       if (error) {
-        throw new Error(`Failed to fetch tooth conditions: ${error.message}`)
+        throw new Error(`Failed to fetch tooth diagnosis: ${error.message}`)
       }
 
-      return data || []
+      const row = (data || [])[0]
+      return row?.tooth_conditions || []
     },
     enabled: !!patientId && !!toothNumber,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   })
 }
 
-// Save tooth condition diagnosis
+// Save diagnosis: create history row, then upsert tooth_diagnoses with JSONB conditions
 export const useSaveToothDiagnosis = () => {
   const queryClient = useQueryClient()
 
@@ -132,12 +141,12 @@ export const useSaveToothDiagnosis = () => {
       const clinicId = useAuthStore.getState().clinicId
       if (!clinicId) throw new Error('No clinic selected')
 
-      // Get current user profile for recording
+      // Auth user
       const { data: authUser } = await supabase.auth.getUser()
       const userId = authUser.user?.id
       if (!userId) throw new Error('No authenticated user found')
 
-      // Get the user's profile for the current clinic
+      // Profile in clinic
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -152,116 +161,70 @@ export const useSaveToothDiagnosis = () => {
 
       const profileId = profile.id
 
-      // Prepare conditions to save (new multi-surface format)
-      // Allow conditions with conditionId even if no surfaces are selected
-      const conditionsToSave = diagnosisData.conditions
-        .filter(
-          condition => condition.conditionId // Only require conditionId, surfaces are optional
-        )
-        .map(condition => ({
+      // Create a history entry for this save
+      const { data: historyInsert, error: historyError } = await supabase
+        .from('tooth_diagnosis_histories')
+        .insert({
           patient_id: patientId,
-          tooth_number: diagnosisData.toothNumber,
-          surfaces: condition.surfaces,
-          condition_type: condition.conditionId,
-          notes: condition.notes || null,
-          recorded_date: new Date().toISOString().split('T')[0],
           recorded_by_profile_id: profileId,
-        }))
+        })
+        .select('id')
+        .single()
 
-      // First, delete existing conditions for this tooth
-      const { error: deleteError } = await supabase
-        .from('tooth_conditions')
-        .delete()
-        .eq('patient_id', patientId)
-        .eq('tooth_number', diagnosisData.toothNumber)
-
-      if (deleteError) {
+      if (historyError || !historyInsert) {
         throw new Error(
-          `Failed to delete existing conditions: ${deleteError.message}`
+          `Failed to create diagnosis history: ${historyError?.message}`
         )
       }
 
-      // Then insert new conditions
-      if (conditionsToSave.length > 0) {
-        const { error: insertError } = await supabase
-          .from('tooth_conditions')
-          .insert(conditionsToSave)
+      const historyId = historyInsert.id as string
 
-        if (insertError) {
-          throw new Error(`Failed to save conditions: ${insertError.message}`)
-        }
+      // Prepare JSONB conditions array (no id field per schema)
+      const nowIso = new Date().toISOString()
+      const today = nowIso.split('T')[0]
+      const toothConditions = diagnosisData.conditions
+        .filter(c => c.conditionId)
+        .map(c => ({
+          surfaces: c.surfaces,
+          condition_type: c.conditionId,
+          notes: c.notes || null,
+          diagnosis_date: today,
+          recorded_by_profile_id: profileId,
+          created_at: nowIso,
+        }))
+
+      // Upsert into tooth_diagnoses using unique (history_id, tooth_number)
+      const { error: upsertError } = await supabase
+        .from('tooth_diagnoses')
+        .upsert(
+          [
+            {
+              tooth_number: diagnosisData.toothNumber,
+              is_present: true,
+              is_treated: false,
+              requires_extraction: false,
+              general_notes: null,
+              tooth_conditions: toothConditions,
+              history_id: historyId,
+            },
+          ],
+          { onConflict: 'history_id,tooth_number' }
+        )
+
+      if (upsertError) {
+        throw new Error(`Failed to save diagnosis: ${upsertError.message}`)
       }
     },
     onSuccess: (_, { patientId, diagnosisData }) => {
-      // Invalidate related queries
+      // Invalidate aggregated view and specific tooth
       queryClient.invalidateQueries({
         queryKey: queryKeys.patientToothConditions(patientId),
       })
-      // Invalidate the specific tooth's cache
       queryClient.invalidateQueries({
         queryKey: queryKeys.toothConditionsByTooth(
           patientId,
           diagnosisData.toothNumber
         ),
-      })
-    },
-  })
-}
-
-// Update tooth condition
-export const useUpdateToothCondition = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      conditionId,
-      updates,
-    }: {
-      conditionId: string
-      updates: Partial<{
-        surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[]
-        condition_type: string
-        notes: string
-        recorded_date: string
-      }>
-    }): Promise<void> => {
-      const { error } = await supabase
-        .from('tooth_conditions')
-        .update(updates)
-        .eq('id', conditionId)
-
-      if (error) {
-        throw new Error(`Failed to update condition: ${error.message}`)
-      }
-    },
-    onSuccess: () => {
-      // Invalidate tooth conditions queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditionsByTooth('', ''),
-      })
-    },
-  })
-}
-
-// Delete tooth condition
-export const useDeleteToothCondition = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (conditionId: string): Promise<void> => {
-      const { error } = await supabase
-        .from('tooth_conditions')
-        .delete()
-        .eq('id', conditionId)
-
-      if (error) {
-        throw new Error(`Failed to delete condition: ${error.message}`)
-      }
-    },
-    onSuccess: () => {
-      // Invalidate tooth conditions queries
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditionsByTooth('', ''),
       })
     },
   })
