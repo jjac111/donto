@@ -69,15 +69,29 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   }
 
   // Calculate summary statistics
-  const totalTeethWithConditions = teeth.filter(tooth =>
-    tooth.surfaces.some(surface => surface.condition)
+  const totalTeethWithConditions = teeth.filter(
+    tooth => tooth.conditions.length > 0
   ).length
 
+  // Helper function to get condition severity
+  const getConditionSeverity = (conditionType: string): string => {
+    const dentalConditions = require('@/lib/dental-conditions.json')
+    for (const category of Object.values(dentalConditions)) {
+      const conditionDetails = (category as any[]).find(
+        c => c.id === conditionType
+      )
+      if (conditionDetails) {
+        return conditionDetails.severity
+      }
+    }
+    return 'low'
+  }
+
   const urgentConditionsCount = teeth.filter(tooth =>
-    tooth.surfaces.some(
-      surface =>
-        surface.condition?.severity === 'critical' ||
-        surface.condition?.severity === 'high'
+    tooth.conditions.some(condition =>
+      ['critical', 'high'].includes(
+        getConditionSeverity(condition.conditionType)
+      )
     )
   ).length
 
@@ -178,8 +192,10 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
               <div className="text-2xl font-bold text-orange-600">
                 {
                   teeth.filter(tooth =>
-                    tooth.surfaces.some(
-                      surface => surface.condition?.severity === 'medium'
+                    tooth.conditions.some(
+                      condition =>
+                        getConditionSeverity(condition.conditionType) ===
+                        'medium'
                     )
                   ).length
                 }
@@ -228,8 +244,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Diente {tooth.number}</span>
                       <span className="text-sm text-muted-foreground">
-                        {tooth.surfaces.filter(s => s.condition).length}{' '}
-                        {t('conditions')}
+                        {tooth.conditions.length} {t('conditions')}
                       </span>
                     </div>
                     <span className="text-xs text-muted-foreground">

@@ -7,7 +7,7 @@ import { supabase } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import {
   ToothWithConditions,
-  ToothSurfaceCondition,
+  ToothCondition,
   DiagnosisFormData,
   getAllToothNumbers,
 } from '@/types/dental-conditions'
@@ -18,13 +18,7 @@ const transformToothConditions = (
 ): ToothWithConditions[] => {
   const allTeeth = getAllToothNumbers().map(number => ({
     number,
-    surfaces: [
-      { surface: 'M' as const, recordedDate: new Date() },
-      { surface: 'D' as const, recordedDate: new Date() },
-      { surface: 'B' as const, recordedDate: new Date() },
-      { surface: 'L' as const, recordedDate: new Date() },
-      { surface: 'O' as const, recordedDate: new Date() },
-    ] as ToothSurfaceCondition[],
+    conditions: [] as ToothCondition[],
     isPresent: true,
     hasTreatments: false,
   }))
@@ -43,33 +37,21 @@ const transformToothConditions = (
   return allTeeth.map(tooth => {
     const toothConditions = conditionsByTooth[tooth.number] || []
 
-    const surfacesWithConditions = tooth.surfaces.map(surface => {
-      // Find condition that applies to this surface
-      const condition = toothConditions.find(
-        (c: any) => c.surfaces && c.surfaces.includes(surface.surface)
-      )
-      if (condition) {
-        return {
-          ...surface,
-          condition: {
-            id: condition.condition_type,
-            category: 'general' as const, // Will be determined from condition type
-            name: condition.condition_type,
-            description: '',
-            color: '#FF8C00', // Default orange for caries
-            severity: 'medium' as const,
-          },
-          notes: condition.notes,
-          recordedDate: new Date(condition.recorded_date),
-          recordedByProfileId: condition.recorded_by_profile_id,
-        }
-      }
-      return surface
-    })
+    // Convert database conditions to frontend format
+    const conditions: ToothCondition[] = toothConditions.map(
+      (condition: any) => ({
+        id: condition.id,
+        conditionType: condition.condition_type,
+        surfaces: condition.surfaces || [],
+        notes: condition.notes,
+        recordedDate: new Date(condition.recorded_date),
+        recordedByProfileId: condition.recorded_by_profile_id,
+      })
+    )
 
     return {
       ...tooth,
-      surfaces: surfacesWithConditions,
+      conditions,
       lastUpdated:
         toothConditions.length > 0
           ? new Date(
@@ -171,9 +153,10 @@ export const useSaveToothDiagnosis = () => {
       const profileId = profile.id
 
       // Prepare conditions to save (new multi-surface format)
+      // Allow conditions with conditionId even if no surfaces are selected
       const conditionsToSave = diagnosisData.conditions
         .filter(
-          condition => condition.conditionId && condition.surfaces.length > 0
+          condition => condition.conditionId // Only require conditionId, surfaces are optional
         )
         .map(condition => ({
           patient_id: patientId,
@@ -209,13 +192,17 @@ export const useSaveToothDiagnosis = () => {
         }
       }
     },
-    onSuccess: (_, { patientId }) => {
+    onSuccess: (_, { patientId, diagnosisData }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({
         queryKey: queryKeys.patientToothConditions(patientId),
       })
+      // Invalidate the specific tooth's cache
       queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditionsByTooth(patientId, ''),
+        queryKey: queryKeys.toothConditionsByTooth(
+          patientId,
+          diagnosisData.toothNumber
+        ),
       })
     },
   })

@@ -32,7 +32,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Separator } from '@/components/ui/separator'
 import {
   DentalCondition,
   DentalConditionsData,
@@ -43,6 +42,7 @@ import {
   CONDITION_CATEGORY_LABELS,
 } from '@/types/dental-conditions'
 import dentalConditionsData from '@/lib/dental-conditions.json'
+import { Tooth } from './odontogram/tooth'
 
 interface DiagnosisFormProps {
   open: boolean
@@ -55,19 +55,14 @@ interface DiagnosisFormProps {
 
 const diagnosisSchema = (t: (key: string) => string) =>
   z.object({
-    conditions: z
-      .array(
-        z.object({
-          conditionId: z.string().min(1, t('condition') + ' ' + t('required')),
-          surfaces: z
-            .array(z.enum(['M', 'D', 'B', 'L', 'O']))
-            .min(1, t('surfaces') + ' ' + t('required')),
-          notes: z.string().optional(),
-          selectedCategory: z.string().optional(),
-        })
-      )
-      .min(1, t('atLeastOneCondition')),
-    generalNotes: z.string().optional(),
+    conditions: z.array(
+      z.object({
+        conditionId: z.string().min(1, t('condition') + ' ' + t('required')),
+        surfaces: z.array(z.enum(['M', 'D', 'B', 'L', 'O'])), // Removed mandatory validation
+        notes: z.string().optional(),
+        selectedCategory: z.string().optional(),
+      })
+    ),
   })
 
 type DiagnosisFormValues = z.infer<ReturnType<typeof diagnosisSchema>>
@@ -106,7 +101,6 @@ export function DiagnosisForm({
     resolver: zodResolver(diagnosisSchema(t)),
     defaultValues: {
       conditions: [],
-      generalNotes: '',
     },
   })
 
@@ -116,7 +110,7 @@ export function DiagnosisForm({
     const diagnosisData: DiagnosisFormData = {
       toothNumber,
       conditions: data.conditions,
-      generalNotes: data.generalNotes,
+      generalNotes: '', // Remove general notes since data model doesn't support it
     }
 
     await onSave(diagnosisData)
@@ -153,8 +147,19 @@ export function DiagnosisForm({
 
   const handleCategoryChange = useMemo(
     () => (conditionIndex: number, category: string) => {
-      // Clear the condition selection when category changes
-      form.setValue(`conditions.${conditionIndex}.conditionId`, '')
+      // Only clear condition if it's a user-initiated change (not loading existing data)
+      const currentConditionId = form.getValues(
+        `conditions.${conditionIndex}.conditionId`
+      )
+      const currentCategory = form.getValues(
+        `conditions.${conditionIndex}.selectedCategory`
+      )
+
+      // If category is changing and we have a condition selected, clear it
+      if (currentConditionId && currentCategory !== category) {
+        form.setValue(`conditions.${conditionIndex}.conditionId`, '')
+      }
+
       form.setValue(`conditions.${conditionIndex}.selectedCategory`, category)
     },
     [form]
@@ -162,57 +167,38 @@ export function DiagnosisForm({
 
   // Load existing conditions when dialog opens
   useEffect(() => {
-    if (open && toothNumber && existingConditions.length > 0) {
-      // Group conditions by condition_type and collect surfaces
-      const conditionsByType = existingConditions.reduce(
-        (acc, condition: any) => {
-          const key = condition.condition_type
-          if (!acc[key]) {
-            // Find the category for this condition
-            const conditionData = getConditionById(condition.condition_type)
-            const category = conditionData?.category || ''
+    if (open && toothNumber) {
+      if (existingConditions.length > 0) {
+        // Convert to array while preserving order
+        const conditionsArray = existingConditions.map(condition => {
+          const conditionData = getConditionById(condition.condition_type)
+          return {
+            conditionId: condition.condition_type,
+            surfaces:
+              condition.surfaces ||
+              (condition.surface ? [condition.surface] : []),
+            notes: condition.notes || '',
+            selectedCategory: conditionData?.category || '',
+          }
+        })
 
-            acc[key] = {
-              conditionId: condition.condition_type,
+        // Reset form with existing values
+        form.reset({
+          conditions: conditionsArray,
+        })
+      } else {
+        // No existing conditions - automatically add an empty condition
+        form.reset({
+          conditions: [
+            {
+              conditionId: '',
               surfaces: [],
-              notes: condition.notes || '',
-              selectedCategory: category,
-            }
-          }
-          // Add surfaces from this condition (handle both old single surface and new array format)
-          if (condition.surfaces && Array.isArray(condition.surfaces)) {
-            acc[key].surfaces.push(...condition.surfaces)
-          } else if (condition.surface) {
-            acc[key].surfaces.push(condition.surface)
-          }
-          return acc
-        },
-        {} as Record<
-          string,
-          {
-            conditionId: string
-            surfaces: string[]
-            notes: string
-            selectedCategory: string
-          }
-        >
-      )
-
-      // Extract general notes from first condition (they should be the same)
-      const generalNotes = existingConditions[0]?.notes || ''
-
-      const existingValues: Partial<DiagnosisFormValues> = {
-        conditions: Object.values(conditionsByType),
-        generalNotes,
+              notes: '',
+              selectedCategory: '',
+            },
+          ],
+        })
       }
-
-      form.reset(existingValues)
-    } else if (open) {
-      // Reset form for new diagnosis
-      form.reset({
-        conditions: [],
-        generalNotes: '',
-      })
     }
   }, [open, toothNumber, existingConditions, form, getConditionById])
 
@@ -268,6 +254,30 @@ export function DiagnosisForm({
             {t('selectConditionsForSurfaces')}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Tooth Visualization */}
+        <div className="flex justify-center py-4">
+          <Tooth
+            tooth={{
+              number: toothNumber!,
+              isPresent: true,
+              hasTreatments: false,
+              conditions: form
+                .watch('conditions')
+                .map((condition, index) => ({
+                  id: `temp-${index}`,
+                  conditionType: condition.conditionId,
+                  surfaces: condition.surfaces,
+                  notes: condition.notes,
+                  recordedDate: new Date(),
+                  recordedByProfileId: '',
+                }))
+                .filter(condition => condition.conditionType), // Only include conditions with IDs
+            }}
+            onClick={() => {}} // No-op since this is just for visualization
+            isSelected={true}
+          />
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -499,27 +509,6 @@ export function DiagnosisForm({
                 )}
               />
             </div>
-
-            <Separator />
-
-            {/* General notes */}
-            <FormField
-              control={form.control}
-              name="generalNotes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('generalNotes')}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('generalNotesPlaceholder')}
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <DialogFooter>
               <Button

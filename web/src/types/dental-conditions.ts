@@ -25,18 +25,20 @@ export interface DentalConditionsData {
   [category: string]: DentalCondition[]
 }
 
-export interface ToothSurfaceCondition {
-  surface: 'M' | 'D' | 'B' | 'L' | 'O' // Mesial, Distal, Buccal, Lingual, Occlusal
-  condition?: DentalCondition
+// Tooth condition entity (matches database structure)
+export interface ToothCondition {
+  id: string // Database ID
+  conditionType: string // Maps to dental-conditions.json
+  surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[] // Surfaces this condition applies to
   notes?: string
   recordedDate: Date
-  recordedByProfileId?: string
+  recordedByProfileId: string
 }
 
-// Extended entity types for odontogram
+// Extended entity types for odontogram (condition-centric)
 export interface ToothWithConditions {
   number: string // FDI notation: "11", "21", etc.
-  surfaces: ToothSurfaceCondition[]
+  conditions: ToothCondition[]
   isPresent: boolean
   hasTreatments?: boolean
   lastUpdated?: Date
@@ -50,19 +52,6 @@ export interface DiagnosisFormData {
     surfaces: ('M' | 'D' | 'B' | 'L' | 'O')[] // Array of surfaces this condition applies to
     notes?: string
   }[]
-  generalNotes?: string
-}
-
-// Legacy form data structure (for backward compatibility during transition)
-export interface LegacyDiagnosisFormData {
-  toothNumber: string
-  surfaces: {
-    [surface in 'M' | 'D' | 'B' | 'L' | 'O']: {
-      conditionId?: string
-      notes?: string
-    }
-  }
-  generalNotes?: string
 }
 
 // Category display names (i18n keys)
