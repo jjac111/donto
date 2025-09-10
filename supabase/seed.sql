@@ -130,11 +130,6 @@ INSERT INTO clinical_notes (id, appointment_id, patient_id, provider_id, subject
      'Caries extensa pieza 16, requiere tratamiento', 
      'Obturación con resina compuesta', true);
 
--- Test tooth conditions
-INSERT INTO tooth_conditions (id, patient_id, tooth_number, surface, condition_type, notes, recorded_by_provider_id) VALUES
-    ('550e8400-e29b-41d4-a716-446655501001', '550e8400-e29b-41d4-a716-446655451001', '16', 'O', 'caries', 'Caries profunda', '550e8400-e29b-41d4-a716-446655461001'),
-    ('550e8400-e29b-41d4-a716-446655501002', '550e8400-e29b-41d4-a716-446655451001', '17', 'M', 'filling', 'Obturación en buen estado', '550e8400-e29b-41d4-a716-446655461001'),
-    ('550e8400-e29b-41d4-a716-446655501003', '550e8400-e29b-41d4-a716-446655451002', '21', 'L', 'healthy', 'Sin patología', '550e8400-e29b-41d4-a716-446655461001');
 
 -- Test treatment plans
 INSERT INTO treatment_plans (id, patient_id, provider_id, name, status) VALUES
@@ -168,6 +163,15 @@ INSERT INTO profiles (id, user_id, clinic_id, provider_id, role, is_active) VALU
     ('550e8400-e29b-41d4-a716-446655534004', '550e8400-e29b-41d4-a716-446655530008', '550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655462001', 'provider', true);
 
 -- NOTE: no-access@test.com (ID 530004) intentionally has NO profiles - that's why it's "no access"
+
+-- Test tooth conditions (new multi-surface format with English condition types)
+INSERT INTO tooth_conditions (id, patient_id, tooth_number, surfaces, condition_type, notes, recorded_by_profile_id) VALUES
+    ('550e8400-e29b-41d4-a716-446655501001', '550e8400-e29b-41d4-a716-446655451001', '16', ARRAY['O'], 'dental_caries', 'Deep caries on occlusal surface', '550e8400-e29b-41d4-a716-446655531001'),
+    ('550e8400-e29b-41d4-a716-446655501002', '550e8400-e29b-41d4-a716-446655451001', '17', ARRAY['M'], 'restoration', 'Amalgam restoration in good condition', '550e8400-e29b-41d4-a716-446655531001'),
+    ('550e8400-e29b-41d4-a716-446655501003', '550e8400-e29b-41d4-a716-446655451002', '21', ARRAY['L'], 'dental_caries', 'Early proximal caries lesion', '550e8400-e29b-41d4-a716-446655531002'),
+    ('550e8400-e29b-41d4-a716-446655501004', '550e8400-e29b-41d4-a716-446655451001', '14', ARRAY['M', 'D', 'O'], 'coronal_fracture', 'Crown fracture affecting mesial, distal, and occlusal surfaces', '550e8400-e29b-41d4-a716-446655531001'),
+    ('550e8400-e29b-41d4-a716-446655501005', '550e8400-e29b-41d4-a716-446655452001', '36', ARRAY['B', 'L'], 'gingivitis', 'Localized gingivitis on buccal and lingual surfaces', '550e8400-e29b-41d4-a716-446655534002'),
+    ('550e8400-e29b-41d4-a716-446655501006', '550e8400-e29b-41d4-a716-446655452002', '11', ARRAY['M', 'D'], 'enamel_hypoplasia', 'Developmental enamel defect on anterior surfaces', '550e8400-e29b-41d4-a716-446655534002');
 
 -- Create some cost estimates for testing
 INSERT INTO cost_estimates (id, treatment_plan_id, patient_id, estimate_number, subtotal, discount_amount, total_amount, valid_until, status, notes) VALUES

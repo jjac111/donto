@@ -44,6 +44,41 @@ CREATE TABLE providers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User profiles table for multi-clinic, multi-role access
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    provider_id UUID REFERENCES providers(id) ON DELETE SET NULL, -- Optional link to provider record
+    role VARCHAR(50) NOT NULL DEFAULT 'admin', -- admin, provider, staff
+    is_active BOOLEAN DEFAULT true,
+    invited_by UUID REFERENCES auth.users(id),
+    invited_at TIMESTAMP WITH TIME ZONE,
+    joined_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(user_id, clinic_id) -- One profile per user per clinic
+);
+
+-- User sessions table to track active clinic per session
+CREATE TABLE user_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    active_clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    session_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Ensure user has access to the active clinic
+    CONSTRAINT fk_user_clinic_access 
+        FOREIGN KEY (user_id, active_clinic_id) 
+        REFERENCES profiles(user_id, clinic_id)
+        ON DELETE CASCADE
+);
+
+
 
 -- Patients (role-specific data linked to persons)
 CREATE TABLE patients (
@@ -207,6 +242,14 @@ CREATE INDEX idx_tooth_conditions_surfaces ON tooth_conditions USING GIN(surface
 CREATE INDEX idx_tooth_conditions_profile ON tooth_conditions(recorded_by_profile_id);
 CREATE INDEX idx_clinical_notes_patient ON clinical_notes(patient_id);
 CREATE INDEX idx_procedures_clinic ON procedures(clinic_id);
+
+-- Indexes for performance
+CREATE INDEX idx_profiles_user_id ON profiles(user_id);
+CREATE INDEX idx_profiles_clinic_id ON profiles(clinic_id);
+CREATE INDEX idx_profiles_provider_id ON profiles(provider_id);
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
 
 -- GIN indexes for full-text search (Spanish language)
 -- Person search: name, national_id, phone, email
@@ -426,47 +469,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- User profiles table for multi-clinic, multi-role access
-CREATE TABLE profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    provider_id UUID REFERENCES providers(id) ON DELETE SET NULL, -- Optional link to provider record
-    role VARCHAR(50) NOT NULL DEFAULT 'admin', -- admin, provider, staff
-    is_active BOOLEAN DEFAULT true,
-    invited_by UUID REFERENCES auth.users(id),
-    invited_at TIMESTAMP WITH TIME ZONE,
-    joined_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(user_id, clinic_id) -- One profile per user per clinic
-);
 
--- User sessions table to track active clinic per session
-CREATE TABLE user_sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    active_clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    session_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Ensure user has access to the active clinic
-    CONSTRAINT fk_user_clinic_access 
-        FOREIGN KEY (user_id, active_clinic_id) 
-        REFERENCES profiles(user_id, clinic_id)
-        ON DELETE CASCADE
-);
-
--- Indexes for performance
-CREATE INDEX idx_profiles_user_id ON profiles(user_id);
-CREATE INDEX idx_profiles_clinic_id ON profiles(clinic_id);
-CREATE INDEX idx_profiles_provider_id ON profiles(provider_id);
-CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
-CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
-CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
 
 -- Function to get current active clinic from session
 CREATE OR REPLACE FUNCTION get_current_active_clinic()
