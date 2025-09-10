@@ -81,6 +81,9 @@ export function DiagnosisForm({
   isLoading = false,
 }: DiagnosisFormProps) {
   const t = useTranslations('diagnosis')
+  const tCategories = useTranslations('categories')
+  const tConditions = useTranslations('conditions')
+  const tSurfaces = useTranslations('surfaces')
 
   // Transform JSON data to match TypeScript interface
   const dentalConditions: DentalConditionsData = useMemo(
@@ -306,102 +309,111 @@ export function DiagnosisForm({
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {/* Category Selection */}
-                          <FormField
-                            control={form.control}
-                            name={`conditions.${conditionIndex}.selectedCategory`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('category')}</FormLabel>
-                                <Select
-                                  onValueChange={value =>
-                                    handleCategoryChange(conditionIndex, value)
-                                  }
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue
-                                        placeholder={t('selectCategory')}
-                                      />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {getAllCategories.map(category => (
-                                      <SelectItem
-                                        key={category}
-                                        value={category}
-                                      >
-                                        {CONDITION_CATEGORY_LABELS[category]}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          {/* Condition Selection */}
-                          <FormField
-                            control={form.control}
-                            name={`conditions.${conditionIndex}.conditionId`}
-                            render={({ field }) => {
-                              const selectedCategory = form.watch(
-                                `conditions.${conditionIndex}.selectedCategory`
-                              )
-                              const conditionsForCategory =
-                                getConditionsForCategory(selectedCategory)
-
-                              return (
+                        <div className="space-y-4">
+                          {/* Category and Condition Row */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Category Selection */}
+                            <FormField
+                              control={form.control}
+                              name={`conditions.${conditionIndex}.selectedCategory`}
+                              render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>{t('condition')}</FormLabel>
+                                  <FormLabel>{t('category')}</FormLabel>
                                   <Select
-                                    onValueChange={field.onChange}
+                                    onValueChange={value =>
+                                      handleCategoryChange(
+                                        conditionIndex,
+                                        value
+                                      )
+                                    }
                                     value={field.value}
-                                    disabled={!selectedCategory}
                                   >
                                     <FormControl>
                                       <SelectTrigger>
                                         <SelectValue
-                                          placeholder={
-                                            selectedCategory
-                                              ? t('selectCondition')
-                                              : t('selectCategoryFirst')
-                                          }
+                                          placeholder={t('selectCategory')}
                                         />
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      {conditionsForCategory.map(condition => (
+                                      {getAllCategories.map(category => (
                                         <SelectItem
-                                          key={condition.id}
-                                          value={condition.id}
+                                          key={category}
+                                          value={category}
                                         >
-                                          <div className="flex items-center gap-2">
-                                            <div
-                                              className="w-3 h-3 rounded"
-                                              style={{
-                                                backgroundColor:
-                                                  condition.color,
-                                              }}
-                                            />
-                                            <span>
-                                              {t(condition.name, {
-                                                defaultValue: condition.name,
-                                              })}
-                                            </span>
-                                          </div>
+                                          {tCategories(category)}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
                                   </Select>
                                   <FormMessage />
                                 </FormItem>
-                              )
-                            }}
-                          />
+                              )}
+                            />
+
+                            {/* Condition Selection */}
+                            <FormField
+                              control={form.control}
+                              name={`conditions.${conditionIndex}.conditionId`}
+                              render={({ field }) => {
+                                const selectedCategory = form.watch(
+                                  `conditions.${conditionIndex}.selectedCategory`
+                                )
+                                const conditionsForCategory =
+                                  getConditionsForCategory(selectedCategory)
+
+                                return (
+                                  <FormItem>
+                                    <FormLabel>{t('condition')}</FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      value={field.value}
+                                      disabled={!selectedCategory}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue
+                                            placeholder={
+                                              selectedCategory
+                                                ? t('selectCondition')
+                                                : t('selectCategoryFirst')
+                                            }
+                                          />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {conditionsForCategory.map(
+                                          condition => (
+                                            <SelectItem
+                                              key={condition.id}
+                                              value={condition.id}
+                                            >
+                                              <div className="flex items-center gap-2">
+                                                <div
+                                                  className="w-3 h-3 rounded"
+                                                  style={{
+                                                    backgroundColor:
+                                                      condition.color,
+                                                  }}
+                                                />
+                                                <span>
+                                                  {tConditions(condition.name, {
+                                                    defaultValue:
+                                                      condition.name,
+                                                  })}
+                                                </span>
+                                              </div>
+                                            </SelectItem>
+                                          )
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          </div>
 
                           {/* Notes */}
                           <FormField
@@ -450,7 +462,7 @@ export function DiagnosisForm({
                                       toggleSurface(conditionIndex, surface)
                                     }
                                   >
-                                    {SURFACE_LABELS[surface]}
+                                    {tSurfaces(surface.toLowerCase())}
                                   </button>
                                 )
                               }

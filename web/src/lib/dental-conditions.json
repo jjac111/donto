@@ -2,36 +2,36 @@
   "orthodontics": [
     {
       "id": "class_i_malocclusion",
-      "name": "conditions.classIMalocclusion",
-      "description": "conditions.classIMalocclusionDesc",
+      "name": "classIMalocclusion",
+      "description": "classIMalocclusionDesc",
       "color": "#FFD700",
       "severity": "medium"
     },
     {
       "id": "class_ii_malocclusion",
-      "name": "conditions.classIIMalocclusion",
-      "description": "conditions.classIIMalocclusionDesc",
+      "name": "classIIMalocclusion",
+      "description": "classIIMalocclusionDesc",
       "color": "#FFA500",
       "severity": "medium"
     },
     {
       "id": "class_iii_malocclusion",
-      "name": "conditions.classIIIMalocclusion",
-      "description": "conditions.classIIIMalocclusionDesc",
+      "name": "classIIIMalocclusion",
+      "description": "classIIIMalocclusionDesc",
       "color": "#FF6347",
       "severity": "high"
     },
     {
       "id": "diastema",
-      "name": "conditions.diastema",
-      "description": "conditions.diastemaDesc",
+      "name": "diastema",
+      "description": "diastemaDesc",
       "color": "#98FB98",
       "severity": "low"
     },
     {
       "id": "crowding",
-      "name": "conditions.crowding",
-      "description": "conditions.crowdingDesc",
+      "name": "crowding",
+      "description": "crowdingDesc",
       "color": "#87CEEB",
       "severity": "medium"
     }
@@ -39,36 +39,36 @@
   "surgery": [
     {
       "id": "extraction_indicated",
-      "name": "conditions.extractionIndicated",
-      "description": "conditions.extractionIndicatedDesc",
+      "name": "extractionIndicated",
+      "description": "extractionIndicatedDesc",
       "color": "#FF6B6B",
       "severity": "high"
     },
     {
       "id": "extraction_complete",
-      "name": "conditions.extractionComplete",
-      "description": "conditions.extractionCompleteDesc",
+      "name": "extractionComplete",
+      "description": "extractionCompleteDesc",
       "color": "#DC143C",
       "severity": "critical"
     },
     {
       "id": "impacted_third_molar",
-      "name": "conditions.impactedThirdMolar",
-      "description": "conditions.impactedThirdMolarDesc",
+      "name": "impactedThirdMolar",
+      "description": "impactedThirdMolarDesc",
       "color": "#B22222",
       "severity": "high"
     },
     {
       "id": "dentigerous_cyst",
-      "name": "conditions.dentigerousCyst",
-      "description": "conditions.dentigerousCystDesc",
+      "name": "dentigerousCyst",
+      "description": "dentigerousCystDesc",
       "color": "#8B0000",
       "severity": "critical"
     },
     {
       "id": "root_fracture",
-      "name": "conditions.rootFracture",
-      "description": "conditions.rootFractureDesc",
+      "name": "rootFracture",
+      "description": "rootFractureDesc",
       "color": "#FF4500",
       "severity": "high"
     }
@@ -76,36 +76,36 @@
   "endodontics": [
     {
       "id": "pulpal_necrosis",
-      "name": "conditions.pulpalNecrosis",
-      "description": "conditions.pulpalNecrosisDesc",
+      "name": "pulpalNecrosis",
+      "description": "pulpalNecrosisDesc",
       "color": "#4ECDC4",
       "severity": "high"
     },
     {
       "id": "pulpotomy",
-      "name": "conditions.pulpotomy",
-      "description": "conditions.pulpotomyDesc",
+      "name": "pulpotomy",
+      "description": "pulpotomyDesc",
       "color": "#26A69A",
       "severity": "medium"
     },
     {
       "id": "endodontic_treatment",
-      "name": "conditions.endodonticTreatment",
-      "description": "conditions.endodonticTreatmentDesc",
+      "name": "endodonticTreatment",
+      "description": "endodonticTreatmentDesc",
       "color": "#00897B",
       "severity": "low"
     },
     {
       "id": "endodontic_retreatment",
-      "name": "conditions.endodonticRetreatment",
-      "description": "conditions.endodonticRetreatmentDesc",
+      "name": "endodonticRetreatment",
+      "description": "endodonticRetreatmentDesc",
       "color": "#00695C",
       "severity": "medium"
     },
     {
       "id": "root_perforation",
-      "name": "conditions.rootPerforation",
-      "description": "conditions.rootPerforationDesc",
+      "name": "rootPerforation",
+      "description": "rootPerforationDesc",
       "color": "#004D40",
       "severity": "critical"
     }
@@ -113,57 +113,57 @@
   "general": [
     {
       "id": "dental_caries",
-      "name": "conditions.dentalCaries",
-      "description": "conditions.dentalCariesDesc",
+      "name": "dentalCaries",
+      "description": "dentalCariesDesc",
       "color": "#FF8C00",
       "severity": "medium"
     },
     {
       "id": "arrested_caries",
-      "name": "conditions.arrestedCaries",
-      "description": "conditions.arrestedCariesDesc",
+      "name": "arrestedCaries",
+      "description": "arrestedCariesDesc",
       "color": "#D2691E",
       "severity": "low"
     },
     {
       "id": "restoration",
-      "name": "conditions.restoration",
-      "description": "conditions.restorationDesc",
+      "name": "restoration",
+      "description": "restorationDesc",
       "color": "#98D8C8",
       "severity": "low"
     },
     {
       "id": "defective_restoration",
-      "name": "conditions.defectiveRestoration",
-      "description": "conditions.defectiveRestorationDesc",
+      "name": "defectiveRestoration",
+      "description": "defectiveRestorationDesc",
       "color": "#66B2A8",
       "severity": "medium"
     },
     {
       "id": "dental_erosion",
-      "name": "conditions.dentalErosion",
-      "description": "conditions.dentalErosionDesc",
+      "name": "dentalErosion",
+      "description": "dentalErosionDesc",
       "color": "#FF69B4",
       "severity": "medium"
     },
     {
       "id": "dental_abrasion",
-      "name": "conditions.dentalAbrasion",
-      "description": "conditions.dentalAbrasionDesc",
+      "name": "dentalAbrasion",
+      "description": "dentalAbrasionDesc",
       "color": "#DA70D6",
       "severity": "medium"
     },
     {
       "id": "coronal_fracture",
-      "name": "conditions.coronalFracture",
-      "description": "conditions.coronalFractureDesc",
+      "name": "coronalFracture",
+      "description": "coronalFractureDesc",
       "color": "#BA55D3",
       "severity": "high"
     },
     {
       "id": "enamel_hypoplasia",
-      "name": "conditions.enamelHypoplasia",
-      "description": "conditions.enamelHypoplasiaDesc",
+      "name": "enamelHypoplasia",
+      "description": "enamelHypoplasiaDesc",
       "color": "#9370DB",
       "severity": "low"
     }
@@ -171,43 +171,43 @@
   "periodontics": [
     {
       "id": "gingivitis",
-      "name": "conditions.gingivitis",
-      "description": "conditions.gingivitisDesc",
+      "name": "gingivitis",
+      "description": "gingivitisDesc",
       "color": "#FFB6C1",
       "severity": "medium"
     },
     {
       "id": "mild_periodontitis",
-      "name": "conditions.mildPeriodontitis",
-      "description": "conditions.mildPeriodontitisDesc",
+      "name": "mildPeriodontitis",
+      "description": "mildPeriodontitisDesc",
       "color": "#FF1493",
       "severity": "medium"
     },
     {
       "id": "moderate_periodontitis",
-      "name": "conditions.moderatePeriodontitis",
-      "description": "conditions.moderatePeriodontitisDesc",
+      "name": "moderatePeriodontitis",
+      "description": "moderatePeriodontitisDesc",
       "color": "#C71585",
       "severity": "high"
     },
     {
       "id": "advanced_periodontitis",
-      "name": "conditions.advancedPeriodontitis",
-      "description": "conditions.advancedPeriodontitisDesc",
+      "name": "advancedPeriodontitis",
+      "description": "advancedPeriodontitisDesc",
       "color": "#8B008B",
       "severity": "critical"
     },
     {
       "id": "tooth_mobility",
-      "name": "conditions.toothMobility",
-      "description": "conditions.toothMobilityDesc",
+      "name": "toothMobility",
+      "description": "toothMobilityDesc",
       "color": "#9932CC",
       "severity": "high"
     },
     {
       "id": "gingival_recession",
-      "name": "conditions.gingivalRecession",
-      "description": "conditions.gingivalRecessionDesc",
+      "name": "gingivalRecession",
+      "description": "gingivalRecessionDesc",
       "color": "#8A2BE2",
       "severity": "medium"
     }
@@ -215,43 +215,43 @@
   "prosthetics": [
     {
       "id": "permanent_crown",
-      "name": "conditions.permanentCrown",
-      "description": "conditions.permanentCrownDesc",
+      "name": "permanentCrown",
+      "description": "permanentCrownDesc",
       "color": "#DDA0DD",
       "severity": "low"
     },
     {
       "id": "temporary_crown",
-      "name": "conditions.temporaryCrown",
-      "description": "conditions.temporaryCrownDesc",
+      "name": "temporaryCrown",
+      "description": "temporaryCrownDesc",
       "color": "#EE82EE",
       "severity": "low"
     },
     {
       "id": "fixed_bridge",
-      "name": "conditions.fixedBridge",
-      "description": "conditions.fixedBridgeDesc",
+      "name": "fixedBridge",
+      "description": "fixedBridgeDesc",
       "color": "#DA70D6",
       "severity": "low"
     },
     {
       "id": "dental_implant",
-      "name": "conditions.dentalImplant",
-      "description": "conditions.dentalImplantDesc",
+      "name": "dentalImplant",
+      "description": "dentalImplantDesc",
       "color": "#BA55D3",
       "severity": "low"
     },
     {
       "id": "removable_prosthesis",
-      "name": "conditions.removableProsthesis",
-      "description": "conditions.removableProsthesisDesc",
+      "name": "removableProsthesis",
+      "description": "removableProsthesisDesc",
       "color": "#9932CC",
       "severity": "medium"
     },
     {
       "id": "complete_denture",
-      "name": "conditions.completeDenture",
-      "description": "conditions.completeDentureDesc",
+      "name": "completeDenture",
+      "description": "completeDentureDesc",
       "color": "#8A2BE2",
       "severity": "medium"
     }
@@ -259,29 +259,29 @@
   "pediatrics": [
     {
       "id": "primary_tooth",
-      "name": "conditions.primaryTooth",
-      "description": "conditions.primaryToothDesc",
+      "name": "primaryTooth",
+      "description": "primaryToothDesc",
       "color": "#F0E68C",
       "severity": "low"
     },
     {
       "id": "erupting_permanent_tooth",
-      "name": "conditions.eruptingPermanentTooth",
-      "description": "conditions.eruptingPermanentToothDesc",
+      "name": "eruptingPermanentTooth",
+      "description": "eruptingPermanentToothDesc",
       "color": "#FFD700",
       "severity": "low"
     },
     {
       "id": "impacted_tooth",
-      "name": "conditions.impactedTooth",
-      "description": "conditions.impactedToothDesc",
+      "name": "impactedTooth",
+      "description": "impactedToothDesc",
       "color": "#FFA500",
       "severity": "medium"
     },
     {
       "id": "ectopic_tooth",
-      "name": "conditions.ectopicTooth",
-      "description": "conditions.ectopicToothDesc",
+      "name": "ectopicTooth",
+      "description": "ectopicToothDesc",
       "color": "#FF8C00",
       "severity": "medium"
     }
@@ -289,36 +289,36 @@
   "emergencies": [
     {
       "id": "periapical_abscess",
-      "name": "conditions.periapicalAbscess",
-      "description": "conditions.periapicalAbscessDesc",
+      "name": "periapicalAbscess",
+      "description": "periapicalAbscessDesc",
       "color": "#FF0000",
       "severity": "critical"
     },
     {
       "id": "periodontal_abscess",
-      "name": "conditions.periodontalAbscess",
-      "description": "conditions.periodontalAbscessDesc",
+      "name": "periodontalAbscess",
+      "description": "periodontalAbscessDesc",
       "color": "#DC143C",
       "severity": "critical"
     },
     {
       "id": "dental_trauma",
-      "name": "conditions.dentalTrauma",
-      "description": "conditions.dentalTraumaDesc",
+      "name": "dentalTrauma",
+      "description": "dentalTraumaDesc",
       "color": "#B22222",
       "severity": "critical"
     },
     {
       "id": "tooth_luxation",
-      "name": "conditions.toothLuxation",
-      "description": "conditions.toothLuxationDesc",
+      "name": "toothLuxation",
+      "description": "toothLuxationDesc",
       "color": "#8B0000",
       "severity": "critical"
     },
     {
       "id": "tooth_avulsion",
-      "name": "conditions.toothAvulsion",
-      "description": "conditions.toothAvulsionDesc",
+      "name": "toothAvulsion",
+      "description": "toothAvulsionDesc",
       "color": "#FF6347",
       "severity": "critical"
     }

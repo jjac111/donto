@@ -292,11 +292,11 @@
     "critical": "Critical"
   },
   "surfaces": {
-    "mesial": "Mesial",
-    "distal": "Distal",
-    "buccal": "Buccal",
-    "lingual": "Lingual",
-    "occlusal": "Occlusal"
+    "m": "Mesial",
+    "d": "Distal",
+    "b": "Buccal",
+    "l": "Lingual",
+    "o": "Occlusal"
   },
   "quadrants": {
     "upperRight": "Upper Right",
