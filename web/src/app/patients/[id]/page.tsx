@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
+import { DiagnosisSection } from '@/components/diagnosis/diagnosis-section'
 import { usePatient } from '@/hooks/use-patients'
 import { Button } from '@/components/ui/button'
 import {
@@ -274,6 +275,10 @@ export default function PatientDetailPage() {
               </Card>
             </div>
           </div>
+
+          {/* Diagnosis Section - Full Width at Bottom */}
+
+          <DiagnosisSection patientId={patientId} />
         </div>
       </AppLayout>
     </ProtectedRoute>

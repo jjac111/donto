@@ -1,0 +1,326 @@
+{
+  "orthodontics": [
+    {
+      "id": "class_i_malocclusion",
+      "name": "classIMalocclusion",
+      "description": "classIMalocclusionDesc",
+      "color": "#FFD700",
+      "severity": "medium"
+    },
+    {
+      "id": "class_ii_malocclusion",
+      "name": "classIIMalocclusion",
+      "description": "classIIMalocclusionDesc",
+      "color": "#FFA500",
+      "severity": "medium"
+    },
+    {
+      "id": "class_iii_malocclusion",
+      "name": "classIIIMalocclusion",
+      "description": "classIIIMalocclusionDesc",
+      "color": "#FF6347",
+      "severity": "high"
+    },
+    {
+      "id": "diastema",
+      "name": "diastema",
+      "description": "diastemaDesc",
+      "color": "#98FB98",
+      "severity": "low"
+    },
+    {
+      "id": "crowding",
+      "name": "crowding",
+      "description": "crowdingDesc",
+      "color": "#87CEEB",
+      "severity": "medium"
+    }
+  ],
+  "surgery": [
+    {
+      "id": "extraction_indicated",
+      "name": "extractionIndicated",
+      "description": "extractionIndicatedDesc",
+      "color": "#FF6B6B",
+      "severity": "high"
+    },
+    {
+      "id": "extraction_complete",
+      "name": "extractionComplete",
+      "description": "extractionCompleteDesc",
+      "color": "#DC143C",
+      "severity": "critical"
+    },
+    {
+      "id": "impacted_third_molar",
+      "name": "impactedThirdMolar",
+      "description": "impactedThirdMolarDesc",
+      "color": "#B22222",
+      "severity": "high"
+    },
+    {
+      "id": "dentigerous_cyst",
+      "name": "dentigerousCyst",
+      "description": "dentigerousCystDesc",
+      "color": "#8B0000",
+      "severity": "critical"
+    },
+    {
+      "id": "root_fracture",
+      "name": "rootFracture",
+      "description": "rootFractureDesc",
+      "color": "#FF4500",
+      "severity": "high"
+    }
+  ],
+  "endodontics": [
+    {
+      "id": "pulpal_necrosis",
+      "name": "pulpalNecrosis",
+      "description": "pulpalNecrosisDesc",
+      "color": "#4ECDC4",
+      "severity": "high"
+    },
+    {
+      "id": "pulpotomy",
+      "name": "pulpotomy",
+      "description": "pulpotomyDesc",
+      "color": "#26A69A",
+      "severity": "medium"
+    },
+    {
+      "id": "endodontic_treatment",
+      "name": "endodonticTreatment",
+      "description": "endodonticTreatmentDesc",
+      "color": "#00897B",
+      "severity": "low"
+    },
+    {
+      "id": "endodontic_retreatment",
+      "name": "endodonticRetreatment",
+      "description": "endodonticRetreatmentDesc",
+      "color": "#00695C",
+      "severity": "medium"
+    },
+    {
+      "id": "root_perforation",
+      "name": "rootPerforation",
+      "description": "rootPerforationDesc",
+      "color": "#004D40",
+      "severity": "critical"
+    }
+  ],
+  "general": [
+    {
+      "id": "dental_caries",
+      "name": "dentalCaries",
+      "description": "dentalCariesDesc",
+      "color": "#FF8C00",
+      "severity": "medium"
+    },
+    {
+      "id": "arrested_caries",
+      "name": "arrestedCaries",
+      "description": "arrestedCariesDesc",
+      "color": "#D2691E",
+      "severity": "low"
+    },
+    {
+      "id": "restoration",
+      "name": "restoration",
+      "description": "restorationDesc",
+      "color": "#98D8C8",
+      "severity": "low"
+    },
+    {
+      "id": "defective_restoration",
+      "name": "defectiveRestoration",
+      "description": "defectiveRestorationDesc",
+      "color": "#66B2A8",
+      "severity": "medium"
+    },
+    {
+      "id": "dental_erosion",
+      "name": "dentalErosion",
+      "description": "dentalErosionDesc",
+      "color": "#FF69B4",
+      "severity": "medium"
+    },
+    {
+      "id": "dental_abrasion",
+      "name": "dentalAbrasion",
+      "description": "dentalAbrasionDesc",
+      "color": "#DA70D6",
+      "severity": "medium"
+    },
+    {
+      "id": "coronal_fracture",
+      "name": "coronalFracture",
+      "description": "coronalFractureDesc",
+      "color": "#BA55D3",
+      "severity": "high"
+    },
+    {
+      "id": "enamel_hypoplasia",
+      "name": "enamelHypoplasia",
+      "description": "enamelHypoplasiaDesc",
+      "color": "#9370DB",
+      "severity": "low"
+    }
+  ],
+  "periodontics": [
+    {
+      "id": "gingivitis",
+      "name": "gingivitis",
+      "description": "gingivitisDesc",
+      "color": "#FFB6C1",
+      "severity": "medium"
+    },
+    {
+      "id": "mild_periodontitis",
+      "name": "mildPeriodontitis",
+      "description": "mildPeriodontitisDesc",
+      "color": "#FF1493",
+      "severity": "medium"
+    },
+    {
+      "id": "moderate_periodontitis",
+      "name": "moderatePeriodontitis",
+      "description": "moderatePeriodontitisDesc",
+      "color": "#C71585",
+      "severity": "high"
+    },
+    {
+      "id": "advanced_periodontitis",
+      "name": "advancedPeriodontitis",
+      "description": "advancedPeriodontitisDesc",
+      "color": "#8B008B",
+      "severity": "critical"
+    },
+    {
+      "id": "tooth_mobility",
+      "name": "toothMobility",
+      "description": "toothMobilityDesc",
+      "color": "#9932CC",
+      "severity": "high"
+    },
+    {
+      "id": "gingival_recession",
+      "name": "gingivalRecession",
+      "description": "gingivalRecessionDesc",
+      "color": "#8A2BE2",
+      "severity": "medium"
+    }
+  ],
+  "prosthetics": [
+    {
+      "id": "permanent_crown",
+      "name": "permanentCrown",
+      "description": "permanentCrownDesc",
+      "color": "#DDA0DD",
+      "severity": "low"
+    },
+    {
+      "id": "temporary_crown",
+      "name": "temporaryCrown",
+      "description": "temporaryCrownDesc",
+      "color": "#EE82EE",
+      "severity": "low"
+    },
+    {
+      "id": "fixed_bridge",
+      "name": "fixedBridge",
+      "description": "fixedBridgeDesc",
+      "color": "#DA70D6",
+      "severity": "low"
+    },
+    {
+      "id": "dental_implant",
+      "name": "dentalImplant",
+      "description": "dentalImplantDesc",
+      "color": "#BA55D3",
+      "severity": "low"
+    },
+    {
+      "id": "removable_prosthesis",
+      "name": "removableProsthesis",
+      "description": "removableProsthesisDesc",
+      "color": "#9932CC",
+      "severity": "medium"
+    },
+    {
+      "id": "complete_denture",
+      "name": "completeDenture",
+      "description": "completeDentureDesc",
+      "color": "#8A2BE2",
+      "severity": "medium"
+    }
+  ],
+  "pediatrics": [
+    {
+      "id": "primary_tooth",
+      "name": "primaryTooth",
+      "description": "primaryToothDesc",
+      "color": "#F0E68C",
+      "severity": "low"
+    },
+    {
+      "id": "erupting_permanent_tooth",
+      "name": "eruptingPermanentTooth",
+      "description": "eruptingPermanentToothDesc",
+      "color": "#FFD700",
+      "severity": "low"
+    },
+    {
+      "id": "impacted_tooth",
+      "name": "impactedTooth",
+      "description": "impactedToothDesc",
+      "color": "#FFA500",
+      "severity": "medium"
+    },
+    {
+      "id": "ectopic_tooth",
+      "name": "ectopicTooth",
+      "description": "ectopicToothDesc",
+      "color": "#FF8C00",
+      "severity": "medium"
+    }
+  ],
+  "emergencies": [
+    {
+      "id": "periapical_abscess",
+      "name": "periapicalAbscess",
+      "description": "periapicalAbscessDesc",
+      "color": "#FF0000",
+      "severity": "critical"
+    },
+    {
+      "id": "periodontal_abscess",
+      "name": "periodontalAbscess",
+      "description": "periodontalAbscessDesc",
+      "color": "#DC143C",
+      "severity": "critical"
+    },
+    {
+      "id": "dental_trauma",
+      "name": "dentalTrauma",
+      "description": "dentalTraumaDesc",
+      "color": "#B22222",
+      "severity": "critical"
+    },
+    {
+      "id": "tooth_luxation",
+      "name": "toothLuxation",
+      "description": "toothLuxationDesc",
+      "color": "#8B0000",
+      "severity": "critical"
+    },
+    {
+      "id": "tooth_avulsion",
+      "name": "toothAvulsion",
+      "description": "toothAvulsionDesc",
+      "color": "#FF6347",
+      "severity": "critical"
+    }
+  ]
+}

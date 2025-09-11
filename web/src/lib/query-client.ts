@@ -80,8 +80,19 @@ export const queryKeys = {
 
   // Tooth Conditions
   toothConditions: ['tooth-conditions'] as const,
-  toothConditionsByPatient: (patientId: string) =>
-    ['tooth-conditions', 'by-patient', patientId] as const,
+  patientToothConditions: (patientId: string) =>
+    ['tooth-conditions', 'patient', patientId] as const,
+  toothConditionsByTooth: (patientId: string, toothNumber: string) =>
+    ['tooth-conditions', patientId, toothNumber] as const,
+  // History-scoped keys
+  patientToothConditionsByHistory: (patientId: string, historyId: string) =>
+    ['tooth-conditions', 'patient', patientId, 'history', historyId] as const,
+  toothConditionsByToothAndHistory: (
+    patientId: string,
+    toothNumber: string,
+    historyId: string
+  ) =>
+    ['tooth-conditions', patientId, toothNumber, 'history', historyId] as const,
 
   // Clinics
   clinics: ['clinics'] as const,
@@ -102,7 +113,7 @@ export const invalidatePatientData = (patientId: string) => {
     queryKey: queryKeys.treatmentPlansByPatient(patientId),
   })
   queryClient.invalidateQueries({
-    queryKey: queryKeys.toothConditionsByPatient(patientId),
+    queryKey: queryKeys.patientToothConditions(patientId),
   })
 }
 

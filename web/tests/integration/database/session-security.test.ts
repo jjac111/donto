@@ -326,6 +326,12 @@ describe('Session Security Tests', () => {
       expect(initialPatients!.length).toBeGreaterThan(0)
 
       // Remove user from clinic by deleting their profile (CASCADE will auto-delete sessions)
+      // First delete any tooth diagnosis histories recorded by this profile
+      await supabaseAdmin
+        .from('tooth_diagnosis_histories')
+        .delete()
+        .eq('recorded_by_profile_id', '550e8400-e29b-41d4-a716-446655531001')
+
       const { error: deleteError } = await supabaseAdmin
         .from('profiles')
         .delete()

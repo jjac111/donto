@@ -44,6 +44,41 @@ CREATE TABLE providers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User profiles table for multi-clinic, multi-role access
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    provider_id UUID REFERENCES providers(id) ON DELETE SET NULL, -- Optional link to provider record
+    role VARCHAR(50) NOT NULL DEFAULT 'admin', -- admin, provider, staff
+    is_active BOOLEAN DEFAULT true,
+    invited_by UUID REFERENCES auth.users(id),
+    invited_at TIMESTAMP WITH TIME ZONE,
+    joined_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE(user_id, clinic_id) -- One profile per user per clinic
+);
+
+-- User sessions table to track active clinic per session
+CREATE TABLE user_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    active_clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+    session_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Ensure user has access to the active clinic
+    CONSTRAINT fk_user_clinic_access 
+        FOREIGN KEY (user_id, active_clinic_id) 
+        REFERENCES profiles(user_id, clinic_id)
+        ON DELETE CASCADE
+);
+
+
 
 -- Patients (role-specific data linked to persons)
 CREATE TABLE patients (
@@ -173,21 +208,42 @@ CREATE TABLE cost_estimate_items (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tooth conditions/odontogram data
-CREATE TABLE tooth_conditions (
+
+-- Tooth diagnosis history - simple audit log for diagnosis sessions
+CREATE TABLE tooth_diagnosis_histories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
-    tooth_number VARCHAR(10) NOT NULL, -- e.g., "11", "14", "21"
-    surface VARCHAR(10) NOT NULL, -- "M", "D", "B", "L", "O" (mesial, distal, buccal, lingual, occlusal)
-    condition_type VARCHAR(50) NOT NULL, -- "healthy", "caries", "filling", "crown", "missing", etc.
-    notes TEXT,
-    recorded_date DATE DEFAULT CURRENT_DATE,
-    recorded_by_provider_id UUID REFERENCES providers(id),
+    recorded_by_profile_id UUID REFERENCES profiles(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(patient_id, tooth_number, surface)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Tooth diagnosis information per patient with current conditions
+CREATE TABLE tooth_diagnoses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tooth_number VARCHAR(10), -- e.g., "11", "14", "21" - NULL for general conditions
+    is_present BOOLEAN DEFAULT true, -- false if tooth is missing (only for tooth-specific records)
+    is_treated BOOLEAN DEFAULT false, -- true if tooth has been treated (only for tooth-specific records)
+    requires_extraction BOOLEAN DEFAULT false, -- true if tooth needs to be extracted (only for tooth-specific records)
+    general_notes TEXT, -- General notes about the tooth or general conditions
+    tooth_conditions JSONB DEFAULT '[]'::jsonb, -- Array of condition objects with diagnosis history
+    -- tooth_conditions structure: [{"surfaces": ["M","D","B","L","O"], "condition_type": "caries", "notes": "text", "diagnosis_date": "2024-01-01", "recorded_by_profile_id": "uuid", "created_at": "timestamp"}]
+    -- For general conditions: surfaces array is empty, only condition_type and notes are used
+    history_id UUID REFERENCES tooth_diagnosis_histories(id) ON DELETE CASCADE, -- Reference to the diagnosis history that created this tooth record
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Unique constraints for tooth_diagnoses
+-- One tooth record per history per tooth number (for tooth-specific records)
+CREATE UNIQUE INDEX tooth_diagnoses_history_tooth_unique 
+ON tooth_diagnoses(history_id, tooth_number) 
+WHERE tooth_number IS NOT NULL;
+
+-- One general conditions record per history (for general conditions)
+CREATE UNIQUE INDEX tooth_diagnoses_history_general_unique 
+ON tooth_diagnoses(history_id) 
+WHERE tooth_number IS NULL;
 
 -- Basic indexes for performance
 CREATE INDEX idx_persons_clinic ON persons(clinic_id);
@@ -202,9 +258,20 @@ CREATE INDEX idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX idx_appointments_provider ON appointments(provider_id);
 CREATE INDEX idx_treatment_items_plan ON treatment_items(treatment_plan_id);
 CREATE INDEX idx_treatment_items_procedure ON treatment_items(procedure_id);
-CREATE INDEX idx_tooth_conditions_patient ON tooth_conditions(patient_id);
+CREATE INDEX idx_tooth_diagnoses_tooth_number ON tooth_diagnoses(tooth_number);
+CREATE INDEX idx_tooth_diagnoses_history_id ON tooth_diagnoses(history_id);
+CREATE INDEX idx_tooth_diagnosis_histories_patient ON tooth_diagnosis_histories(patient_id);
+CREATE INDEX idx_tooth_diagnosis_histories_profile ON tooth_diagnosis_histories(recorded_by_profile_id);
 CREATE INDEX idx_clinical_notes_patient ON clinical_notes(patient_id);
 CREATE INDEX idx_procedures_clinic ON procedures(clinic_id);
+
+-- Indexes for performance
+CREATE INDEX idx_profiles_user_id ON profiles(user_id);
+CREATE INDEX idx_profiles_clinic_id ON profiles(clinic_id);
+CREATE INDEX idx_profiles_provider_id ON profiles(provider_id);
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
 
 -- GIN indexes for full-text search (Spanish language)
 -- Person search: name, national_id, phone, email
@@ -424,47 +491,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- User profiles table for multi-clinic, multi-role access
-CREATE TABLE profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    provider_id UUID REFERENCES providers(id) ON DELETE SET NULL, -- Optional link to provider record
-    role VARCHAR(50) NOT NULL DEFAULT 'admin', -- admin, provider, staff
-    is_active BOOLEAN DEFAULT true,
-    invited_by UUID REFERENCES auth.users(id),
-    invited_at TIMESTAMP WITH TIME ZONE,
-    joined_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(user_id, clinic_id) -- One profile per user per clinic
-);
 
--- User sessions table to track active clinic per session
-CREATE TABLE user_sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    active_clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
-    session_token UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Ensure user has access to the active clinic
-    CONSTRAINT fk_user_clinic_access 
-        FOREIGN KEY (user_id, active_clinic_id) 
-        REFERENCES profiles(user_id, clinic_id)
-        ON DELETE CASCADE
-);
-
--- Indexes for performance
-CREATE INDEX idx_profiles_user_id ON profiles(user_id);
-CREATE INDEX idx_profiles_clinic_id ON profiles(clinic_id);
-CREATE INDEX idx_profiles_provider_id ON profiles(provider_id);
-CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
-CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
-CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
 
 -- Function to get current active clinic from session
 CREATE OR REPLACE FUNCTION get_current_active_clinic()
@@ -566,7 +593,8 @@ ALTER TABLE clinical_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE treatment_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE treatment_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE procedures ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tooth_conditions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tooth_diagnoses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tooth_diagnosis_histories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clinics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cost_estimates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cost_estimate_items ENABLE ROW LEVEL SECURITY;
@@ -656,9 +684,22 @@ CREATE POLICY "Clinic isolation for procedures" ON procedures
         get_current_active_clinic() IS NOT NULL
     );
 
-CREATE POLICY "Clinic isolation for tooth_conditions" ON tooth_conditions
+CREATE POLICY "Clinic isolation for tooth_diagnoses" ON tooth_diagnoses
     FOR ALL USING (
-        -- Tooth conditions link via patient
+        -- Tooth diagnoses link via history -> patient
+        EXISTS (
+            SELECT 1 FROM tooth_diagnosis_histories tdh
+            JOIN patients p ON p.id = tdh.patient_id
+            WHERE tdh.id = history_id 
+            AND p.clinic_id = get_current_active_clinic()
+        )
+        AND 
+        get_current_active_clinic() IS NOT NULL
+    );
+
+CREATE POLICY "Clinic isolation for tooth_diagnosis_histories" ON tooth_diagnosis_histories
+    FOR ALL USING (
+        -- Tooth diagnosis histories link via patient
         EXISTS (
             SELECT 1 FROM patients p 
             WHERE p.id = patient_id 

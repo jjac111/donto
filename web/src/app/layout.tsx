@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import { QueryProvider } from '@/providers/query-provider'
+import { AuthGuard } from '@/components/auth/auth-guard'
 import './globals.css'
 
 const font = Font({
@@ -31,7 +32,9 @@ export default async function RootLayout({
     <html lang="es" className={theme === 'dark' ? 'dark' : ''}>
       <body className={`${font.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <AuthGuard>{children}</AuthGuard>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>
