@@ -1,11 +1,30 @@
 'use client'
 
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
 import { DiagnosisSection } from '@/components/diagnosis/diagnosis-section'
+import { PatientForm } from '@/components/patients/patient-form'
 import { usePatient } from '@/hooks/use-patients'
+import countries from 'world-countries'
+
+// Helper function to get country name from code
+const getCountryName = (countryCode: string): string => {
+  const country = countries.find(c => c.cca3 === countryCode)
+  return country ? country.name.common : countryCode
+}
+
+// Helper function to get phone code for a country
+const getPhoneCode = (countryCode: string): string => {
+  const country = countries.find(c => c.cca3 === countryCode)
+  if (!country || !country.idd?.root) return ''
+  const root = country.idd.root
+  const suffix = country.idd.suffixes?.[0] || ''
+  return root + suffix
+}
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -16,13 +35,22 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Mail, MapPin, Phone, User, AlertCircle } from 'lucide-react'
+import {
+  Calendar,
+  Mail,
+  MapPin,
+  Phone,
+  User,
+  AlertCircle,
+  Edit,
+} from 'lucide-react'
 
 export default function PatientDetailPage() {
   const params = useParams()
   const patientId = params.id as string
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
 
   // Use TanStack Query hook instead of manual state management
   const { data: patient, isLoading, error } = usePatient(patientId)
@@ -73,7 +101,7 @@ export default function PatientDetailPage() {
       <AppLayout>
         <div className="space-y-6">
           {/* Header */}
-          <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {patient.displayName}
@@ -82,11 +110,14 @@ export default function PatientDetailPage() {
                 ID: {person.nationalId} • {patient.age} años
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" disabled>
-                {t('edit')}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditFormOpen(true)}
+              className="flex items-center gap-2 sm:self-start"
+            >
+              <Edit className="h-4 w-4" />
+              {t('edit')}
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -129,17 +160,21 @@ export default function PatientDetailPage() {
                       <label className="text-sm font-medium text-muted-foreground">
                         {t('country')}
                       </label>
-                      <p className="text-foreground">{person.country}</p>
+                      <p className="text-foreground">
+                        {getCountryName(person.country)}
+                      </p>
                     </div>
                   </div>
 
                   <Separator />
 
                   <div className="space-y-3">
-                    {person.phone && (
+                    {person.phone && person.phone_country_code && (
                       <div className="flex items-center">
                         <Phone className="h-4 w-4 text-muted-foreground mr-2" />
-                        <span className="text-foreground">{person.phone}</span>
+                        <span className="text-foreground">
+                          {person.phone_country_code} {person.phone}
+                        </span>
                       </div>
                     )}
                     {person.email && (
@@ -209,14 +244,16 @@ export default function PatientDetailPage() {
                         </p>
                       </div>
                     )}
-                    {patient.emergencyContactPhone && (
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 text-muted-foreground mr-2" />
-                        <span className="text-foreground">
-                          {patient.emergencyContactPhone}
-                        </span>
-                      </div>
-                    )}
+                    {patient.emergencyContactPhone &&
+                      patient.emergency_contact_phone_country_code && (
+                        <div className="flex items-center">
+                          <Phone className="h-4 w-4 text-muted-foreground mr-2" />
+                          <span className="text-foreground">
+                            {patient.emergency_contact_phone_country_code}{' '}
+                            {patient.emergencyContactPhone}
+                          </span>
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
               )}
@@ -280,6 +317,17 @@ export default function PatientDetailPage() {
 
           <DiagnosisSection patientId={patientId} />
         </div>
+
+        {/* Edit Patient Form */}
+        <PatientForm
+          open={isEditFormOpen}
+          onOpenChange={setIsEditFormOpen}
+          patient={patient}
+          mode="edit"
+          onSuccess={() => {
+            // Patient data will be refreshed automatically by the mutation
+          }}
+        />
       </AppLayout>
     </ProtectedRoute>
   )

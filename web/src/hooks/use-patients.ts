@@ -25,6 +25,8 @@ const transformPatient = (
   allergies: dbPatient.allergies || undefined,
   emergencyContactName: dbPatient.emergency_contact_name || undefined,
   emergencyContactPhone: dbPatient.emergency_contact_phone || undefined,
+  emergency_contact_phone_country_code:
+    dbPatient.emergency_contact_phone_country_code || undefined,
   createdAt: dbPatient.created_at,
   updatedAt: dbPatient.updated_at,
 
@@ -39,6 +41,7 @@ const transformPatient = (
     dateOfBirth: new Date(dbPerson.date_of_birth),
     sex: dbPerson.sex || undefined,
     phone: dbPerson.phone || undefined,
+    phone_country_code: dbPerson.phone_country_code || undefined,
     email: dbPerson.email || undefined,
     address: dbPerson.address || undefined,
     displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,
@@ -238,6 +241,7 @@ export const useCreatePatient = () => {
           .split('T')[0],
         sex: patientData.person.sex,
         phone: patientData.person.phone,
+        phone_country_code: (patientData.person as any).phoneCountryCode,
         email: patientData.person.email,
         address: patientData.person.address,
         national_id: patientData.person.nationalId!,
@@ -269,6 +273,8 @@ export const useCreatePatient = () => {
         })(),
         emergency_contact_name: patientData.emergencyContactName,
         emergency_contact_phone: patientData.emergencyContactPhone,
+        emergency_contact_phone_country_code: (patientData as any)
+          .emergencyContactPhoneCountryCode,
         medical_history: patientData.medicalHistory,
         allergies: patientData.allergies,
       }
@@ -342,9 +348,13 @@ export const useUpdatePatient = () => {
       if (patientData.person) {
         const dbPersonData: any = {}
 
-        if (patientData.person.firstName)
+        if (patientData.person.nationalId !== undefined)
+          dbPersonData.national_id = patientData.person.nationalId
+        if (patientData.person.country !== undefined)
+          dbPersonData.country = patientData.person.country
+        if (patientData.person.firstName !== undefined)
           dbPersonData.first_name = patientData.person.firstName
-        if (patientData.person.lastName)
+        if (patientData.person.lastName !== undefined)
           dbPersonData.last_name = patientData.person.lastName
         if (patientData.person.dateOfBirth)
           dbPersonData.date_of_birth = patientData.person.dateOfBirth
@@ -354,6 +364,10 @@ export const useUpdatePatient = () => {
           dbPersonData.sex = patientData.person.sex
         if (patientData.person.phone !== undefined)
           dbPersonData.phone = patientData.person.phone
+        if ((patientData.person as any).phoneCountryCode !== undefined)
+          dbPersonData.phone_country_code = (
+            patientData.person as any
+          ).phoneCountryCode
         if (patientData.person.email !== undefined)
           dbPersonData.email = patientData.person.email
         if (patientData.person.address !== undefined)
@@ -377,6 +391,10 @@ export const useUpdatePatient = () => {
       if (patientData.emergencyContactPhone !== undefined)
         dbPatientData.emergency_contact_phone =
           patientData.emergencyContactPhone
+      if ((patientData as any).emergencyContactPhoneCountryCode !== undefined)
+        dbPatientData.emergency_contact_phone_country_code = (
+          patientData as any
+        ).emergencyContactPhoneCountryCode
       if (patientData.medicalHistory !== undefined)
         dbPatientData.medical_history = patientData.medicalHistory
       if (patientData.allergies !== undefined)

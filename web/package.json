@@ -25,6 +25,7 @@
     "@tanstack/react-query-devtools": "^5.85.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "libphonenumber-js": "^1.12.15",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "next-intl": "^4.3.5",
@@ -33,6 +34,7 @@
     "react-hook-form": "^7.62.0",
     "resend": "^6.0.2",
     "tailwind-merge": "^3.3.1",
+    "world-countries": "^5.1.0",
     "zod": "^4.1.5",
     "zustand": "^5.0.8"
   },
