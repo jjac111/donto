@@ -5,7 +5,15 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
-import { Loader2, X, Plus, Edit2, Check, X as XIcon } from 'lucide-react'
+import {
+  Loader2,
+  X,
+  Plus,
+  Edit2,
+  Check,
+  X as XIcon,
+  Trash2,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -134,6 +142,14 @@ export function DiagnosisForm({
     control: form.control,
     name: 'conditions',
   })
+
+  // Watch isPresent and automatically set requiresExtraction to false when tooth is not present
+  const isPresent = form.watch('isPresent')
+  useEffect(() => {
+    if (!isPresent) {
+      form.setValue('requiresExtraction', false)
+    }
+  }, [isPresent, form])
 
   const onSubmit = async (data: DiagnosisFormValues) => {
     if (!toothNumber) return
@@ -421,6 +437,7 @@ export function DiagnosisForm({
                 number: toothNumber!,
                 isPresent: form.watch('isPresent'),
                 hasTreatments: form.watch('isTreated'),
+                requiresExtraction: form.watch('requiresExtraction'),
                 conditions: form
                   .watch('conditions')
                   .map((condition, index) => ({
@@ -434,7 +451,7 @@ export function DiagnosisForm({
                   .filter(condition => condition.conditionType), // Only include conditions with IDs
               }}
               onClick={() => {}} // No-op since this is just for visualization
-              isSelected={true}
+              isSelected={false}
               {...getToothOrientation(toothNumber!)}
             />
           </div>
@@ -497,6 +514,7 @@ export function DiagnosisForm({
                         <Toggle
                           checked={field.value}
                           onCheckedChange={field.onChange}
+                          disabled={!form.watch('isPresent')}
                           className={field.value ? 'bg-destructive' : ''}
                         />
                       </FormControl>
@@ -580,6 +598,14 @@ export function DiagnosisForm({
                               }
                             >
                               <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeCondition(conditionIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                             <Button
                               type="button"

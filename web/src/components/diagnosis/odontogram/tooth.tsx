@@ -59,21 +59,14 @@ export function Tooth({ tooth, onClick, isSelected, jaw, side }: ToothProps) {
     )
   }
 
-  // SVG fills
+  // SVG fills - standard odontogram colors (red and blue only)
   const getFill = (
     visualSurface: 'up' | 'down' | 'left' | 'right' | 'center'
   ): string => {
     const condition = getConditionForSurface(visualSurface)
     if (condition) {
-      // Get condition details from dental-conditions.json
-      for (const category of Object.values(dentalConditionsData)) {
-        const conditionDetails = (category as any[]).find(
-          c => c.id === condition.conditionType
-        )
-        if (conditionDetails) {
-          return withAlpha(conditionDetails.color, '33')
-        }
-      }
+      // All conditions are red, or blue if tooth is treated
+      return tooth.hasTreatments ? '#3b82f6' : '#ef4444' // blue or red
     }
     return 'white'
   }
@@ -81,25 +74,14 @@ export function Tooth({ tooth, onClick, isSelected, jaw, side }: ToothProps) {
   const getToothStatusColor = (): string => {
     // Check if tooth has any conditions
     const hasConditions = tooth.conditions.length > 0
-    const hasUrgentConditions = tooth.conditions.some(condition => {
-      // Get severity from dental-conditions.json
-      for (const category of Object.values(dentalConditionsData)) {
-        const conditionDetails = (category as any[]).find(
-          c => c.id === condition.conditionType
-        )
-        if (conditionDetails) {
-          return (
-            conditionDetails.severity === 'critical' ||
-            conditionDetails.severity === 'high'
-          )
-        }
-      }
-      return false
-    })
 
-    if (!tooth.isPresent) return 'border-gray-800 bg-gray-200'
-    if (hasUrgentConditions) return 'border-red-500 bg-red-50'
-    if (hasConditions) return 'border-blue-500 bg-blue-50' // Any conditions
+    if (!tooth.isPresent) return 'border-blue-500 bg-blue-50'
+    if (tooth.requiresExtraction) return 'border-red-500 bg-red-50'
+    if (tooth.hasTreatments) return 'border-blue-500 bg-blue-50'
+    if (hasConditions) {
+      // Red border for untreated conditions
+      return 'border-red-500 bg-red-50'
+    }
     return 'border-gray-300 bg-white' // Neutral border for healthy teeth
   }
 
@@ -156,14 +138,8 @@ export function Tooth({ tooth, onClick, isSelected, jaw, side }: ToothProps) {
             stroke={(() => {
               const condition = getConditionForSurface('center')
               if (condition) {
-                for (const category of Object.values(dentalConditionsData)) {
-                  const conditionDetails = (category as any[]).find(
-                    c => c.id === condition.conditionType
-                  )
-                  if (conditionDetails) {
-                    return conditionDetails.color
-                  }
-                }
+                // Use standard odontogram colors
+                return tooth.hasTreatments ? '#3b82f6' : '#ef4444' // blue or red
               }
               return '#9ca3af'
             })()}
@@ -209,17 +185,27 @@ export function Tooth({ tooth, onClick, isSelected, jaw, side }: ToothProps) {
         {/* Click target overlay to keep interactions the same */}
         <div className="absolute inset-0" />
 
-        {/* Missing tooth indicator */}
-        {!tooth.isPresent && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-6 h-0.5 bg-gray-600 rotate-45"></div>
-          </div>
-        )}
+        {/* Missing tooth indicator - blue X cross */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-200 ${
+            !tooth.isPresent ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="absolute w-[141%] h-0.5 bg-blue-600 rotate-45 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 origin-center"></div>
+          <div className="absolute w-[141%] h-0.5 bg-blue-600 -rotate-45 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 origin-center"></div>
+        </div>
 
-        {/* Treatment indicator */}
-        {tooth.hasTreatments && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full border border-white"></div>
-        )}
+        {/* Extraction required indicator - red X cross */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-200 ${
+            tooth.requiresExtraction && tooth.isPresent
+              ? 'opacity-100'
+              : 'opacity-0'
+          }`}
+        >
+          <div className="absolute w-[141%] h-0.5 bg-red-600 rotate-45 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 origin-center"></div>
+          <div className="absolute w-[141%] h-0.5 bg-red-600 -rotate-45 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 origin-center"></div>
+        </div>
       </div>
     </div>
   )
