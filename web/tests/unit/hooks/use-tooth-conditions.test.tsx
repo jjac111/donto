@@ -79,13 +79,17 @@ describe('usePatientToothConditions (aggregated)', () => {
     mockSupabase.from.mockReturnValue({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          order: vi.fn(() => Promise.resolve({ data: mockRows, error: null })),
+          eq: vi.fn(() => ({
+            order: vi.fn(() =>
+              Promise.resolve({ data: mockRows, error: null })
+            ),
+          })),
         })),
       })),
     } as any)
 
     const { result } = renderHook(
-      () => usePatientToothConditions('patient-123'),
+      () => usePatientToothConditions('patient-123', 'history-123'),
       { wrapper }
     )
 
@@ -133,16 +137,18 @@ describe('useToothConditions (single tooth JSONB)', () => {
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           eq: vi.fn(() => ({
-            limit: vi.fn(() =>
-              Promise.resolve({ data: [mockRow], error: null })
-            ),
+            eq: vi.fn(() => ({
+              limit: vi.fn(() =>
+                Promise.resolve({ data: [mockRow], error: null })
+              ),
+            })),
           })),
         })),
       })),
     } as any)
 
     const { result } = renderHook(
-      () => useToothConditions('patient-123', '11'),
+      () => useToothConditions('patient-123', '11', 'history-123'),
       { wrapper }
     )
 
@@ -221,6 +227,15 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     const insertSpy = vi.fn(() => Promise.resolve({ error: null }))
     const diagnosesChain = {
       insert: insertSpy,
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(() =>
+              Promise.resolve({ data: null, error: null })
+            ),
+          })),
+        })),
+      })),
     }
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -234,6 +249,7 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
 
     await result.current.mutateAsync({
       patientId: 'patient-123',
+      historyId: 'history-123',
       diagnosisData: {
         toothNumber: '16',
         conditions: [
@@ -242,13 +258,12 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       },
     })
 
-    // Verify upsert payload contains history_id and JSONB
-    expect(upsertSpy).toHaveBeenCalledTimes(1)
-    const args = upsertSpy.mock.calls[0]
-    expect(args[0][0].history_id).toBe('history-123')
-    expect(args[0][0].tooth_number).toBe('16')
-    expect(Array.isArray(args[0][0].tooth_conditions)).toBe(true)
-    expect(args[1]).toEqual({ onConflict: 'history_id,tooth_number' })
+    // Verify insert payload contains history_id and JSONB
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+    const args = insertSpy.mock.calls[0]
+    expect(args[0].history_id).toBe('history-123')
+    expect(args[0].tooth_number).toBe('16')
+    expect(Array.isArray(args[0].tooth_conditions)).toBe(true)
   })
 
   it('edits by creating a new history and upserting again', async () => {
@@ -296,10 +311,19 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       insert: historiesInsert,
     }
 
-    // tooth_diagnoses upsert spy
-    const upsertSpy = vi.fn(() => Promise.resolve({ error: null }))
+    // tooth_diagnoses insert spy
+    const insertSpy = vi.fn(() => Promise.resolve({ error: null }))
     const diagnosesChain = {
-      upsert: upsertSpy,
+      insert: insertSpy,
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(() =>
+              Promise.resolve({ data: null, error: null })
+            ),
+          })),
+        })),
+      })),
     }
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -314,6 +338,7 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     // First save
     await result.current.mutateAsync({
       patientId: 'patient-123',
+      historyId: 'history-1',
       diagnosisData: {
         toothNumber: '21',
         conditions: [
@@ -325,6 +350,7 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     // Second save (edit)
     await result.current.mutateAsync({
       patientId: 'patient-123',
+      historyId: 'history-2',
       diagnosisData: {
         toothNumber: '21',
         conditions: [
@@ -334,13 +360,13 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     })
 
     // Should have been called twice with different history ids
-    expect(upsertSpy).toHaveBeenCalledTimes(2)
-    const firstArgs = upsertSpy.mock.calls[0]
-    const secondArgs = upsertSpy.mock.calls[1]
-    expect(firstArgs[0][0].history_id).toBe('history-1')
-    expect(secondArgs[0][0].history_id).toBe('history-2')
-    expect(firstArgs[0][0].tooth_number).toBe('21')
-    expect(secondArgs[0][0].tooth_number).toBe('21')
+    expect(insertSpy).toHaveBeenCalledTimes(2)
+    const firstArgs = insertSpy.mock.calls[0]
+    const secondArgs = insertSpy.mock.calls[1]
+    expect(firstArgs[0].history_id).toBe('history-1')
+    expect(secondArgs[0].history_id).toBe('history-2')
+    expect(firstArgs[0].tooth_number).toBe('21')
+    expect(secondArgs[0].tooth_number).toBe('21')
   })
 
   it('adds new condition to existing tooth with multiple conditions', async () => {
@@ -377,10 +403,19 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       })),
     }
 
-    // tooth_diagnoses upsert spy
-    const upsertSpy = vi.fn(() => Promise.resolve({ error: null }))
+    // tooth_diagnoses insert spy
+    const insertSpy = vi.fn(() => Promise.resolve({ error: null }))
     const diagnosesChain = {
-      upsert: upsertSpy,
+      insert: insertSpy,
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(() =>
+              Promise.resolve({ data: null, error: null })
+            ),
+          })),
+        })),
+      })),
     }
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -395,6 +430,7 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     // Simulate adding a new condition to tooth 16 that already has existing conditions
     await result.current.mutateAsync({
       patientId: 'patient-123',
+      historyId: 'history-new',
       diagnosisData: {
         toothNumber: '16',
         conditions: [
@@ -419,13 +455,13 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       },
     })
 
-    // Verify upsert was called with all conditions (existing + new)
-    expect(upsertSpy).toHaveBeenCalledTimes(1)
-    const args = upsertSpy.mock.calls[0]
-    expect(args[0][0].history_id).toBe('history-new')
-    expect(args[0][0].tooth_number).toBe('16')
+    // Verify insert was called with all conditions (existing + new)
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+    const args = insertSpy.mock.calls[0]
+    expect(args[0].history_id).toBe('history-new')
+    expect(args[0].tooth_number).toBe('16')
 
-    const toothConditions = args[0][0].tooth_conditions
+    const toothConditions = args[0].tooth_conditions
     expect(Array.isArray(toothConditions)).toBe(true)
     expect(toothConditions).toHaveLength(3)
 
@@ -494,10 +530,19 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       insert: historiesInsert,
     }
 
-    // tooth_diagnoses upsert spy
-    const upsertSpy = vi.fn(() => Promise.resolve({ error: null }))
+    // tooth_diagnoses insert spy
+    const insertSpy = vi.fn(() => Promise.resolve({ error: null }))
     const diagnosesChain = {
-      upsert: upsertSpy,
+      insert: insertSpy,
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(() =>
+              Promise.resolve({ data: null, error: null })
+            ),
+          })),
+        })),
+      })),
     }
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -512,6 +557,7 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     // Simulate editing an existing tooth diagnosis
     await result.current.mutateAsync({
       patientId: 'patient-123',
+      historyId: 'existing-history-123',
       diagnosisData: {
         toothNumber: '16',
         conditions: [
@@ -533,11 +579,11 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
 
     // This test will likely fail because we're creating a new history instead of updating
     // The current implementation always creates new history records
-    expect(upsertSpy).toHaveBeenCalledTimes(1)
-    const args = upsertSpy.mock.calls[0]
-    expect(args[0][0].tooth_number).toBe('16')
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+    const args = insertSpy.mock.calls[0]
+    expect(args[0].tooth_number).toBe('16')
 
-    const toothConditions = args[0][0].tooth_conditions
+    const toothConditions = args[0].tooth_conditions
     expect(Array.isArray(toothConditions)).toBe(true)
     expect(toothConditions).toHaveLength(2)
 
