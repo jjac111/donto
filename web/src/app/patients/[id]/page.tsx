@@ -8,6 +8,7 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { DiagnosisSection } from '@/components/diagnosis/diagnosis-section'
 import { PatientForm } from '@/components/patients/patient-form'
 import { usePatient } from '@/hooks/use-patients'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import countries from 'world-countries'
 
 // Helper function to get country name from code
@@ -61,7 +62,7 @@ export default function PatientDetailPage() {
         <AppLayout>
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <LoadingSpinner size="lg" className="mx-auto" />
               <p className="mt-2 text-muted-foreground">{tCommon('loading')}</p>
             </div>
           </div>

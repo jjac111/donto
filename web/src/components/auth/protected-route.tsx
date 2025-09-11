@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -33,7 +34,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!isHydrated || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div>{t('loading')}</div>
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-muted-foreground">{t('loading')}</p>
+        </div>
       </div>
     )
   }
