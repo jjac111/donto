@@ -221,7 +221,8 @@
     "edit": "Edit",
     "view": "View",
     "logout": "Sign Out",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "back": "Back"
   },
   "dashboard": {
     "welcome": "Welcome to Donto!",

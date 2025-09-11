@@ -223,7 +223,8 @@
     "edit": "Editar",
     "view": "Ver",
     "logout": "Cerrar Sesión",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "back": "Volver"
   },
   "dashboard": {
     "welcome": "¡Bienvenido a Donto!",
