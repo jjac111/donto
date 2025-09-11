@@ -36,6 +36,22 @@ import {
 } from '@/components/ui/select'
 import { useCreatePatient, useUpdatePatient } from '@/hooks/use-patients'
 import { Patient } from '@/types'
+import countries from 'world-countries'
+
+// Helper function to get phone code for a country
+const getPhoneCode = (countryCode: string): string => {
+  const country = countries.find(c => c.cca3 === countryCode)
+  if (!country || !country.idd?.root) return ''
+
+  const root = country.idd.root
+  const suffix = country.idd.suffixes?.[0] || ''
+  return root + suffix
+}
+
+// Sort countries alphabetically by name for better UX
+const sortedCountries = countries
+  .filter(country => country.independent !== false) // Only independent countries
+  .sort((a, b) => a.name.common.localeCompare(b.name.common))
 
 const patientSchema = (t: (key: string) => string) =>
   z.object({
@@ -91,7 +107,7 @@ export function PatientForm({
     defaultValues: {
       // Person fields
       nationalId: patient?.person?.nationalId || '',
-      country: patient?.person?.country || 'EC',
+      country: patient?.person?.country || 'ECU',
       firstName: patient?.person?.firstName || '',
       lastName: patient?.person?.lastName || '',
       dateOfBirth: patient?.person?.dateOfBirth
@@ -217,12 +233,12 @@ export function PatientForm({
                             <SelectValue placeholder={t('selectCountry')} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="EC">Ecuador</SelectItem>
-                          <SelectItem value="MX">México</SelectItem>
-                          <SelectItem value="US">Estados Unidos</SelectItem>
-                          <SelectItem value="CA">Canadá</SelectItem>
-                          <SelectItem value="ES">España</SelectItem>
+                        <SelectContent className="max-h-[300px]">
+                          {sortedCountries.map(country => (
+                            <SelectItem key={country.cca3} value={country.cca3}>
+                              {country.name.common}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

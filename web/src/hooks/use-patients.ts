@@ -342,9 +342,13 @@ export const useUpdatePatient = () => {
       if (patientData.person) {
         const dbPersonData: any = {}
 
-        if (patientData.person.firstName)
+        if (patientData.person.nationalId !== undefined)
+          dbPersonData.national_id = patientData.person.nationalId
+        if (patientData.person.country !== undefined)
+          dbPersonData.country = patientData.person.country
+        if (patientData.person.firstName !== undefined)
           dbPersonData.first_name = patientData.person.firstName
-        if (patientData.person.lastName)
+        if (patientData.person.lastName !== undefined)
           dbPersonData.last_name = patientData.person.lastName
         if (patientData.person.dateOfBirth)
           dbPersonData.date_of_birth = patientData.person.dateOfBirth

@@ -8,6 +8,14 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { DiagnosisSection } from '@/components/diagnosis/diagnosis-section'
 import { PatientForm } from '@/components/patients/patient-form'
 import { usePatient } from '@/hooks/use-patients'
+import countries from 'world-countries'
+
+// Helper function to get country name from code
+const getCountryName = (countryCode: string): string => {
+  const country = countries.find(c => c.cca3 === countryCode)
+  return country ? country.name.common : countryCode
+}
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -145,7 +153,9 @@ export default function PatientDetailPage() {
                       <label className="text-sm font-medium text-muted-foreground">
                         {t('country')}
                       </label>
-                      <p className="text-foreground">{person.country}</p>
+                      <p className="text-foreground">
+                        {getCountryName(person.country)}
+                      </p>
                     </div>
                   </div>
 
