@@ -37,6 +37,7 @@ import {
 import { useCreatePatient, useUpdatePatient } from '@/hooks/use-patients'
 import { Patient } from '@/types'
 import countries from 'world-countries'
+import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
 
 // Helper function to get phone code for a country
 const getPhoneCode = (countryCode: string): string => {
@@ -48,18 +49,30 @@ const getPhoneCode = (countryCode: string): string => {
   return root + suffix
 }
 
-// Helper function to parse existing phone number
-const parsePhoneNumber = (
+// Helper function to parse existing phone number using libphonenumber-js
+const parseExistingPhone = (
   phone: string | undefined
 ): { countryCode: string; number: string } => {
   if (!phone) return { countryCode: '+593', number: '' }
 
-  // Try to parse E.164 format or existing format
-  const match = phone.match(/^(\+\d{1,3})(.*)$/)
-  if (match) {
-    return { countryCode: match[1], number: match[2].replace(/\D/g, '') }
+  try {
+    // Try to parse as E.164 or international format
+    const parsed = parsePhoneNumber(phone)
+    if (parsed && parsed.isValid()) {
+      return {
+        countryCode: `+${parsed.countryCallingCode}`,
+        number: parsed.nationalNumber,
+      }
+    }
+  } catch (error) {
+    // If parsing fails, try simple regex fallback
+    const match = phone.match(/^(\+\d{1,3})(.*)$/)
+    if (match) {
+      return { countryCode: match[1], number: match[2].replace(/\D/g, '') }
+    }
   }
 
+  // Default fallback
   return { countryCode: '+593', number: phone.replace(/\D/g, '') }
 }
 
@@ -68,34 +81,77 @@ const cleanPhoneNumber = (number: string): string => {
   return number.replace(/\D/g, '').replace(/^0+/, '')
 }
 
+// Helper function to validate phone number with country code
+const validatePhoneNumber = (
+  countryCode: string,
+  phoneNumber: string
+): boolean => {
+  if (!countryCode || !phoneNumber) return true // Allow empty values
+
+  try {
+    const fullNumber = `${countryCode}${phoneNumber}`
+    return isValidPhoneNumber(fullNumber)
+  } catch (error) {
+    return false
+  }
+}
+
 // Sort countries alphabetically by name for better UX
 const sortedCountries = countries
   .filter(country => country.independent !== false) // Only independent countries
   .sort((a, b) => a.name.common.localeCompare(b.name.common))
 
 const patientSchema = (t: (key: string) => string) =>
-  z.object({
-    // Person fields
-    nationalId: z.string().min(1, t('nationalIdRequired')),
-    country: z.string().min(1, t('countryRequired')),
-    firstName: z.string().min(1, t('firstNameRequired')),
-    lastName: z.string().min(1, t('lastNameRequired')),
-    dateOfBirth: z.string().min(1, t('dateOfBirthRequired')),
-    sex: z.enum(['M', 'F'], {
-      message: t('selectValidGender'),
-    }),
-    phoneCountryCode: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.email(t('invalidEmail')).optional().or(z.literal('')),
-    address: z.string().optional(),
+  z
+    .object({
+      // Person fields
+      nationalId: z.string().min(1, t('nationalIdRequired')),
+      country: z.string().min(1, t('countryRequired')),
+      firstName: z.string().min(1, t('firstNameRequired')),
+      lastName: z.string().min(1, t('lastNameRequired')),
+      dateOfBirth: z.string().min(1, t('dateOfBirthRequired')),
+      sex: z.enum(['M', 'F'], {
+        message: t('selectValidGender'),
+      }),
+      phoneCountryCode: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.email(t('invalidEmail')).optional().or(z.literal('')),
+      address: z.string().optional(),
 
-    // Patient fields
-    emergencyContactName: z.string().optional(),
-    emergencyContactPhoneCountryCode: z.string().optional(),
-    emergencyContactPhone: z.string().optional(),
-    medicalHistory: z.string().optional(),
-    allergies: z.string().optional(),
-  })
+      // Patient fields
+      emergencyContactName: z.string().optional(),
+      emergencyContactPhoneCountryCode: z.string().optional(),
+      emergencyContactPhone: z.string().optional(),
+      medicalHistory: z.string().optional(),
+      allergies: z.string().optional(),
+    })
+    .refine(
+      data => {
+        if (!data.phoneCountryCode || !data.phone) return true
+        return validatePhoneNumber(data.phoneCountryCode, data.phone)
+      },
+      {
+        message: t('invalidPhoneNumber'),
+        path: ['phone'],
+      }
+    )
+    .refine(
+      data => {
+        if (
+          !data.emergencyContactPhoneCountryCode ||
+          !data.emergencyContactPhone
+        )
+          return true
+        return validatePhoneNumber(
+          data.emergencyContactPhoneCountryCode,
+          data.emergencyContactPhone
+        )
+      },
+      {
+        message: t('invalidPhoneNumber'),
+        path: ['emergencyContactPhone'],
+      }
+    )
 
 interface PatientFormProps {
   open: boolean
@@ -124,8 +180,10 @@ export function PatientForm({
   const createPatientMutation = useCreatePatient()
   const updatePatientMutation = useUpdatePatient()
 
-  const parsedPhone = parsePhoneNumber(patient?.person?.phone)
-  const parsedEmergencyPhone = parsePhoneNumber(patient?.emergencyContactPhone)
+  const parsedPhone = parseExistingPhone(patient?.person?.phone)
+  const parsedEmergencyPhone = parseExistingPhone(
+    patient?.emergencyContactPhone
+  )
 
   const form = useForm({
     resolver: zodResolver(patientSchema(t)),

@@ -42,6 +42,7 @@
     "phoneNumber": "Número de Teléfono",
     "phoneNumberPlaceholder": "Ej: 987654321",
     "selectCountryCode": "Seleccionar código",
+    "invalidPhoneNumber": "Número de teléfono inválido",
     "email": "Correo",
     "address": "Dirección",
     "save": "Guardar",
