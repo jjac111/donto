@@ -25,6 +25,8 @@ const transformPatient = (
   allergies: dbPatient.allergies || undefined,
   emergencyContactName: dbPatient.emergency_contact_name || undefined,
   emergencyContactPhone: dbPatient.emergency_contact_phone || undefined,
+  emergency_contact_phone_country_code:
+    dbPatient.emergency_contact_phone_country_code || undefined,
   createdAt: dbPatient.created_at,
   updatedAt: dbPatient.updated_at,
 
@@ -39,6 +41,7 @@ const transformPatient = (
     dateOfBirth: new Date(dbPerson.date_of_birth),
     sex: dbPerson.sex || undefined,
     phone: dbPerson.phone || undefined,
+    phone_country_code: dbPerson.phone_country_code || undefined,
     email: dbPerson.email || undefined,
     address: dbPerson.address || undefined,
     displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,

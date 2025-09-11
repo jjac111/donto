@@ -41,6 +41,7 @@ export interface Person {
   dateOfBirth: Date
   sex?: string
   phone?: string
+  phone_country_code?: string
   email?: string
   address?: string
 
@@ -80,6 +81,7 @@ export interface Patient {
   allergies?: string
   emergencyContactName?: string
   emergencyContactPhone?: string
+  emergency_contact_phone_country_code?: string
   createdAt: string
   updatedAt: string
 

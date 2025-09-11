@@ -56,7 +56,7 @@ const parseExistingPhone = (
   if (!phone) return { countryCode: '+593', number: '' }
 
   try {
-    // Try to parse as E.164 or international format
+    // Parse as E.164 or international format
     const parsed = parsePhoneNumber(phone)
     if (parsed && parsed.isValid()) {
       return {
@@ -65,15 +65,12 @@ const parseExistingPhone = (
       }
     }
   } catch (error) {
-    // If parsing fails, try simple regex fallback
-    const match = phone.match(/^(\+\d{1,3})(.*)$/)
-    if (match) {
-      return { countryCode: match[1], number: match[2].replace(/\D/g, '') }
-    }
+    // If parsing fails, return empty values
+    return { countryCode: '+593', number: '' }
   }
 
-  // Default fallback
-  return { countryCode: '+593', number: phone.replace(/\D/g, '') }
+  // If all parsing fails, return empty values
+  return { countryCode: '+593', number: '' }
 }
 
 // Helper function to clean phone number (remove non-digits and trailing zeros)
@@ -431,7 +428,7 @@ export function PatientForm({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="phoneCountryCode"
@@ -584,9 +581,7 @@ export function PatientForm({
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="emergencyContactPhone"

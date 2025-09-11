@@ -21,6 +21,7 @@ export interface DbPerson {
   date_of_birth: string // Date string from database
   sex: string | null
   phone: string | null
+  phone_country_code: string | null
   email: string | null
   address: string | null
   created_at: string
@@ -69,6 +70,7 @@ export interface DbPatient {
   allergies: string | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
+  emergency_contact_phone_country_code: string | null
   created_at: string
   updated_at: string
 }

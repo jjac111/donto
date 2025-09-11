@@ -16,6 +16,15 @@ const getCountryName = (countryCode: string): string => {
   return country ? country.name.common : countryCode
 }
 
+// Helper function to get phone code for a country
+const getPhoneCode = (countryCode: string): string => {
+  const country = countries.find(c => c.cca3 === countryCode)
+  if (!country || !country.idd?.root) return ''
+  const root = country.idd.root
+  const suffix = country.idd.suffixes?.[0] || ''
+  return root + suffix
+}
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -92,7 +101,7 @@ export default function PatientDetailPage() {
       <AppLayout>
         <div className="space-y-6">
           {/* Header */}
-          <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {patient.displayName}
@@ -101,16 +110,14 @@ export default function PatientDetailPage() {
                 ID: {person.nationalId} • {patient.age} años
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditFormOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                {t('edit')}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditFormOpen(true)}
+              className="flex items-center gap-2 sm:self-start"
+            >
+              <Edit className="h-4 w-4" />
+              {t('edit')}
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -162,10 +169,12 @@ export default function PatientDetailPage() {
                   <Separator />
 
                   <div className="space-y-3">
-                    {person.phone && (
+                    {person.phone && person.phone_country_code && (
                       <div className="flex items-center">
                         <Phone className="h-4 w-4 text-muted-foreground mr-2" />
-                        <span className="text-foreground">{person.phone}</span>
+                        <span className="text-foreground">
+                          {person.phone_country_code} {person.phone}
+                        </span>
                       </div>
                     )}
                     {person.email && (
@@ -235,14 +244,16 @@ export default function PatientDetailPage() {
                         </p>
                       </div>
                     )}
-                    {patient.emergencyContactPhone && (
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 text-muted-foreground mr-2" />
-                        <span className="text-foreground">
-                          {patient.emergencyContactPhone}
-                        </span>
-                      </div>
-                    )}
+                    {patient.emergencyContactPhone &&
+                      patient.emergency_contact_phone_country_code && (
+                        <div className="flex items-center">
+                          <Phone className="h-4 w-4 text-muted-foreground mr-2" />
+                          <span className="text-foreground">
+                            {patient.emergency_contact_phone_country_code}{' '}
+                            {patient.emergencyContactPhone}
+                          </span>
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
               )}
