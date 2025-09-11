@@ -69,32 +69,32 @@ INSERT INTO clinics (id, name, address, phone, email) VALUES
     ('550e8400-e29b-41d4-a716-446655440003', 'Clínica Vacía', 'Sin datos', NULL, NULL);
 
 -- Test persons for Clinic 1 (Norte)
-INSERT INTO persons (id, clinic_id, national_id, country, first_name, last_name, date_of_birth, sex, phone, email, address) VALUES
+INSERT INTO persons (id, clinic_id, national_id, country, first_name, last_name, date_of_birth, sex, phone, phone_country_code, email, address) VALUES
     -- Patients
-    ('550e8400-e29b-41d4-a716-446655441001', '550e8400-e29b-41d4-a716-446655440001', '1234567890', 'ECU', 'María', 'González', '1985-03-15', 'F', '+593-99-123-4567', 'maria.gonzalez@email.com', 'Barrio La Floresta, Quito'),
-    ('550e8400-e29b-41d4-a716-446655441002', '550e8400-e29b-41d4-a716-446655440001', '2345678901', 'ECU', 'Carlos', 'Rodríguez', '1978-07-22', 'M', '+593-99-234-5678', 'carlos.rodriguez@email.com', 'Sector El Bosque, Quito'),
-    ('550e8400-e29b-41d4-a716-446655441003', '550e8400-e29b-41d4-a716-446655440001', '3456789012', 'ECU', 'Ana', 'Vargas', '1992-11-08', 'F', '+593-99-345-6789', 'ana.vargas@email.com', 'La Carolina, Quito'),
+    ('550e8400-e29b-41d4-a716-446655441001', '550e8400-e29b-41d4-a716-446655440001', '1234567890', 'ECU', 'María', 'González', '1985-03-15', 'F', '991234567', '+593', 'maria.gonzalez@email.com', 'Barrio La Floresta, Quito'),
+    ('550e8400-e29b-41d4-a716-446655441002', '550e8400-e29b-41d4-a716-446655440001', '2345678901', 'ECU', 'Carlos', 'Rodríguez', '1978-07-22', 'M', '992345678', '+593', 'carlos.rodriguez@email.com', 'Sector El Bosque, Quito'),
+    ('550e8400-e29b-41d4-a716-446655441003', '550e8400-e29b-41d4-a716-446655440001', '3456789012', 'ECU', 'Ana', 'Vargas', '1992-11-08', 'F', '993456789', '+593', 'ana.vargas@email.com', 'La Carolina, Quito'),
     -- Providers
-    ('550e8400-e29b-41d4-a716-446655441004', '550e8400-e29b-41d4-a716-446655440001', '4567890123', 'ECU', 'Dr. Roberto', 'Maldonado', '1975-05-12', 'M', '+593-99-456-7890', 'roberto.maldonado@clinica.com', 'Consultorio Norte'),
-    ('550e8400-e29b-41d4-a716-446655441005', '550e8400-e29b-41d4-a716-446655440001', '5678901234', 'ECU', 'Dra. Patricia', 'Santos', '1982-09-30', 'F', '+593-99-567-8901', 'patricia.santos@clinica.com', 'Consultorio Norte');
+    ('550e8400-e29b-41d4-a716-446655441004', '550e8400-e29b-41d4-a716-446655440001', '4567890123', 'ECU', 'Dr. Roberto', 'Maldonado', '1975-05-12', 'M', '994567890', '+593', 'roberto.maldonado@clinica.com', 'Consultorio Norte'),
+    ('550e8400-e29b-41d4-a716-446655441005', '550e8400-e29b-41d4-a716-446655440001', '5678901234', 'ECU', 'Dra. Patricia', 'Santos', '1982-09-30', 'F', '995678901', '+593', 'patricia.santos@clinica.com', 'Consultorio Norte');
 
 -- Test persons for Clinic 2 (Sur)
-INSERT INTO persons (id, clinic_id, national_id, country, first_name, last_name, date_of_birth, sex, phone, email, address) VALUES
+INSERT INTO persons (id, clinic_id, national_id, country, first_name, last_name, date_of_birth, sex, phone, phone_country_code, email, address) VALUES
     -- Patients (same national IDs as Clinic 1 to test isolation)
-    ('550e8400-e29b-41d4-a716-446655442001', '550e8400-e29b-41d4-a716-446655440002', '1234567890', 'ECU', 'María', 'Jiménez', '1985-03-15', 'F', '+593-98-123-4567', 'maria.jimenez@email.com', 'Barrio Centenario, Guayaquil'),
-    ('550e8400-e29b-41d4-a716-446655442002', '550e8400-e29b-41d4-a716-446655440002', '6789012345', 'ECU', 'Luis', 'Pérez', '1980-12-05', 'M', '+593-98-234-5678', 'luis.perez@email.com', 'Urdesa, Guayaquil'),
+    ('550e8400-e29b-41d4-a716-446655442001', '550e8400-e29b-41d4-a716-446655440002', '1234567890', 'ECU', 'María', 'Jiménez', '1985-03-15', 'F', '981234567', '+593', 'maria.jimenez@email.com', 'Barrio Centenario, Guayaquil'),
+    ('550e8400-e29b-41d4-a716-446655442002', '550e8400-e29b-41d4-a716-446655440002', '6789012345', 'ECU', 'Luis', 'Pérez', '1980-12-05', 'M', '982345678', '+593', 'luis.perez@email.com', 'Urdesa, Guayaquil'),
     -- Providers
-    ('550e8400-e29b-41d4-a716-446655442003', '550e8400-e29b-41d4-a716-446655440002', '7890123456', 'ECU', 'Dr. Fernando', 'Castillo', '1970-08-18', 'M', '+593-98-345-6789', 'fernando.castillo@clinica.com', 'Consultorio Sur');
+    ('550e8400-e29b-41d4-a716-446655442003', '550e8400-e29b-41d4-a716-446655440002', '7890123456', 'ECU', 'Dr. Fernando', 'Castillo', '1970-08-18', 'M', '983456789', '+593', 'fernando.castillo@clinica.com', 'Consultorio Sur');
 
 -- Test patients
-INSERT INTO patients (id, person_id, clinic_id, medical_history, allergies, emergency_contact_name, emergency_contact_phone) VALUES
+INSERT INTO patients (id, person_id, clinic_id, medical_history, allergies, emergency_contact_name, emergency_contact_phone, emergency_contact_phone_country_code) VALUES
     -- Clinic 1 patients
-    ('550e8400-e29b-41d4-a716-446655451001', '550e8400-e29b-41d4-a716-446655441001', '550e8400-e29b-41d4-a716-446655440001', 'Hipertensión controlada', 'Penicilina', 'Juan González', '+593-99-111-2222'),
-    ('550e8400-e29b-41d4-a716-446655451002', '550e8400-e29b-41d4-a716-446655441002', '550e8400-e29b-41d4-a716-446655440001', 'Diabetes tipo 2', NULL, 'Elena Rodríguez', '+593-99-222-3333'),
-    ('550e8400-e29b-41d4-a716-446655451003', '550e8400-e29b-41d4-a716-446655441003', '550e8400-e29b-41d4-a716-446655440001', 'Sin antecedentes', 'Ibuprofeno', 'Pedro Vargas', '+593-99-333-4444'),
+    ('550e8400-e29b-41d4-a716-446655451001', '550e8400-e29b-41d4-a716-446655441001', '550e8400-e29b-41d4-a716-446655440001', 'Hipertensión controlada', 'Penicilina', 'Juan González', '991112222', '+593'),
+    ('550e8400-e29b-41d4-a716-446655451002', '550e8400-e29b-41d4-a716-446655441002', '550e8400-e29b-41d4-a716-446655440001', 'Diabetes tipo 2', NULL, 'Elena Rodríguez', '992223333', '+593'),
+    ('550e8400-e29b-41d4-a716-446655451003', '550e8400-e29b-41d4-a716-446655441003', '550e8400-e29b-41d4-a716-446655440001', 'Sin antecedentes', 'Ibuprofeno', 'Pedro Vargas', '993334444', '+593'),
     -- Clinic 2 patients
-    ('550e8400-e29b-41d4-a716-446655452001', '550e8400-e29b-41d4-a716-446655442001', '550e8400-e29b-41d4-a716-446655440002', 'Asma bronquial', 'Aspirina', 'Carlos Jiménez', '+593-98-111-2222'),
-    ('550e8400-e29b-41d4-a716-446655452002', '550e8400-e29b-41d4-a716-446655442002', '550e8400-e29b-41d4-a716-446655440002', 'Sin antecedentes', NULL, 'Rosa Pérez', '+593-98-222-3333');
+    ('550e8400-e29b-41d4-a716-446655452001', '550e8400-e29b-41d4-a716-446655442001', '550e8400-e29b-41d4-a716-446655440002', 'Asma bronquial', 'Aspirina', 'Carlos Jiménez', '981112222', '+593'),
+    ('550e8400-e29b-41d4-a716-446655452002', '550e8400-e29b-41d4-a716-446655442002', '550e8400-e29b-41d4-a716-446655440002', 'Sin antecedentes', NULL, 'Rosa Pérez', '982223333', '+593');
 
 -- Test providers
 INSERT INTO providers (id, person_id, clinic_id, specialty, is_active) VALUES

@@ -238,6 +238,7 @@ export const useCreatePatient = () => {
           .split('T')[0],
         sex: patientData.person.sex,
         phone: patientData.person.phone,
+        phone_country_code: (patientData.person as any).phoneCountryCode,
         email: patientData.person.email,
         address: patientData.person.address,
         national_id: patientData.person.nationalId!,
@@ -269,6 +270,8 @@ export const useCreatePatient = () => {
         })(),
         emergency_contact_name: patientData.emergencyContactName,
         emergency_contact_phone: patientData.emergencyContactPhone,
+        emergency_contact_phone_country_code: (patientData as any)
+          .emergencyContactPhoneCountryCode,
         medical_history: patientData.medicalHistory,
         allergies: patientData.allergies,
       }
@@ -358,6 +361,10 @@ export const useUpdatePatient = () => {
           dbPersonData.sex = patientData.person.sex
         if (patientData.person.phone !== undefined)
           dbPersonData.phone = patientData.person.phone
+        if ((patientData.person as any).phoneCountryCode !== undefined)
+          dbPersonData.phone_country_code = (
+            patientData.person as any
+          ).phoneCountryCode
         if (patientData.person.email !== undefined)
           dbPersonData.email = patientData.person.email
         if (patientData.person.address !== undefined)
@@ -381,6 +388,10 @@ export const useUpdatePatient = () => {
       if (patientData.emergencyContactPhone !== undefined)
         dbPatientData.emergency_contact_phone =
           patientData.emergencyContactPhone
+      if ((patientData as any).emergencyContactPhoneCountryCode !== undefined)
+        dbPatientData.emergency_contact_phone_country_code = (
+          patientData as any
+        ).emergencyContactPhoneCountryCode
       if (patientData.medicalHistory !== undefined)
         dbPatientData.medical_history = patientData.medicalHistory
       if (patientData.allergies !== undefined)

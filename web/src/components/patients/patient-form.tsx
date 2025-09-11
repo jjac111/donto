@@ -48,6 +48,26 @@ const getPhoneCode = (countryCode: string): string => {
   return root + suffix
 }
 
+// Helper function to parse existing phone number
+const parsePhoneNumber = (
+  phone: string | undefined
+): { countryCode: string; number: string } => {
+  if (!phone) return { countryCode: '+593', number: '' }
+
+  // Try to parse E.164 format or existing format
+  const match = phone.match(/^(\+\d{1,3})(.*)$/)
+  if (match) {
+    return { countryCode: match[1], number: match[2].replace(/\D/g, '') }
+  }
+
+  return { countryCode: '+593', number: phone.replace(/\D/g, '') }
+}
+
+// Helper function to clean phone number (remove non-digits and trailing zeros)
+const cleanPhoneNumber = (number: string): string => {
+  return number.replace(/\D/g, '').replace(/^0+/, '')
+}
+
 // Sort countries alphabetically by name for better UX
 const sortedCountries = countries
   .filter(country => country.independent !== false) // Only independent countries
@@ -64,12 +84,14 @@ const patientSchema = (t: (key: string) => string) =>
     sex: z.enum(['M', 'F'], {
       message: t('selectValidGender'),
     }),
+    phoneCountryCode: z.string().optional(),
     phone: z.string().optional(),
     email: z.email(t('invalidEmail')).optional().or(z.literal('')),
     address: z.string().optional(),
 
     // Patient fields
     emergencyContactName: z.string().optional(),
+    emergencyContactPhoneCountryCode: z.string().optional(),
     emergencyContactPhone: z.string().optional(),
     medicalHistory: z.string().optional(),
     allergies: z.string().optional(),
@@ -102,6 +124,9 @@ export function PatientForm({
   const createPatientMutation = useCreatePatient()
   const updatePatientMutation = useUpdatePatient()
 
+  const parsedPhone = parsePhoneNumber(patient?.person?.phone)
+  const parsedEmergencyPhone = parsePhoneNumber(patient?.emergencyContactPhone)
+
   const form = useForm({
     resolver: zodResolver(patientSchema(t)),
     defaultValues: {
@@ -114,13 +139,15 @@ export function PatientForm({
         ? patient.person.dateOfBirth.toISOString().split('T')[0]
         : '',
       sex: (patient?.person?.sex as 'M' | 'F') || 'F',
-      phone: patient?.person?.phone || '',
+      phoneCountryCode: parsedPhone.countryCode,
+      phone: parsedPhone.number,
       email: patient?.person?.email || '',
       address: patient?.person?.address || '',
 
       // Patient fields
       emergencyContactName: patient?.emergencyContactName || '',
-      emergencyContactPhone: patient?.emergencyContactPhone || '',
+      emergencyContactPhoneCountryCode: parsedEmergencyPhone.countryCode,
+      emergencyContactPhone: parsedEmergencyPhone.number,
       medicalHistory: patient?.medicalHistory || '',
       allergies: patient?.allergies || '',
     },
@@ -135,12 +162,17 @@ export function PatientForm({
         lastName: data.lastName,
         dateOfBirth: new Date(data.dateOfBirth),
         sex: data.sex,
-        phone: data.phone || undefined,
+        phoneCountryCode: data.phoneCountryCode || undefined,
+        phone: data.phone ? cleanPhoneNumber(data.phone) : undefined,
         email: data.email || undefined,
         address: data.address || undefined,
       } as any,
       emergencyContactName: data.emergencyContactName || undefined,
-      emergencyContactPhone: data.emergencyContactPhone || undefined,
+      emergencyContactPhoneCountryCode:
+        data.emergencyContactPhoneCountryCode || undefined,
+      emergencyContactPhone: data.emergencyContactPhone
+        ? cleanPhoneNumber(data.emergencyContactPhone)
+        : undefined,
       medicalHistory: data.medicalHistory || undefined,
       allergies: data.allergies || undefined,
     }
@@ -344,22 +376,60 @@ export function PatientForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
+                  name="phoneCountryCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('phoneCountryCode')}</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('selectCountryCode')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[200px]">
+                          {sortedCountries.map(country => {
+                            const phoneCode = getPhoneCode(country.cca3)
+                            return phoneCode ? (
+                              <SelectItem key={country.cca3} value={phoneCode}>
+                                {country.name.common} ({phoneCode})
+                              </SelectItem>
+                            ) : null
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('phone')}</FormLabel>
+                      <FormLabel>{t('phoneNumber')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('phonePlaceholder')}
+                          placeholder={t('phoneNumberPlaceholder')}
                           className="w-full"
                           {...field}
+                          onChange={e => {
+                            // Only allow digits
+                            const value = e.target.value.replace(/\D/g, '')
+                            field.onChange(value)
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="email"
@@ -426,15 +496,55 @@ export function PatientForm({
 
                 <FormField
                   control={form.control}
+                  name="emergencyContactPhoneCountryCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('emergencyContactPhoneCountryCode')}
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('selectCountryCode')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[200px]">
+                          {sortedCountries.map(country => {
+                            const phoneCode = getPhoneCode(country.cca3)
+                            return phoneCode ? (
+                              <SelectItem key={country.cca3} value={phoneCode}>
+                                {country.name.common} ({phoneCode})
+                              </SelectItem>
+                            ) : null
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
                   name="emergencyContactPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('emergencyContactPhone')}</FormLabel>
+                      <FormLabel>{t('emergencyContactPhoneNumber')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t('phonePlaceholder')}
+                          placeholder={t('phoneNumberPlaceholder')}
                           className="w-full"
                           {...field}
+                          onChange={e => {
+                            // Only allow digits
+                            const value = e.target.value.replace(/\D/g, '')
+                            field.onChange(value)
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
