@@ -313,7 +313,7 @@ export function DiagnosisForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         blurOnly
-        className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] lg:w-full"
+        className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-lg p-4 sm:p-6 w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] lg:w-full transition-all duration-300 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
       >
         <DialogHeader>
           <DialogTitle>
@@ -325,28 +325,30 @@ export function DiagnosisForm({
         </DialogHeader>
 
         {/* Tooth Visualization */}
-        <div className="flex justify-center py-4">
-          <Tooth
-            tooth={{
-              number: toothNumber!,
-              isPresent: form.watch('isPresent'),
-              hasTreatments: form.watch('isTreated'),
-              conditions: form
-                .watch('conditions')
-                .map((condition, index) => ({
-                  id: `temp-${index}`,
-                  conditionType: condition.conditionId,
-                  surfaces: condition.surfaces,
-                  notes: condition.notes,
-                  recordedDate: new Date(),
-                  recordedByProfileId: '',
-                }))
-                .filter(condition => condition.conditionType), // Only include conditions with IDs
-            }}
-            onClick={() => {}} // No-op since this is just for visualization
-            isSelected={true}
-            {...getToothOrientation(toothNumber!)}
-          />
+        <div className="flex justify-center py-8">
+          <div className="scale-[2] my-6 origin-center h-24 w-24 flex items-center justify-center">
+            <Tooth
+              tooth={{
+                number: toothNumber!,
+                isPresent: form.watch('isPresent'),
+                hasTreatments: form.watch('isTreated'),
+                conditions: form
+                  .watch('conditions')
+                  .map((condition, index) => ({
+                    id: `temp-${index}`,
+                    conditionType: condition.conditionId,
+                    surfaces: condition.surfaces,
+                    notes: condition.notes,
+                    recordedDate: new Date(),
+                    recordedByProfileId: '',
+                  }))
+                  .filter(condition => condition.conditionType), // Only include conditions with IDs
+              }}
+              onClick={() => {}} // No-op since this is just for visualization
+              isSelected={true}
+              {...getToothOrientation(toothNumber!)}
+            />
+          </div>
         </div>
 
         <Form {...form}>
@@ -477,7 +479,7 @@ export function DiagnosisForm({
 
                     <div className="space-y-4">
                       {/* Category and Condition Row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         {/* Category Selection */}
                         <FormField
                           control={form.control}
@@ -596,7 +598,86 @@ export function DiagnosisForm({
                       <FormLabel className="text-sm font-medium mb-2 block">
                         {t('toothSurfaces')}
                       </FormLabel>
-                      <div className="grid grid-cols-5 gap-2">
+                      {/* Mobile: Three rows */}
+                      <div className="space-y-2 md:hidden">
+                        {/* Mesial-Distal row */}
+                        <div className="flex gap-2 justify-center">
+                          {(['M', 'D'] as const).map(surface => {
+                            const isSelected = form
+                              .watch(`conditions.${conditionIndex}.surfaces`)
+                              .includes(surface)
+
+                            return (
+                              <button
+                                key={surface}
+                                type="button"
+                                className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
+                                  isSelected
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-muted hover:border-primary/50'
+                                }`}
+                                onClick={() =>
+                                  toggleSurface(conditionIndex, surface)
+                                }
+                              >
+                                {tSurfaces(surface.toLowerCase())}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {/* Buccal-Lingual row */}
+                        <div className="flex gap-2 justify-center">
+                          {(['B', 'L'] as const).map(surface => {
+                            const isSelected = form
+                              .watch(`conditions.${conditionIndex}.surfaces`)
+                              .includes(surface)
+
+                            return (
+                              <button
+                                key={surface}
+                                type="button"
+                                className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
+                                  isSelected
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-muted hover:border-primary/50'
+                                }`}
+                                onClick={() =>
+                                  toggleSurface(conditionIndex, surface)
+                                }
+                              >
+                                {tSurfaces(surface.toLowerCase())}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {/* Occlusal row */}
+                        <div className="flex gap-2 justify-center">
+                          {(['O'] as const).map(surface => {
+                            const isSelected = form
+                              .watch(`conditions.${conditionIndex}.surfaces`)
+                              .includes(surface)
+
+                            return (
+                              <button
+                                key={surface}
+                                type="button"
+                                className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
+                                  isSelected
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-muted hover:border-primary/50'
+                                }`}
+                                onClick={() =>
+                                  toggleSurface(conditionIndex, surface)
+                                }
+                              >
+                                {tSurfaces(surface.toLowerCase())}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      {/* Desktop: Flat grid */}
+                      <div className="hidden md:grid md:grid-cols-5 gap-2">
                         {(['M', 'D', 'B', 'L', 'O'] as const).map(surface => {
                           const isSelected = form
                             .watch(`conditions.${conditionIndex}.surfaces`)
@@ -606,7 +687,7 @@ export function DiagnosisForm({
                             <button
                               key={surface}
                               type="button"
-                              className={`p-2 border rounded text-center text-sm transition-colors ${
+                              className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors md:h-9 ${
                                 isSelected
                                   ? 'border-primary bg-primary/10 text-primary'
                                   : 'border-muted hover:border-primary/50'

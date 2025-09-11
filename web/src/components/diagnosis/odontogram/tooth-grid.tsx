@@ -21,7 +21,7 @@ export function ToothGrid({
   side,
 }: ToothGridProps) {
   return (
-    <div className="tooth-grid flex gap-1">
+    <div className="tooth-grid grid grid-cols-8 gap-1 max-w-full overflow-hidden">
       {teeth.map(tooth => (
         <Tooth
           key={tooth.number}

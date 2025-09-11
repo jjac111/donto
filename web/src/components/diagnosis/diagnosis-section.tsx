@@ -157,21 +157,23 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                {t('diagnosis')}
-                <Badge variant="secondary" className="ml-2">
-                  {totalTeethWithConditions} {t('teethWithConditions')}
-                </Badge>
-                {urgentConditionsCount > 0 && (
-                  <Badge variant="destructive" className="ml-1">
-                    {urgentConditionsCount} {t('urgent')}
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span>{t('diagnosis')}</span>
+                <div className="flex gap-2">
+                  <Badge variant="secondary">
+                    {totalTeethWithConditions} {t('teethWithConditions')}
                   </Badge>
-                )}
+                  {urgentConditionsCount > 0 && (
+                    <Badge variant="destructive">
+                      {urgentConditionsCount} {t('urgent')}
+                    </Badge>
+                  )}
+                </div>
               </CardTitle>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
               <select
                 className="border rounded px-3 py-2 text-sm h-9 min-w-[140px]"
                 value={selectedHistoryId || ''}
