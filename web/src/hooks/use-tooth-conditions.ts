@@ -9,6 +9,9 @@ import {
   ToothWithConditions,
   ToothCondition,
   DiagnosisFormData,
+  GeneralCondition,
+  GeneralConditionFormData,
+  GeneralConditionsData,
   getAllToothNumbers,
 } from '@/types/dental-conditions'
 
@@ -321,6 +324,157 @@ export const useSaveToothDiagnosis = () => {
           diagnosisData.toothNumber,
           historyId
         ),
+      })
+    },
+  })
+}
+
+// General conditions hooks
+export const useGeneralConditions = (patientId: string, historyId: string) => {
+  return useQuery({
+    queryKey: ['general-conditions', patientId, historyId],
+    queryFn: async (): Promise<GeneralConditionsData> => {
+      const clinicId = useAuthStore.getState().clinicId
+      if (!clinicId) throw new Error('No clinic selected')
+
+      const { data, error } = await supabase
+        .from('tooth_diagnoses')
+        .select(
+          `
+          tooth_conditions,
+          updated_at,
+          tooth_diagnosis_histories!inner(patient_id)
+        `
+        )
+        .eq('tooth_diagnosis_histories.patient_id', patientId)
+        .eq('history_id', historyId)
+        .is('tooth_number', null) // General conditions have null tooth_number
+        .order('updated_at', { ascending: false })
+        .limit(1)
+
+      if (error) {
+        throw new Error(`Failed to fetch general conditions: ${error.message}`)
+      }
+
+      if (!data || data.length === 0) {
+        return { conditions: [] }
+      }
+
+      const row = data[0]
+      const jsonbConditions: any[] = row?.tooth_conditions || []
+
+      const conditions: GeneralCondition[] = jsonbConditions.map(
+        (c: any, index: number) => ({
+          id: `general-${index}`,
+          conditionType: c.condition_type,
+          notes: c.notes ?? undefined,
+          recordedDate: new Date(
+            c.diagnosis_date || c.created_at || Date.now()
+          ),
+          recordedByProfileId: c.recorded_by_profile_id || '',
+        })
+      )
+
+      return {
+        conditions,
+        lastUpdated: row?.updated_at ? new Date(row.updated_at) : undefined,
+      }
+    },
+    enabled: !!patientId && !!historyId,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export const useSaveGeneralConditions = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      patientId,
+      historyId,
+      conditions,
+    }: {
+      patientId: string
+      historyId: string
+      conditions: GeneralConditionFormData[]
+    }): Promise<void> => {
+      const clinicId = useAuthStore.getState().clinicId
+      if (!clinicId) throw new Error('No clinic selected')
+
+      const { data: authUser } = await supabase.auth.getUser()
+      const userId = authUser.user?.id
+      if (!userId) throw new Error('No authenticated user found')
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('clinic_id', clinicId)
+        .eq('is_active', true)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Could not find user profile')
+      }
+
+      const profileId = profile.id
+
+      // Check if there's already a general conditions record for this history
+      const { data: existingGeneral } = await supabase
+        .from('tooth_diagnoses')
+        .select('id')
+        .eq('history_id', historyId)
+        .is('tooth_number', null)
+        .maybeSingle()
+
+      // Prepare JSONB conditions array
+      const nowIso = new Date().toISOString()
+      const today = nowIso.split('T')[0]
+      const generalConditions = conditions
+        .filter(c => c.conditionId)
+        .map(c => ({
+          condition_type: c.conditionId,
+          notes: c.notes || null,
+          diagnosis_date: today,
+          recorded_by_profile_id: profileId,
+          created_at: nowIso,
+        }))
+
+      if (existingGeneral) {
+        // Update existing general conditions record
+        const { error: updateError } = await supabase
+          .from('tooth_diagnoses')
+          .update({
+            tooth_conditions: generalConditions,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingGeneral.id)
+
+        if (updateError) {
+          throw new Error(
+            `Failed to update general conditions: ${updateError.message}`
+          )
+        }
+      } else {
+        // Insert new general conditions record
+        const { error: insertError } = await supabase
+          .from('tooth_diagnoses')
+          .insert({
+            tooth_number: null, // General conditions have null tooth_number
+            tooth_conditions: generalConditions,
+            history_id: historyId,
+          })
+
+        if (insertError) {
+          throw new Error(
+            `Failed to insert general conditions: ${insertError.message}`
+          )
+        }
+      }
+    },
+    onSuccess: (_, { patientId, historyId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['general-conditions', patientId, historyId],
       })
     },
   })

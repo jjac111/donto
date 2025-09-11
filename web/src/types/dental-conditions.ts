@@ -35,6 +35,15 @@ export interface ToothCondition {
   recordedByProfileId: string
 }
 
+// General condition entity (mouth-wide conditions)
+export interface GeneralCondition {
+  id: string // Database ID
+  conditionType: string // Maps to dental-conditions.json
+  notes?: string
+  recordedDate: Date
+  recordedByProfileId: string
+}
+
 // Extended entity types for odontogram (condition-centric)
 export interface ToothWithConditions {
   number: string // FDI notation: "11", "21", etc.
@@ -58,6 +67,18 @@ export interface DiagnosisFormData {
   isTreated?: boolean
   requiresExtraction?: boolean
   generalNotes?: string
+}
+
+// Form data for general conditions (mouth-wide)
+export interface GeneralConditionFormData {
+  conditionId: string
+  notes?: string
+}
+
+// General conditions data for a history
+export interface GeneralConditionsData {
+  conditions: GeneralCondition[]
+  lastUpdated?: Date
 }
 
 // Category display names (i18n keys)

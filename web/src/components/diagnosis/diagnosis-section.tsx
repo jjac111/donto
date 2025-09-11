@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Odontogram } from './odontogram'
 import { DiagnosisForm } from './diagnosis-form'
+import { GeneralConditions } from './general-conditions'
 import {
   usePatientToothConditions,
   useToothConditions,
@@ -205,14 +206,32 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Odontogram */}
-          <div className="odontogram-container">
-            <Odontogram
-              teeth={teeth}
-              onToothClick={handleToothClick}
-              selectedTooth={selectedTooth || undefined}
-            />
-          </div>
+          {selectedHistoryId ? (
+            <>
+              {/* Odontogram */}
+              <div className="odontogram-container">
+                <Odontogram
+                  teeth={teeth}
+                  onToothClick={handleToothClick}
+                  selectedTooth={selectedTooth || undefined}
+                />
+              </div>
+
+              {/* General Conditions */}
+              <div className="general-conditions-container">
+                <GeneralConditions
+                  patientId={patientId}
+                  historyId={selectedHistoryId}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">{t('selectHistory')}</h3>
+              <p className="text-sm">{t('selectHistoryToViewDiagnosis')}</p>
+            </div>
+          )}
 
           {/* <Separator />
 

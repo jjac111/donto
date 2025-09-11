@@ -275,6 +275,7 @@
     "category": "Category",
     "selectCategory": "Select category",
     "selectCategoryFirst": "Select a category first",
+    "noSurfacesSelected": "No surfaces selected",
     "toothStatus": "Tooth Status",
     "toothPresent": "Tooth Present",
     "toothPresentDescription": "Tooth is present in the mouth",
@@ -283,7 +284,15 @@
     "requiresExtraction": "Requires Extraction",
     "requiresExtractionDescription": "Tooth needs to be extracted",
     "selectHistory": "Select History",
-    "newHistory": "New History"
+    "selectHistoryToViewDiagnosis": "Please select a diagnosis history to view and manage dental conditions",
+    "newHistory": "New History",
+    "generalConditions": "General Conditions",
+    "generalConditionsDescription": "Mouth-wide conditions that apply to the entire oral cavity",
+    "addGeneralCondition": "Add General Condition",
+    "generalConditionNotes": "Notes",
+    "generalConditionNotesPlaceholder": "Additional notes for this condition...",
+    "saveGeneralConditions": "Save General Conditions",
+    "noGeneralConditions": "No general conditions added yet"
   },
   "categories": {
     "orthodontics": "Orthodontics",

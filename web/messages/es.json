@@ -277,6 +277,7 @@
     "category": "Categoría",
     "selectCategory": "Seleccionar categoría",
     "selectCategoryFirst": "Primero selecciona una categoría",
+    "noSurfacesSelected": "No hay superficies seleccionadas",
     "toothStatus": "Estado del Diente",
     "toothPresent": "Diente Presente",
     "toothPresentDescription": "El diente está presente en la boca",
@@ -285,7 +286,15 @@
     "requiresExtraction": "Requiere Extracción",
     "requiresExtractionDescription": "El diente necesita ser extraído",
     "selectHistory": "Seleccionar Historial",
-    "newHistory": "Nuevo Historial"
+    "selectHistoryToViewDiagnosis": "Por favor selecciona un historial de diagnóstico para ver y gestionar las condiciones dentales",
+    "newHistory": "Nuevo Historial",
+    "generalConditions": "Condiciones Generales",
+    "generalConditionsDescription": "Condiciones generales que aplican a toda la cavidad oral",
+    "addGeneralCondition": "Agregar Condición General",
+    "generalConditionNotes": "Notas",
+    "generalConditionNotesPlaceholder": "Notas adicionales para esta condición...",
+    "saveGeneralConditions": "Guardar Condiciones Generales",
+    "noGeneralConditions": "Aún no se han agregado condiciones generales"
   },
   "categories": {
     "orthodontics": "Ortodoncia",

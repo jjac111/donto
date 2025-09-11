@@ -221,20 +221,29 @@ CREATE TABLE tooth_diagnosis_histories (
 -- Tooth diagnosis information per patient with current conditions
 CREATE TABLE tooth_diagnoses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tooth_number VARCHAR(10) NOT NULL, -- e.g., "11", "14", "21"
-    is_present BOOLEAN DEFAULT true, -- false if tooth is missing
-    is_treated BOOLEAN DEFAULT false, -- true if tooth has been treated
-    requires_extraction BOOLEAN DEFAULT false, -- true if tooth needs to be extracted
-    general_notes TEXT, -- General notes about the tooth
+    tooth_number VARCHAR(10), -- e.g., "11", "14", "21" - NULL for general conditions
+    is_present BOOLEAN DEFAULT true, -- false if tooth is missing (only for tooth-specific records)
+    is_treated BOOLEAN DEFAULT false, -- true if tooth has been treated (only for tooth-specific records)
+    requires_extraction BOOLEAN DEFAULT false, -- true if tooth needs to be extracted (only for tooth-specific records)
+    general_notes TEXT, -- General notes about the tooth or general conditions
     tooth_conditions JSONB DEFAULT '[]'::jsonb, -- Array of condition objects with diagnosis history
     -- tooth_conditions structure: [{"surfaces": ["M","D","B","L","O"], "condition_type": "caries", "notes": "text", "diagnosis_date": "2024-01-01", "recorded_by_profile_id": "uuid", "created_at": "timestamp"}]
+    -- For general conditions: surfaces array is empty, only condition_type and notes are used
     history_id UUID REFERENCES tooth_diagnosis_histories(id) ON DELETE CASCADE, -- Reference to the diagnosis history that created this tooth record
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    UNIQUE(history_id, tooth_number) -- One tooth record per history per tooth number
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Unique constraints for tooth_diagnoses
+-- One tooth record per history per tooth number (for tooth-specific records)
+CREATE UNIQUE INDEX tooth_diagnoses_history_tooth_unique 
+ON tooth_diagnoses(history_id, tooth_number) 
+WHERE tooth_number IS NOT NULL;
+
+-- One general conditions record per history (for general conditions)
+CREATE UNIQUE INDEX tooth_diagnoses_history_general_unique 
+ON tooth_diagnoses(history_id) 
+WHERE tooth_number IS NULL;
 
 -- Basic indexes for performance
 CREATE INDEX idx_persons_clinic ON persons(clinic_id);

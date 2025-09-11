@@ -5,7 +5,8 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
-import { Loader2, X, Plus } from 'lucide-react'
+import { Loader2, X, Plus, Edit2, Check, X as XIcon } from 'lucide-react'
+import { useMinimumLoading } from '@/hooks/use-minimum-loading'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -93,6 +94,17 @@ export function DiagnosisForm({
   const tSurfaces = useTranslations('surfaces')
 
   const isInitializingRef = useRef(false)
+  const preventFocusRef = useRef(false)
+  const [editingConditions, setEditingConditions] = useState<Set<number>>(
+    new Set()
+  )
+  const [isExistingData, setIsExistingData] = useState(false)
+  const [newlyAddedConditions, setNewlyAddedConditions] = useState<Set<number>>(
+    new Set()
+  )
+  const { isLoading: isSaving, executeWithMinimumLoading } = useMinimumLoading({
+    minimumDuration: 1000,
+  })
 
   // Transform JSON data to match TypeScript interface
   const dentalConditions: DentalConditionsData = useMemo(
@@ -139,8 +151,10 @@ export function DiagnosisForm({
       generalNotes: data.generalNotes,
     }
 
-    await onSave(diagnosisData)
-    onOpenChange(false)
+    await executeWithMinimumLoading(async () => {
+      await onSave(diagnosisData)
+      onOpenChange(false)
+    })
   }
 
   const getConditionById = useMemo(
@@ -239,6 +253,11 @@ export function DiagnosisForm({
           requiresExtraction: existingToothData?.requiresExtraction ?? false,
           generalNotes: existingToothData?.generalNotes || '',
         })
+
+        // Mark as existing data and clear editing state
+        setIsExistingData(true)
+        setEditingConditions(new Set())
+        setNewlyAddedConditions(new Set())
       } else {
         // No existing conditions - start with empty conditions array
         form.reset({
@@ -248,6 +267,10 @@ export function DiagnosisForm({
           requiresExtraction: existingToothData?.requiresExtraction ?? false,
           generalNotes: '',
         })
+
+        // Mark as new data
+        setIsExistingData(false)
+        setEditingConditions(new Set())
       }
 
       // Clear initialization flag after a short delay to allow form to settle
@@ -265,16 +288,87 @@ export function DiagnosisForm({
   ])
 
   const addCondition = () => {
+    preventFocusRef.current = true
+    const newIndex = fields.length
     append({
       conditionId: '',
       surfaces: [],
       notes: '',
       selectedCategory: '',
     })
+    // Mark this condition as newly added
+    setNewlyAddedConditions(prev => new Set(prev).add(newIndex))
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      preventFocusRef.current = false
+    }, 100)
   }
 
   const removeCondition = (index: number) => {
     remove(index)
+    // Clean up tracking for removed conditions
+    setNewlyAddedConditions(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(index)
+      // Adjust indices for conditions after the removed one
+      const adjustedSet = new Set<number>()
+      newSet.forEach(idx => {
+        if (idx > index) {
+          adjustedSet.add(idx - 1)
+        } else if (idx < index) {
+          adjustedSet.add(idx)
+        }
+      })
+      return adjustedSet
+    })
+    setEditingConditions(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(index)
+      // Adjust indices for conditions after the removed one
+      const adjustedSet = new Set<number>()
+      newSet.forEach(idx => {
+        if (idx > index) {
+          adjustedSet.add(idx - 1)
+        } else if (idx < index) {
+          adjustedSet.add(idx)
+        }
+      })
+      return adjustedSet
+    })
+  }
+
+  const startEditingCondition = (index: number) => {
+    setEditingConditions(prev => new Set(prev).add(index))
+  }
+
+  const cancelEditingCondition = (index: number) => {
+    setEditingConditions(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(index)
+      return newSet
+    })
+  }
+
+  const finishEditingCondition = (index: number) => {
+    setEditingConditions(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(index)
+      return newSet
+    })
+  }
+
+  // Helper function to determine if a condition should be read-only
+  const isConditionReadOnly = (conditionIndex: number) => {
+    // If it's newly added, it should be editable
+    if (newlyAddedConditions.has(conditionIndex)) {
+      return false
+    }
+    // If it's existing data and not being edited, it should be read-only
+    if (isExistingData && !editingConditions.has(conditionIndex)) {
+      return true
+    }
+    // Otherwise, it should be editable
+    return false
   }
 
   const toggleSurface = (
@@ -467,19 +561,58 @@ export function DiagnosisForm({
                       <h5 className="text-sm font-medium">
                         {t('condition')} {conditionIndex + 1}
                       </h5>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCondition(conditionIndex)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                        <div className="flex gap-2">
+                          {isConditionReadOnly(conditionIndex) ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                startEditingCondition(conditionIndex)
+                              }
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          ) : isExistingData &&
+                            editingConditions.has(conditionIndex) ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  finishEditingCondition(conditionIndex)
+                                }
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  cancelEditingCondition(conditionIndex)
+                                }
+                              >
+                                <XIcon className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeCondition(conditionIndex)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                     </div>
 
                     <div className="space-y-4">
                       {/* Category and Condition Row */}
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {/* Category Selection */}
                         <FormField
                           control={form.control}
@@ -487,27 +620,38 @@ export function DiagnosisForm({
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>{t('category')}</FormLabel>
-                              <Select
-                                onValueChange={value =>
-                                  handleCategoryChange(conditionIndex, value)
-                                }
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue
-                                      placeholder={t('selectCategory')}
-                                    />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {getAllCategories.map(category => (
-                                    <SelectItem key={category} value={category}>
-                                      {tCategories(category)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              {isConditionReadOnly(conditionIndex) ? (
+                                <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                                  {field.value
+                                    ? tCategories(field.value)
+                                    : t('selectCategory')}
+                                </div>
+                              ) : (
+                                <Select
+                                  onValueChange={value =>
+                                    handleCategoryChange(conditionIndex, value)
+                                  }
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue
+                                        placeholder={t('selectCategory')}
+                                      />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {getAllCategories.map(category => (
+                                      <SelectItem
+                                        key={category}
+                                        value={category}
+                                      >
+                                        {tCategories(category)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
                               <FormMessage />
                             </FormItem>
                           )}
@@ -527,45 +671,83 @@ export function DiagnosisForm({
                             return (
                               <FormItem>
                                 <FormLabel>{t('condition')}</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                  disabled={!selectedCategory}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue
-                                        placeholder={
-                                          selectedCategory
-                                            ? t('selectCondition')
-                                            : t('selectCategoryFirst')
-                                        }
-                                      />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {conditionsForCategory.map(condition => (
-                                      <SelectItem
-                                        key={condition.id}
-                                        value={condition.id}
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <div
-                                            className="w-3 h-3 rounded"
-                                            style={{
-                                              backgroundColor: condition.color,
-                                            }}
-                                          />
-                                          <span>
-                                            {tConditions(condition.name, {
-                                              defaultValue: condition.name,
-                                            })}
-                                          </span>
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                {isConditionReadOnly(conditionIndex) ? (
+                                  <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                                    {field.value ? (
+                                      <div className="flex items-center gap-2">
+                                        {(() => {
+                                          const condition =
+                                            conditionsForCategory.find(
+                                              c => c.id === field.value
+                                            )
+                                          return condition ? (
+                                            <>
+                                              <div
+                                                className="w-3 h-3 rounded"
+                                                style={{
+                                                  backgroundColor:
+                                                    condition.color,
+                                                }}
+                                              />
+                                              <span>
+                                                {tConditions(condition.name, {
+                                                  defaultValue: condition.name,
+                                                })}
+                                              </span>
+                                            </>
+                                          ) : (
+                                            field.value
+                                          )
+                                        })()}
+                                      </div>
+                                    ) : selectedCategory ? (
+                                      t('selectCondition')
+                                    ) : (
+                                      t('selectCategoryFirst')
+                                    )}
+                                  </div>
+                                ) : (
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value}
+                                    disabled={!selectedCategory}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue
+                                          placeholder={
+                                            selectedCategory
+                                              ? t('selectCondition')
+                                              : t('selectCategoryFirst')
+                                          }
+                                        />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {conditionsForCategory.map(condition => (
+                                        <SelectItem
+                                          key={condition.id}
+                                          value={condition.id}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <div
+                                              className="w-3 h-3 rounded"
+                                              style={{
+                                                backgroundColor:
+                                                  condition.color,
+                                              }}
+                                            />
+                                            <span>
+                                              {tConditions(condition.name, {
+                                                defaultValue: condition.name,
+                                              })}
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
                                 <FormMessage />
                               </FormItem>
                             )
@@ -580,13 +762,28 @@ export function DiagnosisForm({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>{t('notes')}</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder={t('surfaceNotesPlaceholder')}
-                                className="min-h-[80px]"
-                                {...field}
-                              />
-                            </FormControl>
+                            {isConditionReadOnly(conditionIndex) ? (
+                              <div className="px-3 py-2 border rounded-md bg-muted text-sm min-h-[80px]">
+                                {field.value || (
+                                  <span className="text-muted-foreground">
+                                    {t('surfaceNotesPlaceholder')}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <FormControl>
+                                <Textarea
+                                  placeholder={t('surfaceNotesPlaceholder')}
+                                  className="min-h-[80px]"
+                                  onFocus={e => {
+                                    if (preventFocusRef.current) {
+                                      e.target.blur()
+                                    }
+                                  }}
+                                  {...field}
+                                />
+                              </FormControl>
+                            )}
                             <FormMessage />
                           </FormItem>
                         )}
@@ -598,114 +795,150 @@ export function DiagnosisForm({
                       <FormLabel className="text-sm font-medium mb-2 block">
                         {t('toothSurfaces')}
                       </FormLabel>
-                      {/* Mobile: Three rows */}
-                      <div className="space-y-2 md:hidden">
-                        {/* Mesial-Distal row */}
-                        <div className="flex gap-2 justify-center">
-                          {(['M', 'D'] as const).map(surface => {
-                            const isSelected = form
-                              .watch(`conditions.${conditionIndex}.surfaces`)
-                              .includes(surface)
-
-                            return (
-                              <button
-                                key={surface}
-                                type="button"
-                                className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
-                                  isSelected
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-muted hover:border-primary/50'
-                                }`}
-                                onClick={() =>
-                                  toggleSurface(conditionIndex, surface)
-                                }
-                              >
-                                {tSurfaces(surface.toLowerCase())}
-                              </button>
-                            )
-                          })}
+                      {isConditionReadOnly(conditionIndex) ? (
+                        <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                          {form.watch(`conditions.${conditionIndex}.surfaces`)
+                            .length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {form
+                                .watch(`conditions.${conditionIndex}.surfaces`)
+                                .map(surface => (
+                                  <span
+                                    key={surface}
+                                    className="px-2 py-1 bg-primary/10 text-primary rounded text-xs"
+                                  >
+                                    {tSurfaces(surface.toLowerCase())}
+                                  </span>
+                                ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              {t('noSurfacesSelected')}
+                            </span>
+                          )}
                         </div>
-                        {/* Buccal-Lingual row */}
-                        <div className="flex gap-2 justify-center">
-                          {(['B', 'L'] as const).map(surface => {
-                            const isSelected = form
-                              .watch(`conditions.${conditionIndex}.surfaces`)
-                              .includes(surface)
+                      ) : (
+                        <>
+                          {/* Mobile: Three rows */}
+                          <div className="space-y-2 md:hidden">
+                            {/* Mesial-Distal row */}
+                            <div className="flex gap-2 justify-center">
+                              {(['M', 'D'] as const).map(surface => {
+                                const isSelected = form
+                                  .watch(
+                                    `conditions.${conditionIndex}.surfaces`
+                                  )
+                                  .includes(surface)
 
-                            return (
-                              <button
-                                key={surface}
-                                type="button"
-                                className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
-                                  isSelected
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-muted hover:border-primary/50'
-                                }`}
-                                onClick={() =>
-                                  toggleSurface(conditionIndex, surface)
-                                }
-                              >
-                                {tSurfaces(surface.toLowerCase())}
-                              </button>
-                            )
-                          })}
-                        </div>
-                        {/* Occlusal row */}
-                        <div className="flex gap-2 justify-center">
-                          {(['O'] as const).map(surface => {
-                            const isSelected = form
-                              .watch(`conditions.${conditionIndex}.surfaces`)
-                              .includes(surface)
+                                return (
+                                  <button
+                                    key={surface}
+                                    type="button"
+                                    className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
+                                      isSelected
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-muted hover:border-primary/50'
+                                    }`}
+                                    onClick={() =>
+                                      toggleSurface(conditionIndex, surface)
+                                    }
+                                  >
+                                    {tSurfaces(surface.toLowerCase())}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            {/* Buccal-Lingual row */}
+                            <div className="flex gap-2 justify-center">
+                              {(['B', 'L'] as const).map(surface => {
+                                const isSelected = form
+                                  .watch(
+                                    `conditions.${conditionIndex}.surfaces`
+                                  )
+                                  .includes(surface)
 
-                            return (
-                              <button
-                                key={surface}
-                                type="button"
-                                className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
-                                  isSelected
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-muted hover:border-primary/50'
-                                }`}
-                                onClick={() =>
-                                  toggleSurface(conditionIndex, surface)
-                                }
-                              >
-                                {tSurfaces(surface.toLowerCase())}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                      {/* Desktop: Flat grid */}
-                      <div className="hidden md:grid md:grid-cols-5 gap-2">
-                        {(['M', 'D', 'B', 'L', 'O'] as const).map(surface => {
-                          const isSelected = form
-                            .watch(`conditions.${conditionIndex}.surfaces`)
-                            .includes(surface)
+                                return (
+                                  <button
+                                    key={surface}
+                                    type="button"
+                                    className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
+                                      isSelected
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-muted hover:border-primary/50'
+                                    }`}
+                                    onClick={() =>
+                                      toggleSurface(conditionIndex, surface)
+                                    }
+                                  >
+                                    {tSurfaces(surface.toLowerCase())}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            {/* Occlusal row */}
+                            <div className="flex gap-2 justify-center">
+                              {(['O'] as const).map(surface => {
+                                const isSelected = form
+                                  .watch(
+                                    `conditions.${conditionIndex}.surfaces`
+                                  )
+                                  .includes(surface)
 
-                          return (
-                            <button
-                              key={surface}
-                              type="button"
-                              className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors md:h-9 ${
-                                isSelected
-                                  ? 'border-primary bg-primary/10 text-primary'
-                                  : 'border-muted hover:border-primary/50'
-                              }`}
-                              onClick={() =>
-                                toggleSurface(conditionIndex, surface)
+                                return (
+                                  <button
+                                    key={surface}
+                                    type="button"
+                                    className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors flex-1 max-w-[100px] md:h-9 md:max-w-[80px] ${
+                                      isSelected
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-muted hover:border-primary/50'
+                                    }`}
+                                    onClick={() =>
+                                      toggleSurface(conditionIndex, surface)
+                                    }
+                                  >
+                                    {tSurfaces(surface.toLowerCase())}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                          {/* Desktop: Flat grid */}
+                          <div className="hidden md:grid md:grid-cols-5 gap-2">
+                            {(['M', 'D', 'B', 'L', 'O'] as const).map(
+                              surface => {
+                                const isSelected = form
+                                  .watch(
+                                    `conditions.${conditionIndex}.surfaces`
+                                  )
+                                  .includes(surface)
+
+                                return (
+                                  <button
+                                    key={surface}
+                                    type="button"
+                                    className={`h-10 px-4 py-2 border rounded-md text-center text-sm transition-colors md:h-9 ${
+                                      isSelected
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-muted hover:border-primary/50'
+                                    }`}
+                                    onClick={() =>
+                                      toggleSurface(conditionIndex, surface)
+                                    }
+                                  >
+                                    {tSurfaces(surface.toLowerCase())}
+                                  </button>
+                                )
                               }
-                            >
-                              {tSurfaces(surface.toLowerCase())}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name={`conditions.${conditionIndex}.surfaces`}
-                        render={() => <FormMessage />}
-                      />
+                            )}
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name={`conditions.${conditionIndex}.surfaces`}
+                            render={() => <FormMessage />}
+                          />
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -736,8 +969,8 @@ export function DiagnosisForm({
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" disabled={isLoading || isSaving}>
+                {isLoading || isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('saving')}
