@@ -38,7 +38,7 @@ export function AppLayout({
 
         {/* Page content */}
         <main className="flex-1 py-6">
-          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
+          <div className="px-4 pb-6 sm:px-6 lg:pb-8 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

@@ -45,6 +45,13 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const { data: histories = [] } = useToothDiagnosisHistories(patientId)
   const createHistory = useCreateToothDiagnosisHistory()
 
+  // Auto-select latest history on load
+  React.useEffect(() => {
+    if (histories.length > 0 && !selectedHistoryId) {
+      setSelectedHistoryId(histories[0].id)
+    }
+  }, [histories, selectedHistoryId])
+
   // Fetch tooth conditions for the patient in selected history
   const {
     data: teeth = [],
@@ -166,7 +173,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
             </div>
             <div className="flex gap-2 items-center">
               <select
-                className="border rounded px-2 py-1 text-sm"
+                className="border rounded px-3 py-2 text-sm h-9 min-w-[140px]"
                 value={selectedHistoryId || ''}
                 onChange={e => setSelectedHistoryId(e.target.value || null)}
               >
@@ -175,7 +182,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                 </option>
                 {histories.map(h => (
                   <option key={h.id} value={h.id}>
-                    {new Date(h.created_at).toLocaleString('es-MX')}
+                    {new Date(h.created_at).toLocaleDateString('es-MX')}
                   </option>
                 ))}
               </select>
@@ -190,17 +197,6 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                 }}
               >
                 <History className="h-4 w-4 mr-2" />
-                {t('newHistory')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSelectedTooth(null)
-                  setDiagnosisDialogOpen(true)
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
                 {t('newDiagnosis')}
               </Button>
             </div>
@@ -216,9 +212,8 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
             />
           </div>
 
-          <Separator />
+          {/* <Separator />
 
-          {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">
@@ -262,7 +257,6 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
             </div>
           </div>
 
-          {/* Recent Activity */}
           <div className="recent-activity">
             <h4 className="text-sm font-medium text-foreground mb-3">
               {t('recentActivity')}
@@ -298,7 +292,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                 </p>
               )}
             </div>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 

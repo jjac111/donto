@@ -61,8 +61,7 @@ export function Odontogram({
             </span>
           </div>
           <div className="flex justify-center gap-12">
-            
-          <ToothGrid
+            <ToothGrid
               teeth={upperLeftTeeth}
               onToothClick={onToothClick}
               selectedTooth={selectedTooth}
@@ -103,31 +102,6 @@ export function Odontogram({
               jaw="lower"
               side="right"
             />
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="odontogram-legend mt-6 p-4 bg-muted/50 rounded-lg">
-        <h4 className="text-sm font-medium text-foreground mb-2">
-          {t('legend')}
-        </h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded"></div>
-            <span>{t('healthy')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-orange-500 rounded"></div>
-            <span>{t('treatmentNeeded')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-            <span>{t('restored')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded"></div>
-            <span>{t('urgent')}</span>
           </div>
         </div>
       </div>

@@ -277,6 +277,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* Diagnosis Section - Full Width at Bottom */}
+
           <DiagnosisSection patientId={patientId} />
         </div>
       </AppLayout>

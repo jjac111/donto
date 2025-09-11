@@ -91,7 +91,8 @@ export const queryKeys = {
     patientId: string,
     toothNumber: string,
     historyId: string
-  ) => ['tooth-conditions', patientId, toothNumber, 'history', historyId] as const,
+  ) =>
+    ['tooth-conditions', patientId, toothNumber, 'history', historyId] as const,
 
   // Clinics
   clinics: ['clinics'] as const,
