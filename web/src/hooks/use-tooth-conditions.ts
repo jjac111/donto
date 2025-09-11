@@ -66,10 +66,81 @@ const transformToothDiagnoses = (rows: any[]): ToothWithConditions[] => {
   })
 }
 
-// Get aggregated tooth diagnoses for a patient (for odontogram and summaries)
-export const usePatientToothConditions = (patientId: string) => {
+// Histories list for a patient
+export const useToothDiagnosisHistories = (patientId: string) => {
   return useQuery({
-    queryKey: queryKeys.patientToothConditions(patientId),
+    queryKey: ['tooth-diagnosis-histories', patientId],
+    queryFn: async (): Promise<
+      Array<{ id: string; created_at: string; recorded_by_profile_id: string }>
+    > => {
+      const clinicId = useAuthStore.getState().clinicId
+      if (!clinicId) throw new Error('No clinic selected')
+
+      const { data, error } = await supabase
+        .from('tooth_diagnosis_histories')
+        .select('id, created_at, recorded_by_profile_id')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw new Error(`Failed to fetch histories: ${error.message}`)
+      return data || []
+    },
+    enabled: !!patientId,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+// Create a new history for a patient
+export const useCreateToothDiagnosisHistory = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (patientId: string): Promise<{ id: string }> => {
+      const clinicId = useAuthStore.getState().clinicId
+      if (!clinicId) throw new Error('No clinic selected')
+
+      const { data: authUser } = await supabase.auth.getUser()
+      const userId = authUser.user?.id
+      if (!userId) throw new Error('No authenticated user found')
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('clinic_id', clinicId)
+        .eq('is_active', true)
+        .single()
+
+      if (profileError || !profile)
+        throw new Error('Could not find user profile')
+
+      const { data, error } = await supabase
+        .from('tooth_diagnosis_histories')
+        .insert({
+          patient_id: patientId,
+          recorded_by_profile_id: profile.id,
+        })
+        .select('id')
+        .single()
+
+      if (error || !data)
+        throw new Error(`Failed to create history: ${error?.message}`)
+      return { id: data.id as string }
+    },
+    onSuccess: (_, patientId) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tooth-diagnosis-histories', patientId],
+      })
+    },
+  })
+}
+
+// Get aggregated tooth diagnoses for a patient in a given history
+export const usePatientToothConditions = (
+  patientId: string,
+  historyId: string
+) => {
+  return useQuery({
+    queryKey: queryKeys.patientToothConditionsByHistory(patientId, historyId),
     queryFn: async (): Promise<ToothWithConditions[]> => {
       const clinicId = useAuthStore.getState().clinicId
       if (!clinicId) throw new Error('No clinic selected')
@@ -83,6 +154,7 @@ export const usePatientToothConditions = (patientId: string) => {
         `
         )
         .eq('tooth_diagnosis_histories.patient_id', patientId)
+        .eq('history_id', historyId)
         .order('updated_at', { ascending: false })
 
       if (error) {
@@ -91,15 +163,23 @@ export const usePatientToothConditions = (patientId: string) => {
 
       return transformToothDiagnoses(data || [])
     },
-    enabled: !!patientId,
+    enabled: !!patientId && !!historyId,
     staleTime: 2 * 60 * 1000,
   })
 }
 
-// Get raw JSONB conditions for a specific tooth (for editing in the form)
-export const useToothConditions = (patientId: string, toothNumber: string) => {
+// Get raw JSONB conditions for a specific tooth within a history (for editing in the form)
+export const useToothConditions = (
+  patientId: string,
+  toothNumber: string,
+  historyId: string
+) => {
   return useQuery({
-    queryKey: queryKeys.toothConditionsByTooth(patientId, toothNumber),
+    queryKey: queryKeys.toothConditionsByToothAndHistory(
+      patientId,
+      toothNumber,
+      historyId
+    ),
     queryFn: async (): Promise<any[]> => {
       const clinicId = useAuthStore.getState().clinicId
       if (!clinicId) throw new Error('No clinic selected')
@@ -113,6 +193,7 @@ export const useToothConditions = (patientId: string, toothNumber: string) => {
         `
         )
         .eq('tooth_diagnosis_histories.patient_id', patientId)
+        .eq('history_id', historyId)
         .eq('tooth_number', toothNumber)
         .limit(1)
 
@@ -128,16 +209,18 @@ export const useToothConditions = (patientId: string, toothNumber: string) => {
   })
 }
 
-// Save diagnosis: create history row, then upsert tooth_diagnoses with JSONB conditions
+// Save diagnosis: requires historyId; updates existing row or inserts under that history
 export const useSaveToothDiagnosis = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({
       patientId,
+      historyId,
       diagnosisData,
     }: {
       patientId: string
+      historyId: string
       diagnosisData: DiagnosisFormData
     }): Promise<void> => {
       const clinicId = useAuthStore.getState().clinicId
@@ -163,23 +246,16 @@ export const useSaveToothDiagnosis = () => {
 
       const profileId = profile.id
 
-      // Create a history entry for this save
-      const { data: historyInsert, error: historyError } = await supabase
-        .from('tooth_diagnosis_histories')
-        .insert({
-          patient_id: patientId,
-          recorded_by_profile_id: profileId,
-        })
+      // Strict: historyId must be provided by caller
+      if (!historyId) throw new Error('History must be selected before saving')
+
+      // Check if there's already an existing tooth_diagnoses record for this tooth in the selected history
+      const { data: existingDiagnosis } = await supabase
+        .from('tooth_diagnoses')
         .select('id')
-        .single()
-
-      if (historyError || !historyInsert) {
-        throw new Error(
-          `Failed to create diagnosis history: ${historyError?.message}`
-        )
-      }
-
-      const historyId = historyInsert.id as string
+        .eq('history_id', historyId)
+        .eq('tooth_number', diagnosisData.toothNumber)
+        .maybeSingle()
 
       // Prepare JSONB conditions array (no id field per schema)
       const nowIso = new Date().toISOString()
@@ -195,37 +271,55 @@ export const useSaveToothDiagnosis = () => {
           created_at: nowIso,
         }))
 
-      // Upsert into tooth_diagnoses using unique (history_id, tooth_number)
-      const { error: upsertError } = await supabase
-        .from('tooth_diagnoses')
-        .upsert(
-          [
-            {
-              tooth_number: diagnosisData.toothNumber,
-              is_present: diagnosisData.isPresent ?? true,
-              is_treated: diagnosisData.isTreated ?? false,
-              requires_extraction: diagnosisData.requiresExtraction ?? false,
-              general_notes: diagnosisData.generalNotes || null,
-              tooth_conditions: toothConditions,
-              history_id: historyId,
-            },
-          ],
-          { onConflict: 'history_id,tooth_number' }
-        )
+      if (existingDiagnosis) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('tooth_diagnoses')
+          .update({
+            is_present: diagnosisData.isPresent ?? true,
+            is_treated: diagnosisData.isTreated ?? false,
+            requires_extraction: diagnosisData.requiresExtraction ?? false,
+            general_notes: diagnosisData.generalNotes || null,
+            tooth_conditions: toothConditions,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingDiagnosis.id)
 
-      if (upsertError) {
-        throw new Error(`Failed to save diagnosis: ${upsertError.message}`)
+        if (updateError) {
+          throw new Error(`Failed to update diagnosis: ${updateError.message}`)
+        }
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('tooth_diagnoses')
+          .insert({
+            tooth_number: diagnosisData.toothNumber,
+            is_present: diagnosisData.isPresent ?? true,
+            is_treated: diagnosisData.isTreated ?? false,
+            requires_extraction: diagnosisData.requiresExtraction ?? false,
+            general_notes: diagnosisData.generalNotes || null,
+            tooth_conditions: toothConditions,
+            history_id: historyId,
+          })
+
+        if (insertError) {
+          throw new Error(`Failed to insert diagnosis: ${insertError.message}`)
+        }
       }
     },
-    onSuccess: (_, { patientId, diagnosisData }) => {
+    onSuccess: (_, { patientId, historyId, diagnosisData }) => {
       // Invalidate aggregated view and specific tooth
       queryClient.invalidateQueries({
-        queryKey: queryKeys.patientToothConditions(patientId),
+        queryKey: queryKeys.patientToothConditionsByHistory(
+          patientId,
+          historyId
+        ),
       })
       queryClient.invalidateQueries({
-        queryKey: queryKeys.toothConditionsByTooth(
+        queryKey: queryKeys.toothConditionsByToothAndHistory(
           patientId,
-          diagnosisData.toothNumber
+          diagnosisData.toothNumber,
+          historyId
         ),
       })
     },

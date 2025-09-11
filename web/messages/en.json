@@ -280,7 +280,9 @@
     "toothTreated": "Tooth Treated",
     "toothTreatedDescription": "Tooth has been treated/restored",
     "requiresExtraction": "Requires Extraction",
-    "requiresExtractionDescription": "Tooth needs to be extracted"
+    "requiresExtractionDescription": "Tooth needs to be extracted",
+    "selectHistory": "Select History",
+    "newHistory": "New History"
   },
   "categories": {
     "orthodontics": "Orthodontics",

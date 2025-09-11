@@ -84,6 +84,14 @@ export const queryKeys = {
     ['tooth-conditions', 'patient', patientId] as const,
   toothConditionsByTooth: (patientId: string, toothNumber: string) =>
     ['tooth-conditions', patientId, toothNumber] as const,
+  // History-scoped keys
+  patientToothConditionsByHistory: (patientId: string, historyId: string) =>
+    ['tooth-conditions', 'patient', patientId, 'history', historyId] as const,
+  toothConditionsByToothAndHistory: (
+    patientId: string,
+    toothNumber: string,
+    historyId: string
+  ) => ['tooth-conditions', patientId, toothNumber, 'history', historyId] as const,
 
   // Clinics
   clinics: ['clinics'] as const,

@@ -190,6 +190,22 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       })),
     }
 
+    // Check for existing diagnosis (should return null for new diagnosis)
+    const existingDiagnosisChain = {
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            inner: vi.fn(() => ({
+              single: vi.fn(
+                () =>
+                  Promise.resolve({ data: null, error: { code: 'PGRST116' } }) // No rows found
+              ),
+            })),
+          })),
+        })),
+      })),
+    }
+
     // histories insert -> select -> single
     const historiesChain = {
       insert: vi.fn(() => ({
@@ -201,10 +217,10 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
       })),
     }
 
-    // tooth_diagnoses upsert
-    const upsertSpy = vi.fn(() => Promise.resolve({ error: null }))
+    // tooth_diagnoses insert
+    const insertSpy = vi.fn(() => Promise.resolve({ error: null }))
     const diagnosesChain = {
-      upsert: upsertSpy,
+      insert: insertSpy,
     }
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -429,6 +445,17 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     expect(newCondition.recorded_by_profile_id).toBe('profile-123')
     expect(newCondition.diagnosis_date).toBeTruthy()
     expect(newCondition.created_at).toBeTruthy()
+
+    // Verify notes are preserved for all conditions
+    const cariesCondition = toothConditions.find(
+      (c: any) => c.condition_type === 'dental_caries'
+    )
+    expect(cariesCondition.notes).toBe('Existing caries')
+
+    const gingivitisCondition = toothConditions.find(
+      (c: any) => c.condition_type === 'gingivitis'
+    )
+    expect(gingivitisCondition.notes).toBe('Existing gingivitis')
   })
 
   it('edits existing tooth diagnosis by updating the same record', async () => {

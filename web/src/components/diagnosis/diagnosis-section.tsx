@@ -20,6 +20,8 @@ import {
   usePatientToothConditions,
   useToothConditions,
   useSaveToothDiagnosis,
+  useToothDiagnosisHistories,
+  useCreateToothDiagnosisHistory,
 } from '@/hooks/use-tooth-conditions'
 import {
   DiagnosisFormData,
@@ -35,18 +37,26 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const t = useTranslations('diagnosis')
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null)
   const [diagnosisDialogOpen, setDiagnosisDialogOpen] = useState(false)
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(
+    null
+  )
 
-  // Fetch tooth conditions for the patient
+  // Histories
+  const { data: histories = [] } = useToothDiagnosisHistories(patientId)
+  const createHistory = useCreateToothDiagnosisHistory()
+
+  // Fetch tooth conditions for the patient in selected history
   const {
     data: teeth = [],
     isLoading,
     error,
-  } = usePatientToothConditions(patientId)
+  } = usePatientToothConditions(patientId, selectedHistoryId || '')
 
-  // Fetch conditions for selected tooth
+  // Fetch conditions for selected tooth in selected history
   const { data: selectedToothConditions = [] } = useToothConditions(
     patientId,
-    selectedTooth || ''
+    selectedTooth || '',
+    selectedHistoryId || ''
   )
 
   // Get selected tooth data for status fields
@@ -63,8 +73,10 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   }
 
   const handleSaveDiagnosis = async (diagnosisData: DiagnosisFormData) => {
+    if (!selectedHistoryId) return
     await saveDiagnosisMutation.mutateAsync({
       patientId,
+      historyId: selectedHistoryId,
       diagnosisData,
     })
   }
@@ -152,10 +164,33 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                 )}
               </CardTitle>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled>
+            <div className="flex gap-2 items-center">
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={selectedHistoryId || ''}
+                onChange={e => setSelectedHistoryId(e.target.value || null)}
+              >
+                <option value="" disabled>
+                  {t('selectHistory')}
+                </option>
+                {histories.map(h => (
+                  <option key={h.id} value={h.id}>
+                    {new Date(h.created_at).toLocaleString('es-MX')}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (createHistory.isPending) return
+                  createHistory.mutate(patientId, {
+                    onSuccess: ({ id }) => setSelectedHistoryId(id),
+                  })
+                }}
+              >
                 <History className="h-4 w-4 mr-2" />
-                {t('viewHistory')}
+                {t('newHistory')}
               </Button>
               <Button
                 variant="outline"
