@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { Loader2, Plus, X, Save } from 'lucide-react'
-import { useMinimumLoading } from '@/hooks/use-minimum-loading'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -64,9 +63,6 @@ export function GeneralConditions({
   const t = useTranslations('diagnosis')
   const tCategories = useTranslations('categories')
   const tConditions = useTranslations('conditions')
-  const { isLoading: isSaving, executeWithMinimumLoading } = useMinimumLoading({
-    minimumDuration: 1000,
-  })
 
   // Transform JSON data to match TypeScript interface
   const dentalConditions: DentalConditionsData = useMemo(
@@ -185,12 +181,10 @@ export function GeneralConditions({
         notes: c.notes || undefined,
       }))
 
-    await executeWithMinimumLoading(async () => {
-      await saveGeneralConditions.mutateAsync({
-        patientId,
-        historyId,
-        conditions,
-      })
+    await saveGeneralConditions.mutateAsync({
+      patientId,
+      historyId,
+      conditions,
     })
   }
 
@@ -205,8 +199,7 @@ export function GeneralConditions({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-        </div>
+        <div></div>
         <Button
           type="button"
           variant="outline"
@@ -381,11 +374,9 @@ export function GeneralConditions({
             <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={
-                  saveGeneralConditions.isPending || isLoading || isSaving
-                }
+                disabled={saveGeneralConditions.isPending || isLoading}
               >
-                {saveGeneralConditions.isPending || isSaving ? (
+                {saveGeneralConditions.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('saving')}

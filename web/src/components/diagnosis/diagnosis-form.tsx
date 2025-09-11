@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { Loader2, X, Plus, Edit2, Check, X as XIcon } from 'lucide-react'
-import { useMinimumLoading } from '@/hooks/use-minimum-loading'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -102,9 +101,6 @@ export function DiagnosisForm({
   const [newlyAddedConditions, setNewlyAddedConditions] = useState<Set<number>>(
     new Set()
   )
-  const { isLoading: isSaving, executeWithMinimumLoading } = useMinimumLoading({
-    minimumDuration: 1000,
-  })
 
   // Transform JSON data to match TypeScript interface
   const dentalConditions: DentalConditionsData = useMemo(
@@ -151,10 +147,8 @@ export function DiagnosisForm({
       generalNotes: data.generalNotes,
     }
 
-    await executeWithMinimumLoading(async () => {
-      await onSave(diagnosisData)
-      onOpenChange(false)
-    })
+    await onSave(diagnosisData)
+    onOpenChange(false)
   }
 
   const getConditionById = useMemo(
@@ -271,6 +265,7 @@ export function DiagnosisForm({
         // Mark as new data
         setIsExistingData(false)
         setEditingConditions(new Set())
+        setNewlyAddedConditions(new Set())
       }
 
       // Clear initialization flag after a short delay to allow form to settle
@@ -561,53 +556,53 @@ export function DiagnosisForm({
                       <h5 className="text-sm font-medium">
                         {t('condition')} {conditionIndex + 1}
                       </h5>
-                        <div className="flex gap-2">
-                          {isConditionReadOnly(conditionIndex) ? (
+                      <div className="flex gap-2">
+                        {isConditionReadOnly(conditionIndex) ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              startEditingCondition(conditionIndex)
+                            }
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        ) : isExistingData &&
+                          editingConditions.has(conditionIndex) ? (
+                          <>
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               onClick={() =>
-                                startEditingCondition(conditionIndex)
+                                finishEditingCondition(conditionIndex)
                               }
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Check className="h-4 w-4" />
                             </Button>
-                          ) : isExistingData &&
-                            editingConditions.has(conditionIndex) ? (
-                            <>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  finishEditingCondition(conditionIndex)
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  cancelEditingCondition(conditionIndex)
-                                }
-                              >
-                                <XIcon className="h-4 w-4" />
-                              </Button>
-                            </>
-                          ) : (
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => removeCondition(conditionIndex)}
+                              onClick={() =>
+                                cancelEditingCondition(conditionIndex)
+                              }
                             >
-                              <X className="h-4 w-4" />
+                              <XIcon className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
+                          </>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCondition(conditionIndex)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -969,8 +964,8 @@ export function DiagnosisForm({
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isLoading || isSaving}>
-                {isLoading || isSaving ? (
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {t('saving')}
