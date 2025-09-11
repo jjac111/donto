@@ -31,6 +31,8 @@
     "patients": "Patients",
     "newPatient": "New Patient",
     "newPatientDescription": "Add the basic information of the new patient to the system.",
+    "editPatient": "Edit Patient",
+    "editPatientDescription": "Modify information for the selected patient.",
     "search": "Search patient...",
     "firstName": "First Name",
     "lastName": "Last Name",

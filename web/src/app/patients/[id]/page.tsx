@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
 import { DiagnosisSection } from '@/components/diagnosis/diagnosis-section'
+import { PatientForm } from '@/components/patients/patient-form'
 import { usePatient } from '@/hooks/use-patients'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,13 +18,22 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Mail, MapPin, Phone, User, AlertCircle } from 'lucide-react'
+import {
+  Calendar,
+  Mail,
+  MapPin,
+  Phone,
+  User,
+  AlertCircle,
+  Edit,
+} from 'lucide-react'
 
 export default function PatientDetailPage() {
   const params = useParams()
   const patientId = params.id as string
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
 
   // Use TanStack Query hook instead of manual state management
   const { data: patient, isLoading, error } = usePatient(patientId)
@@ -83,7 +94,12 @@ export default function PatientDetailPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" disabled>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditFormOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
                 {t('edit')}
               </Button>
             </div>
@@ -280,6 +296,17 @@ export default function PatientDetailPage() {
 
           <DiagnosisSection patientId={patientId} />
         </div>
+
+        {/* Edit Patient Form */}
+        <PatientForm
+          open={isEditFormOpen}
+          onOpenChange={setIsEditFormOpen}
+          patient={patient}
+          mode="edit"
+          onSuccess={() => {
+            // Patient data will be refreshed automatically by the mutation
+          }}
+        />
       </AppLayout>
     </ProtectedRoute>
   )
