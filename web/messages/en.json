@@ -244,6 +244,8 @@
     "odontogramDescription": "Interactive dental visualization for recording conditions per tooth",
     "maxillary": "Maxillary",
     "mandibular": "Mandibular",
+    "left": "Left",
+    "right": "Right",
     "legend": "Legend",
     "healthy": "Healthy",
     "treatmentNeeded": "Treatment Needed",

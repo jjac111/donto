@@ -54,15 +54,14 @@ export function Odontogram({
     <div
       className={`odontogram w-full max-w-full overflow-hidden ${className}`}
     >
-      <div className="odontogram-grid space-y-8 w-full">
-        {/* Upper jaw */}
-        <div className="upper-jaw">
-          <div className="flex justify-center mb-2">
+      <div className="odontogram-grid space-y-6 w-full">
+        {/* Mobile-first: All 4 grids stacked vertically */}
+        <div className="flex flex-col gap-6">
+          {/* Upper Left Quadrant */}
+          <div className="flex flex-col items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">
-              {t('maxillary')}
+              {t('maxillary')} - {t('left')}
             </span>
-          </div>
-          <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-12 w-full max-w-full overflow-hidden">
             <ToothGrid
               teeth={upperLeftTeeth}
               onToothClick={onToothClick}
@@ -70,8 +69,13 @@ export function Odontogram({
               jaw="upper"
               side="left"
             />
-            <div className="hidden md:block w-2" />{' '}
-            {/* Separation - hidden on mobile */}
+          </div>
+
+          {/* Upper Right Quadrant */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {t('maxillary')} - {t('right')}
+            </span>
             <ToothGrid
               teeth={upperRightTeeth}
               onToothClick={onToothClick}
@@ -80,51 +84,33 @@ export function Odontogram({
               side="right"
             />
           </div>
-        </div>
 
-        {/* Lower jaw */}
-        <div className="lower-jaw">
-          <div className="flex justify-center mb-2">
+          {/* Lower Left Quadrant */}
+          <div className="flex flex-col items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">
-              {t('mandibular')}
+              {t('mandibular')} - {t('left')}
             </span>
+            <ToothGrid
+              teeth={lowerLeftTeeth}
+              onToothClick={onToothClick}
+              selectedTooth={selectedTooth}
+              jaw="lower"
+              side="left"
+            />
           </div>
-          <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-12 w-full max-w-full overflow-hidden">
-            {/* Mobile: Show right first, then left (quadrants 3,4) */}
-            <div className="flex flex-col md:hidden gap-4">
-              <ToothGrid
-                teeth={lowerRightTeeth}
-                onToothClick={onToothClick}
-                selectedTooth={selectedTooth}
-                jaw="lower"
-                side="right"
-              />
-              <ToothGrid
-                teeth={lowerLeftTeeth}
-                onToothClick={onToothClick}
-                selectedTooth={selectedTooth}
-                jaw="lower"
-                side="left"
-              />
-            </div>
-            {/* Desktop: Show left first, then right (original order) */}
-            <div className="hidden md:flex gap-12">
-              <ToothGrid
-                teeth={lowerLeftTeeth}
-                onToothClick={onToothClick}
-                selectedTooth={selectedTooth}
-                jaw="lower"
-                side="left"
-              />
-              <div className="w-2" /> {/* Separation */}
-              <ToothGrid
-                teeth={lowerRightTeeth}
-                onToothClick={onToothClick}
-                selectedTooth={selectedTooth}
-                jaw="lower"
-                side="right"
-              />
-            </div>
+
+          {/* Lower Right Quadrant */}
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {t('mandibular')} - {t('right')}
+            </span>
+            <ToothGrid
+              teeth={lowerRightTeeth}
+              onToothClick={onToothClick}
+              selectedTooth={selectedTooth}
+              jaw="lower"
+              side="right"
+            />
           </div>
         </div>
       </div>
