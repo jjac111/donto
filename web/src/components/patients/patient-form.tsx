@@ -37,7 +37,10 @@ import {
 import { useCreatePatient, useUpdatePatient } from '@/hooks/use-patients'
 import { Patient } from '@/types'
 import countries from 'world-countries'
-import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
+import {
+  parsePhoneNumberWithError,
+  isValidPhoneNumber,
+} from 'libphonenumber-js'
 
 // Helper function to get phone code for a country
 const getPhoneCode = (countryCode: string): string => {
@@ -57,7 +60,7 @@ const parseExistingPhone = (
 
   try {
     // Parse as E.164 or international format
-    const parsed = parsePhoneNumber(phone)
+    const parsed = parsePhoneNumberWithError(phone)
     if (parsed && parsed.isValid()) {
       return {
         countryCode: `+${parsed.countryCallingCode}`,

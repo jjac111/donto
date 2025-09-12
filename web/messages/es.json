@@ -432,5 +432,38 @@
     "toothLuxationDesc": "Diente desplazado de su alveolo",
     "toothAvulsion": "Avulsión Dental",
     "toothAvulsionDesc": "Diente completamente arrancado"
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Gestiona la información de tu clínica y personal",
+    "clinic": {
+      "title": "Información de la Clínica",
+      "description": "Configura los datos básicos de tu clínica dental",
+      "name": "Nombre de la Clínica",
+      "namePlaceholder": "Ej: Clínica Dental Central",
+      "nameRequired": "El nombre de la clínica es obligatorio",
+      "address": "Dirección",
+      "addressPlaceholder": "Dirección completa de la clínica",
+      "country": "País",
+      "selectCountry": "Selecciona país",
+      "countryRequired": "El país es obligatorio",
+      "phoneCountryCode": "Código de País",
+      "selectCountryCode": "Seleccionar código",
+      "phone": "Teléfono",
+      "phonePlaceholder": "987654321",
+      "email": "Correo Electrónico",
+      "emailPlaceholder": "contacto@clinica.com",
+      "invalidEmail": "Correo electrónico inválido",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "saved": "Guardado"
+    },
+    "providers": {
+      "title": "Gestión de Personal",
+      "description": "Administra doctores, higienistas y personal de la clínica",
+      "comingSoon": "Próximamente",
+      "comingSoonDescription": "La gestión de personal estará disponible pronto. Podrás agregar doctores, higienistas y configurar sus especialidades.",
+      "addProvider": "Agregar Personal"
+    }
   }
 }

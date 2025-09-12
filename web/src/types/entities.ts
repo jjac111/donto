@@ -57,6 +57,8 @@ export interface Clinic {
   address?: string
   phone?: string
   email?: string
+  country: string
+  phoneCountryCode: string
 }
 
 export interface Provider {

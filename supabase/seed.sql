@@ -63,10 +63,10 @@ INSERT INTO auth.identities (
     (gen_random_uuid(), '550e8400-e29b-41d4-a716-446655530008', '550e8400-e29b-41d4-a716-446655530008', format('{"sub":"%s","email":"%s"}', '550e8400-e29b-41d4-a716-446655530008'::text, 'test@test.com')::jsonb, 'email', current_timestamp, current_timestamp, current_timestamp);
 
 -- Test clinics
-INSERT INTO clinics (id, name, address, phone, email) VALUES
-    ('550e8400-e29b-41d4-a716-446655440001', 'Clínica Dental Norte', 'Av. Principal 123, Quito', '+593-2-234-5678', 'contacto@clinicalnorte.com'),
-    ('550e8400-e29b-41d4-a716-446655440002', 'Clínica Dental Sur', 'Calle Secundaria 456, Guayaquil', '+593-4-345-6789', 'info@clinicalsur.com'),
-    ('550e8400-e29b-41d4-a716-446655440003', 'Clínica Vacía', 'Sin datos', NULL, NULL);
+INSERT INTO clinics (id, name, address, phone, email, country, phone_country_code) VALUES
+    ('550e8400-e29b-41d4-a716-446655440001', 'Clínica Dental Norte', 'Av. Principal 123, Quito', '2-234-5678', 'contacto@clinicalnorte.com', 'ECU', '+593'),
+    ('550e8400-e29b-41d4-a716-446655440002', 'Clínica Dental Sur', 'Calle Secundaria 456, Guayaquil', '4-345-6789', 'info@clinicalsur.com', 'ECU', '+593'),
+    ('550e8400-e29b-41d4-a716-446655440003', 'Clínica Vacía', 'Sin datos', NULL, NULL, 'ECU', '+593');
 
 -- Test persons for Clinic 1 (Norte)
 INSERT INTO persons (id, clinic_id, national_id, country, first_name, last_name, date_of_birth, sex, phone, phone_country_code, email, address) VALUES

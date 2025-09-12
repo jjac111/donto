@@ -7,6 +7,8 @@ export interface DbClinic {
   address: string | null
   phone: string | null
   email: string | null
+  country: string
+  phone_country_code: string
   created_at: string
   updated_at: string
 }
