@@ -41,7 +41,7 @@ const transformPatient = (
     dateOfBirth: new Date(dbPerson.date_of_birth),
     sex: dbPerson.sex || undefined,
     phone: dbPerson.phone || undefined,
-    phone_country_code: dbPerson.phone_country_code || undefined,
+    phoneCountryCode: dbPerson.phone_country_code || undefined,
     email: dbPerson.email || undefined,
     address: dbPerson.address || undefined,
     displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,

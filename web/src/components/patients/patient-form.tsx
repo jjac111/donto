@@ -270,7 +270,7 @@ export function PatientForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent blurOnly mobileResponsive className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{title || defaultTitle}</DialogTitle>
           <DialogDescription>

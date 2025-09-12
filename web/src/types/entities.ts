@@ -41,7 +41,7 @@ export interface Person {
   dateOfBirth: Date
   sex?: string
   phone?: string
-  phone_country_code?: string
+  phoneCountryCode?: string
   email?: string
   address?: string
 
