@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import {
   Form,
   FormField,
@@ -155,12 +154,16 @@ interface ProviderFormProps {
   provider?: Provider
   onSuccess?: () => void
   onCancel?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function ProviderForm({
   provider,
   onSuccess,
   onCancel,
+  open,
+  onOpenChange,
 }: ProviderFormProps) {
   const t = useTranslations('settings.providers')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -256,94 +259,154 @@ export function ProviderForm({
     }
   }
 
-  return (
-    <Card className="p-6">
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-lg font-semibold">
-            {isEditing ? t('editProvider') : t('addProvider')}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {isEditing
-              ? 'Modifica la información del personal'
-              : 'Agrega nuevo personal a la clínica'}
-          </p>
-        </div>
+  const formContent = (
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-md font-medium">{t('personalInfo')}</h3>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Personal Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-md font-medium">{t('personalInfo')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('firstName')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Dr. Juan" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('firstName')}</FormLabel>
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('lastName')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Pérez García" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="nationalId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('nationalId')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t('nationalIdPlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('country')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input placeholder="Dr. Juan" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('selectCountry')} />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <SelectContent className="max-h-[300px]">
+                        {sortedCountries.map(country => (
+                          <SelectItem key={country.cca3} value={country.cca3}>
+                            {country.name.common}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('lastName')}</FormLabel>
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('dateOfBirth')}</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="sex"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('sex')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input placeholder="Pérez García" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('selectSex')} />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <SelectContent>
+                        <SelectItem value="M">{t('male')}</SelectItem>
+                        <SelectItem value="F">{t('female')}</SelectItem>
+                        <SelectItem value="O">{t('other')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              {/* Phone fields - side by side on mobile */}
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="nationalId"
+                  name="phoneCountryCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('nationalId')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('nationalIdPlaceholder')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('country')}</FormLabel>
+                      <FormLabel>{t('phoneCountryCode')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('selectCountry')} />
+                            <SelectValue placeholder={t('selectCountryCode')} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          {sortedCountries.map(country => (
-                            <SelectItem key={country.cca3} value={country.cca3}>
-                              {country.name.common}
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="max-h-[200px]">
+                          {sortedCountries.map(country => {
+                            const phoneCode = getPhoneCode(country.cca3)
+                            return phoneCode ? (
+                              <SelectItem key={country.cca3} value={phoneCode}>
+                                {country.name.common} ({phoneCode})
+                              </SelectItem>
+                            ) : null
+                          })}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -353,116 +416,19 @@ export function ProviderForm({
 
                 <FormField
                   control={form.control}
-                  name="dateOfBirth"
+                  name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('dateOfBirth')}</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sex"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('sex')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('selectSex')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="M">{t('male')}</SelectItem>
-                          <SelectItem value="F">{t('female')}</SelectItem>
-                          <SelectItem value="O">{t('other')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Phone fields - side by side on mobile */}
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phoneCountryCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('phoneCountryCode')}</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={t('selectCountryCode')}
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {sortedCountries.map(country => {
-                              const phoneCode = getPhoneCode(country.cca3)
-                              return phoneCode ? (
-                                <SelectItem
-                                  key={country.cca3}
-                                  value={phoneCode}
-                                >
-                                  {country.name.common} ({phoneCode})
-                                </SelectItem>
-                              ) : null
-                            })}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('phone')}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t('phonePlaceholder')}
-                            {...field}
-                            onChange={e => {
-                              // Only allow digits
-                              const value = e.target.value.replace(/\D/g, '')
-                              field.onChange(value)
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('email')}</FormLabel>
+                      <FormLabel>{t('phone')}</FormLabel>
                       <FormControl>
                         <Input
-                          type="email"
-                          placeholder={t('emailPlaceholder')}
+                          placeholder={t('phonePlaceholder')}
                           {...field}
+                          onChange={e => {
+                            // Only allow digits
+                            const value = e.target.value.replace(/\D/g, '')
+                            field.onChange(value)
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -473,12 +439,16 @@ export function ProviderForm({
 
               <FormField
                 control={form.control}
-                name="address"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('address')}</FormLabel>
+                    <FormLabel>{t('email')}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('addressPlaceholder')} {...field} />
+                      <Input
+                        type="email"
+                        placeholder={t('emailPlaceholder')}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -486,148 +456,233 @@ export function ProviderForm({
               />
             </div>
 
-            {/* Professional Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-md font-medium">{t('professionalInfo')}</h3>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('address')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('addressPlaceholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="specialty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('specialty')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t('specialtyPlaceholder')}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          {/* Professional Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-md font-medium">{t('professionalInfo')}</h3>
 
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          {t('isActive')}
-                        </FormLabel>
-                        <div className="text-sm text-muted-foreground">
-                          {t('isActiveDescription')}
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="specialty"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('specialty')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t('specialtyPlaceholder')}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        {t('isActive')}
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        {t('isActiveDescription')}
                       </div>
-                      <FormControl>
-                        <Toggle
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                    </div>
+                    <FormControl>
+                      <Toggle
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-between pt-4">
+            {/* Delete button - only show when editing */}
+            {isEditing && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSubmitting || isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <LoadingSpinner className="mr-2 h-4 w-4" />
+                    Eliminando...
+                  </>
+                ) : (
+                  'Eliminar'
+                )}
+              </Button>
+            )}
+
+            {/* Save/Cancel buttons */}
+            <div className="flex space-x-2 ml-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting || isDeleting}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || isDeleting}
+                className="min-w-[100px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <LoadingSpinner className="mr-2 h-4 w-4" />
+                    {t('saving')}
+                  </>
+                ) : (
+                  t('save')
+                )}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Form>
+    </div>
+  )
+
+  // If no dialog props provided, render form content directly
+  if (!open && !onOpenChange) {
+    return (
+      <>
+        {formContent}
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('confirmDelete')}</DialogTitle>
+              <DialogDescription>
+                {t('confirmDeleteDescription')}
+              </DialogDescription>
+            </DialogHeader>
+            {provider && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="font-medium">{provider.displayName}</p>
+                {provider.specialty && (
+                  <p className="text-sm text-muted-foreground">
+                    {provider.specialty}
+                  </p>
+                )}
               </div>
-            </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <LoadingSpinner className="mr-2 h-4 w-4" />
+                    Eliminando...
+                  </>
+                ) : (
+                  t('deleteProvider')
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  }
 
-            {/* Actions */}
-            <div className="flex justify-between pt-4">
-              {/* Delete button - only show when editing */}
-              {isEditing && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={isSubmitting || isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <LoadingSpinner className="mr-2 h-4 w-4" />
-                      Eliminando...
-                    </>
-                  ) : (
-                    'Eliminar'
-                  )}
-                </Button>
-              )}
-
-              {/* Save/Cancel buttons */}
-              <div className="flex space-x-2 ml-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isSubmitting || isDeleting}
-                >
-                  {t('cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || isDeleting}
-                  className="min-w-[100px]"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <LoadingSpinner className="mr-2 h-4 w-4" />
-                      {t('saving')}
-                    </>
-                  ) : (
-                    t('save')
-                  )}
-                </Button>
+  // Render with Dialog wrapper
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? t('editProvider') : t('addProvider')}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? 'Modifica la información del personal'
+              : 'Agrega nuevo personal a la clínica'}
+          </DialogDescription>
+        </DialogHeader>
+        {formContent}
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('confirmDelete')}</DialogTitle>
+              <DialogDescription>
+                {t('confirmDeleteDescription')}
+              </DialogDescription>
+            </DialogHeader>
+            {provider && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="font-medium">{provider.displayName}</p>
+                {provider.specialty && (
+                  <p className="text-sm text-muted-foreground">
+                    {provider.specialty}
+                  </p>
+                )}
               </div>
-            </div>
-          </form>
-        </Form>
-      </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('confirmDelete')}</DialogTitle>
-            <DialogDescription>
-              {t('confirmDeleteDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          {provider && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="font-medium">{provider.displayName}</p>
-              {provider.specialty && (
-                <p className="text-sm text-muted-foreground">
-                  {provider.specialty}
-                </p>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(false)}
-              disabled={isDeleting}
-            >
-              {t('cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <>
-                  <LoadingSpinner className="mr-2 h-4 w-4" />
-                  Eliminando...
-                </>
-              ) : (
-                t('deleteProvider')
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </Card>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <LoadingSpinner className="mr-2 h-4 w-4" />
+                    Eliminando...
+                  </>
+                ) : (
+                  t('deleteProvider')
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </DialogContent>
+    </Dialog>
   )
 }

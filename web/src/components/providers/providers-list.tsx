@@ -7,13 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { useProviders } from '@/hooks/use-providers'
 import { Provider } from '@/types/entities'
 import { ProviderForm } from './provider-form'
@@ -85,15 +79,12 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
               {t('addProvider')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t('addProvider')}</DialogTitle>
-            </DialogHeader>
-            <ProviderForm
-              onSuccess={handleFormSuccess}
-              onCancel={handleFormCancel}
-            />
-          </DialogContent>
+          <ProviderForm
+            open={isAddDialogOpen}
+            onOpenChange={setIsAddDialogOpen}
+            onSuccess={handleFormSuccess}
+            onCancel={handleFormCancel}
+          />
         </Dialog>
       </div>
     )
@@ -118,15 +109,12 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
               {t('addProvider')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t('addProvider')}</DialogTitle>
-            </DialogHeader>
-            <ProviderForm
-              onSuccess={handleFormSuccess}
-              onCancel={handleFormCancel}
-            />
-          </DialogContent>
+          <ProviderForm
+            open={isAddDialogOpen}
+            onOpenChange={setIsAddDialogOpen}
+            onSuccess={handleFormSuccess}
+            onCancel={handleFormCancel}
+          />
         </Dialog>
       </div>
 
@@ -174,10 +162,12 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
         ))}
       </div>
 
-      {/* Edit Form - No Dialog */}
-      {isEditDialogOpen && editingProvider && (
+      {/* Edit Dialog */}
+      {editingProvider && (
         <ProviderForm
           provider={editingProvider}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
           onSuccess={handleFormSuccess}
           onCancel={handleFormCancel}
         />
