@@ -69,13 +69,10 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const deleteHistory = useDeleteToothDiagnosisHistory()
   const copyHistory = useCopyToothDiagnosisHistory()
 
-  // Auto-select latest history on load and clear selection when no histories
+  // Auto-select latest history on initial load
   React.useEffect(() => {
     if (histories.length > 0 && !selectedHistoryId) {
       setSelectedHistoryId(histories[0].id)
-    } else if (histories.length === 0 && selectedHistoryId) {
-      // Clear selection when no histories are available
-      setSelectedHistoryId(null)
     }
   }, [histories, selectedHistoryId])
 
@@ -134,8 +131,21 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
         historyId: historyToDelete,
       })
 
-      // The useEffect will handle clearing selectedHistoryId if needed
-      // when the histories array is updated
+      // If we deleted the currently selected history, we need to handle selection
+      if (selectedHistoryId === historyToDelete) {
+        // Find the remaining histories (excluding the one we just deleted)
+        const remainingHistories = histories.filter(
+          h => h.id !== historyToDelete
+        )
+
+        if (remainingHistories.length > 0) {
+          // Select the first remaining history
+          setSelectedHistoryId(remainingHistories[0].id)
+        } else {
+          // No histories left, clear selection
+          setSelectedHistoryId(null)
+        }
+      }
     } catch (error) {
       console.error('Failed to delete history:', error)
       // Don't close dialog on error, let user retry
