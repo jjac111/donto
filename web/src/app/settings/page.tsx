@@ -36,6 +36,14 @@ export default function SettingsPage() {
           {/* Providers Section */}
           <Card>
             <div className="px-6">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold">
+                  {t('providers.title')}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('providers.description')}
+                </p>
+              </div>
               <ProvidersSettingsForm />
             </div>
           </Card>

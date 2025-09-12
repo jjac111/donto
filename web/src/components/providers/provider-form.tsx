@@ -577,7 +577,7 @@ export function ProviderForm({
         {formContent}
         {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>{t('confirmDelete')}</DialogTitle>
               <DialogDescription>
@@ -640,7 +640,7 @@ export function ProviderForm({
         {formContent}
         {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>{t('confirmDelete')}</DialogTitle>
               <DialogDescription>

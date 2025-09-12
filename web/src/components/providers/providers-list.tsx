@@ -95,7 +95,6 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
       {/* Header with Add Button */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold">{t('title')}</h3>
           <p className="text-sm text-muted-foreground">
             {providers.length}{' '}
             {providers.length === 1 ? 'personal' : 'personal'} registrado
