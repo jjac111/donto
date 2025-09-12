@@ -29,6 +29,7 @@ const transformProvider = (
     dateOfBirth: new Date(dbPerson.date_of_birth),
     sex: dbPerson.sex || undefined,
     phone: dbPerson.phone || undefined,
+    phoneCountryCode: dbPerson.phone_country_code || undefined,
     email: dbPerson.email || undefined,
     address: dbPerson.address || undefined,
     displayName: `${dbPerson.first_name} ${dbPerson.last_name}`,
@@ -117,6 +118,7 @@ export const useCreateProvider = () => {
         dateOfBirth: Date
         sex?: string
         phone?: string
+        phoneCountryCode?: string
         email?: string
         address?: string
       }
@@ -136,6 +138,7 @@ export const useCreateProvider = () => {
             .split('T')[0],
           sex: providerData.person.sex || null,
           phone: providerData.person.phone || null,
+          phone_country_code: providerData.person.phoneCountryCode || null,
           email: providerData.person.email || null,
           address: providerData.person.address || null,
         })
@@ -193,6 +196,7 @@ export const useUpdateProvider = () => {
           dateOfBirth?: Date
           sex?: string
           phone?: string
+          phoneCountryCode?: string
           email?: string
           address?: string
         }
@@ -230,6 +234,9 @@ export const useUpdateProvider = () => {
           personUpdateData.sex = updateData.person.sex
         if (updateData.person.phone !== undefined)
           personUpdateData.phone = updateData.person.phone
+        if (updateData.person.phoneCountryCode !== undefined)
+          personUpdateData.phone_country_code =
+            updateData.person.phoneCountryCode
         if (updateData.person.email !== undefined)
           personUpdateData.email = updateData.person.email
         if (updateData.person.address !== undefined)

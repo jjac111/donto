@@ -170,11 +170,11 @@ export default function PatientDetailPage() {
                   <Separator />
 
                   <div className="space-y-3">
-                    {person.phone && person.phone_country_code && (
+                    {person.phone && person.phoneCountryCode && (
                       <div className="flex items-center">
                         <Phone className="h-4 w-4 text-muted-foreground mr-2" />
                         <span className="text-foreground">
-                          {person.phone_country_code} {person.phone}
+                          {person.phoneCountryCode} {person.phone}
                         </span>
                       </div>
                     )}

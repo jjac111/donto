@@ -25,33 +25,131 @@ import {
 } from '@/components/ui/select'
 import { Toggle } from '@/components/ui/toggle'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { useCreateProvider, useUpdateProvider } from '@/hooks/use-providers'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  useCreateProvider,
+  useUpdateProvider,
+  useDeleteProvider,
+} from '@/hooks/use-providers'
 import { Provider } from '@/types/entities'
+import countries from 'world-countries'
+import {
+  parsePhoneNumberWithError,
+  isValidPhoneNumber,
+} from 'libphonenumber-js'
 // import { toast } from 'sonner' // TODO: Add toast library
 
+// Helper function to get phone code for a country
+const getPhoneCode = (countryCode: string): string => {
+  const country = countries.find(c => c.cca3 === countryCode)
+  if (!country || !country.idd?.root) return ''
+
+  const root = country.idd.root
+  const suffix = country.idd.suffixes?.[0] || ''
+  return root + suffix
+}
+
+// Helper function to parse existing phone number using libphonenumber-js
+const parseExistingPhone = (
+  phone: string | undefined
+): { countryCode: string; number: string } => {
+  if (!phone) return { countryCode: '+593', number: '' }
+
+  try {
+    // Parse as E.164 or international format
+    const parsed = parsePhoneNumberWithError(phone)
+    if (parsed && parsed.isValid()) {
+      return {
+        countryCode: `+${parsed.countryCallingCode}`,
+        number: parsed.nationalNumber,
+      }
+    }
+  } catch (error) {
+    // If parsing fails, return empty values
+    return { countryCode: '+593', number: '' }
+  }
+
+  // If all parsing fails, return empty values
+  return { countryCode: '+593', number: '' }
+}
+
+// Helper function to clean phone number (remove non-digits and trailing zeros)
+const cleanPhoneNumber = (number: string): string => {
+  return number.replace(/\D/g, '').replace(/^0+/, '')
+}
+
+// Helper function to validate phone number with country code
+const validatePhoneNumber = (
+  countryCode: string,
+  phoneNumber: string
+): boolean => {
+  if (!countryCode || !phoneNumber) return true // Allow empty values
+
+  try {
+    const fullNumber = `${countryCode}${phoneNumber}`
+    return isValidPhoneNumber(fullNumber)
+  } catch (error) {
+    return false
+  }
+}
+
+// Sort countries alphabetically by name for better UX
+const sortedCountries = countries
+  .filter(country => country.independent !== false) // Only independent countries
+  .sort((a, b) => a.name.common.localeCompare(b.name.common))
+
 // Form validation schema
-const providerSchema = z.object({
-  // Personal information
-  nationalId: z.string().min(1, 'El ID nacional es obligatorio'),
-  country: z.string().min(1, 'El país es obligatorio'),
-  firstName: z.string().min(1, 'El nombre es obligatorio'),
-  lastName: z.string().min(1, 'Los apellidos son obligatorios'),
-  dateOfBirth: z.string().min(1, 'La fecha de nacimiento es obligatoria'),
-  sex: z.string().optional(),
-  phone: z.string().optional(),
-  email: z
-    .string()
-    .email('Correo electrónico inválido')
-    .optional()
-    .or(z.literal('')),
-  address: z.string().optional(),
+const createProviderSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      // Personal information
+      nationalId: z.string().min(1, t('nationalIdRequired')),
+      country: z.string().min(1, t('countryRequired')),
+      firstName: z.string().min(1, t('firstNameRequired')),
+      lastName: z.string().min(1, t('lastNameRequired')),
+      dateOfBirth: z.string().min(1, t('dateOfBirthRequired')),
+      sex: z.string().optional(),
+      phoneCountryCode: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
+      address: z.string().optional(),
 
-  // Professional information
-  specialty: z.string().optional(),
-  isActive: z.boolean(),
-})
+      // Professional information
+      specialty: z.string().optional(),
+      isActive: z.boolean(),
+    })
+    .refine(
+      data => {
+        if (!data.phoneCountryCode || !data.phone) return true
+        return validatePhoneNumber(data.phoneCountryCode, data.phone)
+      },
+      {
+        message: t('invalidPhoneNumber'),
+        path: ['phone'],
+      }
+    )
 
-type ProviderFormData = z.infer<typeof providerSchema>
+type ProviderFormData = {
+  nationalId: string
+  country: string
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  sex?: string
+  phoneCountryCode?: string
+  phone?: string
+  email?: string
+  address?: string
+  specialty?: string
+  isActive: boolean
+}
 
 interface ProviderFormProps {
   provider?: Provider
@@ -66,24 +164,30 @@ export function ProviderForm({
 }: ProviderFormProps) {
   const t = useTranslations('settings.providers')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const createProvider = useCreateProvider()
   const updateProvider = useUpdateProvider()
+  const deleteProvider = useDeleteProvider()
 
   const isEditing = !!provider
 
+  const parsedPhone = parseExistingPhone(provider?.person?.phone)
+
   const form = useForm<ProviderFormData>({
-    resolver: zodResolver(providerSchema),
+    resolver: zodResolver(createProviderSchema(t)),
     defaultValues: {
       nationalId: provider?.person?.nationalId || '',
-      country: provider?.person?.country || 'EC',
+      country: provider?.person?.country || 'ECU',
       firstName: provider?.person?.firstName || '',
       lastName: provider?.person?.lastName || '',
       dateOfBirth: provider?.person?.dateOfBirth
         ? provider.person.dateOfBirth.toISOString().split('T')[0]
         : '',
       sex: provider?.person?.sex || '',
-      phone: provider?.person?.phone || '',
+      phoneCountryCode: parsedPhone.countryCode,
+      phone: parsedPhone.number,
       email: provider?.person?.email || '',
       address: provider?.person?.address || '',
       specialty: provider?.specialty || '',
@@ -103,7 +207,8 @@ export function ProviderForm({
           lastName: data.lastName,
           dateOfBirth: new Date(data.dateOfBirth),
           sex: data.sex || undefined,
-          phone: data.phone || undefined,
+          phone: data.phone ? cleanPhoneNumber(data.phone) : undefined,
+          phoneCountryCode: data.phoneCountryCode || undefined,
           email: data.email || undefined,
           address: data.address || undefined,
         },
@@ -131,6 +236,23 @@ export function ProviderForm({
       alert(isEditing ? t('updateError') : t('createError'))
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!provider) return
+
+    setIsDeleting(true)
+    try {
+      await deleteProvider.mutateAsync(provider.id)
+      console.log('Provider deleted successfully')
+      onSuccess?.()
+    } catch (error) {
+      console.error('Delete provider error:', error)
+      alert(t('deleteError'))
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -216,12 +338,12 @@ export function ProviderForm({
                             <SelectValue placeholder={t('selectCountry')} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="EC">Ecuador</SelectItem>
-                          <SelectItem value="CO">Colombia</SelectItem>
-                          <SelectItem value="PE">Perú</SelectItem>
-                          <SelectItem value="MX">México</SelectItem>
-                          <SelectItem value="US">Estados Unidos</SelectItem>
+                        <SelectContent className="max-h-[300px]">
+                          {sortedCountries.map(country => (
+                            <SelectItem key={country.cca3} value={country.cca3}>
+                              {country.name.common}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -269,19 +391,66 @@ export function ProviderForm({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('phone')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t('phonePlaceholder')} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Phone fields - side by side on mobile */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="phoneCountryCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('phoneCountryCode')}</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={t('selectCountryCode')}
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[200px]">
+                            {sortedCountries.map(country => {
+                              const phoneCode = getPhoneCode(country.cca3)
+                              return phoneCode ? (
+                                <SelectItem
+                                  key={country.cca3}
+                                  value={phoneCode}
+                                >
+                                  {country.name.common} ({phoneCode})
+                                </SelectItem>
+                              ) : null
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('phone')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t('phonePlaceholder')}
+                            {...field}
+                            onChange={e => {
+                              // Only allow digits
+                              const value = e.target.value.replace(/\D/g, '')
+                              field.onChange(value)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
@@ -365,33 +534,100 @@ export function ProviderForm({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="min-w-[100px]"
-              >
-                {isSubmitting ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-4 w-4" />
-                    {t('saving')}
-                  </>
-                ) : (
-                  t('save')
-                )}
-              </Button>
+            <div className="flex justify-between pt-4">
+              {/* Delete button - only show when editing */}
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <LoadingSpinner className="mr-2 h-4 w-4" />
+                      Eliminando...
+                    </>
+                  ) : (
+                    'Eliminar'
+                  )}
+                </Button>
+              )}
+
+              {/* Save/Cancel buttons */}
+              <div className="flex space-x-2 ml-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || isDeleting}
+                  className="min-w-[100px]"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoadingSpinner className="mr-2 h-4 w-4" />
+                      {t('saving')}
+                    </>
+                  ) : (
+                    t('save')
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('confirmDelete')}</DialogTitle>
+            <DialogDescription>
+              {t('confirmDeleteDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          {provider && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="font-medium">{provider.displayName}</p>
+              {provider.specialty && (
+                <p className="text-sm text-muted-foreground">
+                  {provider.specialty}
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
+                  Eliminando...
+                </>
+              ) : (
+                t('deleteProvider')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

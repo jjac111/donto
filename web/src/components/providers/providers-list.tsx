@@ -14,11 +14,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { useProviders, useDeleteProvider } from '@/hooks/use-providers'
+import { useProviders } from '@/hooks/use-providers'
 import { Provider } from '@/types/entities'
 import { ProviderForm } from './provider-form'
 // import { toast } from 'sonner' // TODO: Add toast library
-import { MoreHorizontal, Edit, Trash2, UserPlus } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
 
 interface ProvidersListProps {
   onProviderSelect?: (provider: Provider) => void
@@ -29,36 +29,13 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [providerToDelete, setProviderToDelete] = useState<Provider | null>(
-    null
-  )
 
   const { data: providers, isLoading, error } = useProviders()
-  const deleteProvider = useDeleteProvider()
 
-  const handleEdit = (provider: Provider) => {
+  const handleProviderClick = (provider: Provider) => {
     setEditingProvider(provider)
     setIsEditDialogOpen(true)
-  }
-
-  const handleDelete = (provider: Provider) => {
-    setProviderToDelete(provider)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const confirmDelete = async () => {
-    if (!providerToDelete) return
-
-    try {
-      await deleteProvider.mutateAsync(providerToDelete.id)
-      console.log('Provider deleted successfully')
-      setIsDeleteDialogOpen(false)
-      setProviderToDelete(null)
-    } catch (error) {
-      console.error('Delete provider error:', error)
-      alert(t('deleteError'))
-    }
+    onProviderSelect?.(provider)
   }
 
   const handleFormSuccess = () => {
@@ -159,7 +136,7 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
           <Card
             key={provider.id}
             className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onProviderSelect?.(provider)}
+            onClick={() => handleProviderClick(provider)}
           >
             <div className="space-y-3">
               {/* Provider Info */}
@@ -183,98 +160,28 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
               {/* Contact Info */}
               <div className="space-y-1 text-sm text-muted-foreground">
                 {provider.person?.email && <p>{provider.person.email}</p>}
-                {provider.person?.phone && <p>{provider.person.phone}</p>}
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end space-x-1 pt-2 border-t">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={e => {
-                    e.stopPropagation()
-                    handleEdit(provider)
-                  }}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={e => {
-                    e.stopPropagation()
-                    handleDelete(provider)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {provider.person?.phone && (
+                  <p>
+                    {provider.person.phoneCountryCode &&
+                    provider.person.phoneCountryCode !== provider.person.phone
+                      ? `${provider.person.phoneCountryCode} ${provider.person.phone}`
+                      : provider.person.phone}
+                  </p>
+                )}
               </div>
             </div>
           </Card>
         ))}
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('editProvider')}</DialogTitle>
-          </DialogHeader>
-          {editingProvider && (
-            <ProviderForm
-              provider={editingProvider}
-              onSuccess={handleFormSuccess}
-              onCancel={handleFormCancel}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('confirmDelete')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {t('confirmDeleteDescription')}
-            </p>
-            {providerToDelete && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="font-medium">{providerToDelete.displayName}</p>
-                {providerToDelete.specialty && (
-                  <p className="text-sm text-muted-foreground">
-                    {providerToDelete.specialty}
-                  </p>
-                )}
-              </div>
-            )}
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDelete}
-                disabled={deleteProvider.isPending}
-              >
-                {deleteProvider.isPending ? (
-                  <>
-                    <LoadingSpinner className="mr-2 h-4 w-4" />
-                    Eliminando...
-                  </>
-                ) : (
-                  t('deleteProvider')
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Edit Form - No Dialog */}
+      {isEditDialogOpen && editingProvider && (
+        <ProviderForm
+          provider={editingProvider}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
+      )}
     </div>
   )
 }
