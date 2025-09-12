@@ -54,14 +54,11 @@ export function Odontogram({
     <div
       className={`odontogram w-full max-w-full overflow-hidden ${className}`}
     >
-      <div className="odontogram-grid space-y-6 w-full">
+      <div className="odontogram-grid space-y-12 w-full mt-8">
         {/* Mobile: All 4 grids stacked vertically */}
-        <div className="flex flex-col md:hidden gap-6">
+        <div className="flex flex-col md:hidden gap-12">
           {/* Upper Left Quadrant */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('maxillary')} - {t('left')}
-            </span>
             <ToothGrid
               teeth={upperLeftTeeth}
               onToothClick={onToothClick}
@@ -73,9 +70,6 @@ export function Odontogram({
 
           {/* Upper Right Quadrant */}
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('maxillary')} - {t('right')}
-            </span>
             <ToothGrid
               teeth={upperRightTeeth}
               onToothClick={onToothClick}
@@ -87,13 +81,10 @@ export function Odontogram({
         </div>
 
         {/* Desktop: Upper quadrants in one row */}
-        <div className="hidden md:flex flex-col gap-6">
+        <div className="hidden md:flex flex-col gap-12">
           <div className="flex flex-row justify-evenly gap-8">
             {/* Upper Left Quadrant */}
             <div className="flex flex-col items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t('maxillary')} - {t('left')}
-              </span>
               <ToothGrid
                 teeth={upperLeftTeeth}
                 onToothClick={onToothClick}
@@ -105,9 +96,6 @@ export function Odontogram({
 
             {/* Upper Right Quadrant */}
             <div className="flex flex-col items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t('maxillary')} - {t('right')}
-              </span>
               <ToothGrid
                 teeth={upperRightTeeth}
                 onToothClick={onToothClick}
@@ -122,9 +110,6 @@ export function Odontogram({
           <div className="flex flex-row justify-evenly gap-8">
             {/* Lower Left Quadrant */}
             <div className="flex flex-col items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t('mandibular')} - {t('left')}
-              </span>
               <ToothGrid
                 teeth={lowerLeftTeeth}
                 onToothClick={onToothClick}
@@ -136,9 +121,6 @@ export function Odontogram({
 
             {/* Lower Right Quadrant */}
             <div className="flex flex-col items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                {t('mandibular')} - {t('right')}
-              </span>
               <ToothGrid
                 teeth={lowerRightTeeth}
                 onToothClick={onToothClick}
@@ -151,11 +133,8 @@ export function Odontogram({
         </div>
 
         {/* Mobile/Tablet: Lower Right first, then Lower Left */}
-        <div className="flex flex-col md:hidden gap-6">
+        <div className="flex flex-col md:hidden gap-12">
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('mandibular')} - {t('right')}
-            </span>
             <ToothGrid
               teeth={lowerRightTeeth}
               onToothClick={onToothClick}
@@ -165,9 +144,6 @@ export function Odontogram({
             />
           </div>
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('mandibular')} - {t('left')}
-            </span>
             <ToothGrid
               teeth={lowerLeftTeeth}
               onToothClick={onToothClick}
