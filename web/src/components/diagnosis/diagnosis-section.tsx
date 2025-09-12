@@ -69,10 +69,13 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const deleteHistory = useDeleteToothDiagnosisHistory()
   const copyHistory = useCopyToothDiagnosisHistory()
 
-  // Auto-select latest history on initial load
+  // Auto-select latest history on initial load and clear selection when no histories
   React.useEffect(() => {
     if (histories.length > 0 && !selectedHistoryId) {
       setSelectedHistoryId(histories[0].id)
+    } else if (histories.length === 0 && selectedHistoryId) {
+      // Clear selection when no histories are available
+      setSelectedHistoryId(null)
     }
   }, [histories, selectedHistoryId])
 
