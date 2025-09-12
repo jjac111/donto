@@ -70,12 +70,7 @@ export function ClinicSettingsForm() {
   } = useClinic(clinicId || '')
 
   // Debug logging
-  React.useEffect(() => {
-    console.log('Clinic data:', clinic)
-    console.log('Active clinic ID:', clinicId)
-    console.log('Loading:', isLoadingClinic)
-    console.log('Error:', error)
-  }, [clinic, clinicId, isLoadingClinic, error])
+  React.useEffect(() => {}, [clinic, clinicId, isLoadingClinic, error])
   const updateClinicMutation = useUpdateClinic()
 
   const form = useForm<ClinicFormValues>({
