@@ -280,6 +280,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
               <Select
                 value={selectedHistoryId || ''}
                 onValueChange={value => setSelectedHistoryId(value || null)}
+                disabled={histories.length === 0}
               >
                 <SelectTrigger className="min-w-[140px] h-9">
                   <SelectValue placeholder={t('selectHistory')} />
