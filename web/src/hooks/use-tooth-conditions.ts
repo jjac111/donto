@@ -137,6 +137,114 @@ export const useCreateToothDiagnosisHistory = () => {
   })
 }
 
+// Delete a diagnosis history for a patient
+export const useDeleteToothDiagnosisHistory = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      patientId,
+      historyId,
+    }: {
+      patientId: string
+      historyId: string
+    }): Promise<void> => {
+      const clinicId = useAuthStore.getState().clinicId
+      if (!clinicId) throw new Error('No clinic selected')
+
+      // Delete all tooth diagnoses in this history first
+      const { error: deleteDiagnosesError } = await supabase
+        .from('tooth_diagnoses')
+        .delete()
+        .eq('history_id', historyId)
+
+      if (deleteDiagnosesError) {
+        throw new Error(
+          `Failed to delete tooth diagnoses: ${deleteDiagnosesError.message}`
+        )
+      }
+
+      // Delete the history itself
+      const { error } = await supabase
+        .from('tooth_diagnosis_histories')
+        .delete()
+        .eq('id', historyId)
+
+      if (error) {
+        throw new Error(`Failed to delete history: ${error.message}`)
+      }
+    },
+    onSuccess: (_, { patientId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tooth-diagnosis-histories', patientId],
+      })
+      // Invalidate all tooth condition queries for this patient
+      queryClient.invalidateQueries({
+        queryKey: ['patient-tooth-conditions', patientId],
+      })
+    },
+  })
+}
+
+// Copy diagnosis history from one to another
+export const useCopyToothDiagnosisHistory = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      patientId,
+      sourceHistoryId,
+      targetHistoryId,
+    }: {
+      patientId: string
+      sourceHistoryId: string
+      targetHistoryId: string
+    }): Promise<void> => {
+      const clinicId = useAuthStore.getState().clinicId
+      if (!clinicId) throw new Error('No clinic selected')
+
+      // Get all tooth diagnoses from source history
+      const { data: sourceDiagnoses, error: fetchError } = await supabase
+        .from('tooth_diagnoses')
+        .select('*')
+        .eq('history_id', sourceHistoryId)
+
+      if (fetchError) {
+        throw new Error(
+          `Failed to fetch source diagnoses: ${fetchError.message}`
+        )
+      }
+
+      if (sourceDiagnoses && sourceDiagnoses.length > 0) {
+        // Copy each diagnosis to the target history
+        const diagnosesToInsert = sourceDiagnoses.map(diagnosis => ({
+          tooth_number: diagnosis.tooth_number,
+          is_present: diagnosis.is_present,
+          is_treated: diagnosis.is_treated,
+          requires_extraction: diagnosis.requires_extraction,
+          general_notes: diagnosis.general_notes,
+          tooth_conditions: diagnosis.tooth_conditions,
+          history_id: targetHistoryId,
+        }))
+
+        const { error: insertError } = await supabase
+          .from('tooth_diagnoses')
+          .insert(diagnosesToInsert)
+
+        if (insertError) {
+          throw new Error(`Failed to copy diagnoses: ${insertError.message}`)
+        }
+      }
+    },
+    onSuccess: (_, { patientId, targetHistoryId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['patient-tooth-conditions', patientId, targetHistoryId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tooth-diagnosis-histories', patientId],
+      })
+    },
+  })
+}
+
 // Get aggregated tooth diagnoses for a patient in a given history
 export const usePatientToothConditions = (
   patientId: string,
