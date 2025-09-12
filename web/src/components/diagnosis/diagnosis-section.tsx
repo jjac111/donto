@@ -115,9 +115,14 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
     })
   }
 
-  const handleCloseDiagnosisDialog = () => {
-    setDiagnosisDialogOpen(false)
-    setSelectedTooth(null)
+  const handleCloseDiagnosisDialog = (open: boolean) => {
+    setDiagnosisDialogOpen(open)
+    if (!open) {
+      // Defer clearing the selected tooth so the dialog can animate out smoothly
+      setTimeout(() => {
+        setSelectedTooth(null)
+      }, 200)
+    }
   }
 
   const handleDeleteHistory = (historyId: string) => {
