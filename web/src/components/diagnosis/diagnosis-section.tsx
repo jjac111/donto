@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Plus, History } from 'lucide-react'
+import { Plus, History, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -30,6 +38,8 @@ import {
   useSaveToothDiagnosis,
   useToothDiagnosisHistories,
   useCreateToothDiagnosisHistory,
+  useDeleteToothDiagnosisHistory,
+  useCopyToothDiagnosisHistory,
 } from '@/hooks/use-tooth-conditions'
 import {
   DiagnosisFormData,
@@ -43,20 +53,29 @@ interface DiagnosisSectionProps {
 
 export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const t = useTranslations('diagnosis')
+  const tCommon = useTranslations('common')
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null)
   const [diagnosisDialogOpen, setDiagnosisDialogOpen] = useState(false)
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(
     null
   )
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [historyToDelete, setHistoryToDelete] = useState<string | null>(null)
+  const [newDiagnosisDialogOpen, setNewDiagnosisDialogOpen] = useState(false)
 
   // Histories
   const { data: histories = [] } = useToothDiagnosisHistories(patientId)
   const createHistory = useCreateToothDiagnosisHistory()
+  const deleteHistory = useDeleteToothDiagnosisHistory()
+  const copyHistory = useCopyToothDiagnosisHistory()
 
-  // Auto-select latest history on load
+  // Auto-select latest history on initial load and clear selection when no histories
   React.useEffect(() => {
     if (histories.length > 0 && !selectedHistoryId) {
       setSelectedHistoryId(histories[0].id)
+    } else if (histories.length === 0 && selectedHistoryId) {
+      // Clear selection when no histories are available
+      setSelectedHistoryId(null)
     }
   }, [histories, selectedHistoryId])
 
@@ -99,6 +118,82 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const handleCloseDiagnosisDialog = () => {
     setDiagnosisDialogOpen(false)
     setSelectedTooth(null)
+  }
+
+  const handleDeleteHistory = (historyId: string) => {
+    setHistoryToDelete(historyId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteHistory = async () => {
+    if (!historyToDelete) return
+
+    try {
+      await deleteHistory.mutateAsync({
+        patientId,
+        historyId: historyToDelete,
+      })
+
+      // If we deleted the currently selected history, we need to handle selection
+      if (selectedHistoryId === historyToDelete) {
+        // Find the remaining histories (excluding the one we just deleted)
+        const remainingHistories = histories.filter(
+          h => h.id !== historyToDelete
+        )
+
+        if (remainingHistories.length > 0) {
+          // Select the first remaining history
+          setSelectedHistoryId(remainingHistories[0].id)
+        } else {
+          // No histories left, clear selection
+          setSelectedHistoryId(null)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete history:', error)
+      // Don't close dialog on error, let user retry
+      return
+    }
+
+    setDeleteDialogOpen(false)
+    setHistoryToDelete(null)
+  }
+
+  const handleNewDiagnosis = () => {
+    if (selectedHistoryId) {
+      setNewDiagnosisDialogOpen(true)
+    } else {
+      // No current history, create new one directly
+      createHistory.mutate(patientId, {
+        onSuccess: ({ id }) => setSelectedHistoryId(id),
+      })
+    }
+  }
+
+  const handleCreateFromScratch = () => {
+    setNewDiagnosisDialogOpen(false)
+    createHistory.mutate(patientId, {
+      onSuccess: ({ id }) => setSelectedHistoryId(id),
+    })
+  }
+
+  const handleCopyCurrent = async () => {
+    if (!selectedHistoryId) return
+
+    setNewDiagnosisDialogOpen(false)
+
+    // Create new history first
+    const { id: newHistoryId } = await createHistory.mutateAsync(patientId)
+
+    // Copy current history to new one
+    await copyHistory.mutateAsync({
+      patientId,
+      sourceHistoryId: selectedHistoryId,
+      targetHistoryId: newHistoryId,
+    })
+
+    // Select the new history
+    setSelectedHistoryId(newHistoryId)
   }
 
   // Calculate summary statistics
@@ -185,6 +280,7 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
               <Select
                 value={selectedHistoryId || ''}
                 onValueChange={value => setSelectedHistoryId(value || null)}
+                disabled={histories.length === 0}
               >
                 <SelectTrigger className="min-w-[140px] h-9">
                   <SelectValue placeholder={t('selectHistory')} />
@@ -200,16 +296,24 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  if (createHistory.isPending) return
-                  createHistory.mutate(patientId, {
-                    onSuccess: ({ id }) => setSelectedHistoryId(id),
-                  })
-                }}
+                onClick={handleNewDiagnosis}
+                disabled={createHistory.isPending}
               >
                 <History className="h-4 w-4 mr-2" />
                 {t('newDiagnosis')}
               </Button>
+              {selectedHistoryId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteHistory(selectedHistoryId)}
+                  disabled={deleteHistory.isPending}
+                  className="text-destructive hover:text-destructive"
+                  title={t('deleteHistory')}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -344,6 +448,93 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
         onSave={handleSaveDiagnosis}
         isLoading={saveDiagnosisMutation.isPending}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent blurOnly mobileResponsive className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>{t('deleteHistory')}</DialogTitle>
+            <DialogDescription>
+              {t('deleteHistoryConfirmation')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteHistory.isPending}
+            >
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteHistory}
+              disabled={deleteHistory.isPending}
+            >
+              {deleteHistory.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {t('deleting')}
+                </>
+              ) : (
+                tCommon('delete')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Diagnosis Choice Dialog */}
+      <Dialog
+        open={newDiagnosisDialogOpen}
+        onOpenChange={setNewDiagnosisDialogOpen}
+      >
+        <DialogContent blurOnly mobileResponsive className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('newDiagnosis')}</DialogTitle>
+            <DialogDescription>
+              {t('newDiagnosisChoiceDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto p-4"
+              onClick={handleCreateFromScratch}
+              disabled={createHistory.isPending}
+            >
+              <div className="text-left">
+                <div className="font-medium">{t('createFromScratch')}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t('createFromScratchDescription')}
+                </div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto p-4"
+              onClick={handleCopyCurrent}
+              disabled={createHistory.isPending || copyHistory.isPending}
+            >
+              <div className="text-left">
+                <div className="font-medium">{t('copyCurrentDiagnosis')}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t('copyCurrentDiagnosisDescription')}
+                </div>
+              </div>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setNewDiagnosisDialogOpen(false)}
+              disabled={createHistory.isPending || copyHistory.isPending}
+            >
+              {tCommon('cancel')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

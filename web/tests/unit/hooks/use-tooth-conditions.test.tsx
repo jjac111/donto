@@ -9,6 +9,8 @@ import {
   usePatientToothConditions,
   useToothConditions,
   useSaveToothDiagnosis,
+  useDeleteToothDiagnosisHistory,
+  useCopyToothDiagnosisHistory,
 } from '@/hooks/use-tooth-conditions'
 import { supabase } from '@/lib/api'
 
@@ -592,5 +594,559 @@ describe('useSaveToothDiagnosis (saving flow)', () => {
     expect(conditionTypes).toContain('dental_caries')
     expect(conditionTypes).toContain('enamel_hypoplasia')
     expect(conditionTypes).not.toContain('gingivitis') // Should be removed
+  })
+})
+
+describe('useDeleteToothDiagnosisHistory', () => {
+  let wrapper: ReturnType<typeof createWrapper>
+
+  beforeEach(() => {
+    wrapper = createWrapper()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('deletes tooth diagnoses first, then the history record', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    // Mock the delete operations with proper chain
+    const deleteDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+    const deleteHistorySpy = vi.fn(() => Promise.resolve({ error: null }))
+
+    const diagnosesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteDiagnosesSpy,
+      })),
+    }
+
+    const historiesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteHistorySpy,
+      })),
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      if (table === 'tooth_diagnosis_histories') return historiesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useDeleteToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await result.current.mutateAsync({
+      patientId: 'patient-123',
+      historyId: 'history-to-delete',
+    })
+
+    // Verify tooth diagnoses are deleted first
+    expect(deleteDiagnosesSpy).toHaveBeenCalledTimes(1)
+    expect(deleteDiagnosesSpy).toHaveBeenCalledWith(
+      'history_id',
+      'history-to-delete'
+    )
+
+    // Verify history is deleted second
+    expect(deleteHistorySpy).toHaveBeenCalledTimes(1)
+    expect(deleteHistorySpy).toHaveBeenCalledWith('id', 'history-to-delete')
+  })
+
+  it('handles deletion errors gracefully', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    // Mock delete diagnoses error
+    const deleteDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ error: { message: 'Failed to delete diagnoses' } })
+    )
+
+    const diagnosesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteDiagnosesSpy,
+      })),
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useDeleteToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await expect(
+      result.current.mutateAsync({
+        patientId: 'patient-123',
+        historyId: 'history-to-delete',
+      })
+    ).rejects.toThrow(
+      'Failed to delete tooth diagnoses: Failed to delete diagnoses'
+    )
+  })
+
+  it('handles history deletion errors', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    // Mock successful diagnoses deletion but failed history deletion
+    const deleteDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+    const deleteHistorySpy = vi.fn(() =>
+      Promise.resolve({ error: { message: 'Failed to delete history' } })
+    )
+
+    const diagnosesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteDiagnosesSpy,
+      })),
+    }
+
+    const historiesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteHistorySpy,
+      })),
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      if (table === 'tooth_diagnosis_histories') return historiesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useDeleteToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await expect(
+      result.current.mutateAsync({
+        patientId: 'patient-123',
+        historyId: 'history-to-delete',
+      })
+    ).rejects.toThrow('Failed to delete history: Failed to delete history')
+  })
+
+  it('invalidates relevant queries after successful deletion', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    const deleteDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+    const deleteHistorySpy = vi.fn(() => Promise.resolve({ error: null }))
+
+    const diagnosesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteDiagnosesSpy,
+      })),
+    }
+
+    const historiesChain = {
+      delete: vi.fn(() => ({
+        eq: deleteHistorySpy,
+      })),
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      if (table === 'tooth_diagnosis_histories') return historiesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useDeleteToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await result.current.mutateAsync({
+      patientId: 'patient-123',
+      historyId: 'history-to-delete',
+    })
+
+    // The mutation should complete successfully
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+  })
+})
+
+describe('useCopyToothDiagnosisHistory', () => {
+  let wrapper: ReturnType<typeof createWrapper>
+
+  beforeEach(() => {
+    wrapper = createWrapper()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('copies all tooth diagnoses from source to target history', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    const mockSourceDiagnoses = [
+      {
+        tooth_number: '16',
+        is_present: true,
+        is_treated: false,
+        requires_extraction: false,
+        general_notes: 'Some notes',
+        tooth_conditions: [
+          {
+            surfaces: ['O'],
+            condition_type: 'dental_caries',
+            notes: 'Deep caries',
+            diagnosis_date: '2024-01-15',
+            recorded_by_profile_id: 'profile-1',
+            created_at: '2024-01-15T10:00:00Z',
+          },
+        ],
+      },
+      {
+        tooth_number: '21',
+        is_present: true,
+        is_treated: true,
+        requires_extraction: false,
+        general_notes: null,
+        tooth_conditions: [
+          {
+            surfaces: ['M', 'D'],
+            condition_type: 'enamel_hypoplasia',
+            notes: 'Anterior',
+            diagnosis_date: '2024-01-16',
+            recorded_by_profile_id: 'profile-1',
+            created_at: '2024-01-16T11:00:00Z',
+          },
+        ],
+      },
+    ]
+
+    // Mock fetch source diagnoses
+    const fetchDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ data: mockSourceDiagnoses, error: null })
+    )
+
+    // Mock insert copied diagnoses
+    const insertDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+
+    const diagnosesChain = {
+      select: vi.fn(() => ({
+        eq: fetchDiagnosesSpy,
+      })),
+      insert: insertDiagnosesSpy,
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useCopyToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await result.current.mutateAsync({
+      patientId: 'patient-123',
+      sourceHistoryId: 'source-history',
+      targetHistoryId: 'target-history',
+    })
+
+    // Verify source diagnoses were fetched
+    expect(fetchDiagnosesSpy).toHaveBeenCalledTimes(1)
+
+    // Verify diagnoses were inserted with correct target history ID
+    expect(insertDiagnosesSpy).toHaveBeenCalledTimes(1)
+    const insertArgs = insertDiagnosesSpy.mock.calls[0][0]
+
+    expect(insertArgs).toHaveLength(2) // Two teeth copied
+
+    // Verify first tooth copy
+    const tooth16Copy = insertArgs.find((d: any) => d.tooth_number === '16')
+    expect(tooth16Copy).toBeTruthy()
+    expect(tooth16Copy.history_id).toBe('target-history')
+    expect(tooth16Copy.is_present).toBe(true)
+    expect(tooth16Copy.is_treated).toBe(false)
+    expect(tooth16Copy.requires_extraction).toBe(false)
+    expect(tooth16Copy.general_notes).toBe('Some notes')
+    expect(tooth16Copy.tooth_conditions).toEqual(
+      mockSourceDiagnoses[0].tooth_conditions
+    )
+
+    // Verify second tooth copy
+    const tooth21Copy = insertArgs.find((d: any) => d.tooth_number === '21')
+    expect(tooth21Copy).toBeTruthy()
+    expect(tooth21Copy.history_id).toBe('target-history')
+    expect(tooth21Copy.is_present).toBe(true)
+    expect(tooth21Copy.is_treated).toBe(true)
+    expect(tooth21Copy.requires_extraction).toBe(false)
+    expect(tooth21Copy.general_notes).toBe(null)
+    expect(tooth21Copy.tooth_conditions).toEqual(
+      mockSourceDiagnoses[1].tooth_conditions
+    )
+  })
+
+  it('handles empty source diagnoses gracefully', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    // Mock empty source diagnoses
+    const fetchDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ data: [], error: null })
+    )
+
+    const insertDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+
+    const diagnosesChain = {
+      select: vi.fn(() => ({
+        eq: fetchDiagnosesSpy,
+      })),
+      insert: insertDiagnosesSpy,
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useCopyToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await result.current.mutateAsync({
+      patientId: 'patient-123',
+      sourceHistoryId: 'empty-source-history',
+      targetHistoryId: 'target-history',
+    })
+
+    // Verify source was fetched
+    expect(fetchDiagnosesSpy).toHaveBeenCalledTimes(1)
+
+    // Verify no insert was called since source is empty
+    expect(insertDiagnosesSpy).not.toHaveBeenCalled()
+  })
+
+  it('handles fetch errors during copy operation', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    // Mock fetch error
+    const fetchDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ data: null, error: { message: 'Database error' } })
+    )
+
+    const diagnosesChain = {
+      select: vi.fn(() => ({
+        eq: fetchDiagnosesSpy,
+      })),
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useCopyToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await expect(
+      result.current.mutateAsync({
+        patientId: 'patient-123',
+        sourceHistoryId: 'source-history',
+        targetHistoryId: 'target-history',
+      })
+    ).rejects.toThrow('Failed to fetch source diagnoses: Database error')
+  })
+
+  it('handles insert errors during copy operation', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    const mockSourceDiagnoses = [
+      {
+        tooth_number: '16',
+        is_present: true,
+        is_treated: false,
+        requires_extraction: false,
+        general_notes: null,
+        tooth_conditions: [
+          {
+            surfaces: ['O'],
+            condition_type: 'dental_caries',
+            notes: 'Deep caries',
+            diagnosis_date: '2024-01-15',
+            recorded_by_profile_id: 'profile-1',
+            created_at: '2024-01-15T10:00:00Z',
+          },
+        ],
+      },
+    ]
+
+    // Mock successful fetch
+    const fetchDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ data: mockSourceDiagnoses, error: null })
+    )
+
+    // Mock insert error
+    const insertDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ error: { message: 'Insert failed' } })
+    )
+
+    const diagnosesChain = {
+      select: vi.fn(() => ({
+        eq: fetchDiagnosesSpy,
+      })),
+      insert: insertDiagnosesSpy,
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useCopyToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await expect(
+      result.current.mutateAsync({
+        patientId: 'patient-123',
+        sourceHistoryId: 'source-history',
+        targetHistoryId: 'target-history',
+      })
+    ).rejects.toThrow('Failed to copy diagnoses: Insert failed')
+  })
+
+  it('invalidates relevant queries after successful copy', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    const mockSourceDiagnoses = [
+      {
+        tooth_number: '16',
+        is_present: true,
+        is_treated: false,
+        requires_extraction: false,
+        general_notes: null,
+        tooth_conditions: [],
+      },
+    ]
+
+    const fetchDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ data: mockSourceDiagnoses, error: null })
+    )
+
+    const insertDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+
+    const diagnosesChain = {
+      select: vi.fn(() => ({
+        eq: fetchDiagnosesSpy,
+      })),
+      insert: insertDiagnosesSpy,
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useCopyToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await result.current.mutateAsync({
+      patientId: 'patient-123',
+      sourceHistoryId: 'source-history',
+      targetHistoryId: 'target-history',
+    })
+
+    // The mutation should complete successfully
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+  })
+
+  it('preserves all tooth diagnosis properties during copy', async () => {
+    const mockSupabase = vi.mocked(supabase)
+
+    const mockSourceDiagnoses = [
+      {
+        tooth_number: '16',
+        is_present: false,
+        is_treated: true,
+        requires_extraction: true,
+        general_notes: 'Complex case',
+        tooth_conditions: [
+          {
+            surfaces: ['O', 'M', 'D'],
+            condition_type: 'dental_caries',
+            notes: 'Multiple surfaces affected',
+            diagnosis_date: '2024-01-15',
+            recorded_by_profile_id: 'profile-1',
+            created_at: '2024-01-15T10:00:00Z',
+          },
+          {
+            surfaces: ['B'],
+            condition_type: 'gingivitis',
+            notes: 'Buccal inflammation',
+            diagnosis_date: '2024-01-16',
+            recorded_by_profile_id: 'profile-1',
+            created_at: '2024-01-16T11:00:00Z',
+          },
+        ],
+      },
+    ]
+
+    const fetchDiagnosesSpy = vi.fn(() =>
+      Promise.resolve({ data: mockSourceDiagnoses, error: null })
+    )
+
+    const insertDiagnosesSpy = vi.fn(() => Promise.resolve({ error: null }))
+
+    const diagnosesChain = {
+      select: vi.fn(() => ({
+        eq: fetchDiagnosesSpy,
+      })),
+      insert: insertDiagnosesSpy,
+    }
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'tooth_diagnoses') return diagnosesChain as any
+      return {} as any
+    })
+
+    const { result } = renderHook(() => useCopyToothDiagnosisHistory(), {
+      wrapper,
+    })
+
+    await result.current.mutateAsync({
+      patientId: 'patient-123',
+      sourceHistoryId: 'source-history',
+      targetHistoryId: 'target-history',
+    })
+
+    const insertArgs = insertDiagnosesSpy.mock.calls[0][0]
+    const copiedDiagnosis = insertArgs[0]
+
+    // Verify all properties are preserved
+    expect(copiedDiagnosis.tooth_number).toBe('16')
+    expect(copiedDiagnosis.is_present).toBe(false)
+    expect(copiedDiagnosis.is_treated).toBe(true)
+    expect(copiedDiagnosis.requires_extraction).toBe(true)
+    expect(copiedDiagnosis.general_notes).toBe('Complex case')
+    expect(copiedDiagnosis.history_id).toBe('target-history')
+
+    // Verify tooth conditions are preserved exactly
+    expect(copiedDiagnosis.tooth_conditions).toEqual(
+      mockSourceDiagnoses[0].tooth_conditions
+    )
+    expect(copiedDiagnosis.tooth_conditions).toHaveLength(2)
+
+    // Verify individual conditions
+    const cariesCondition = copiedDiagnosis.tooth_conditions.find(
+      (c: any) => c.condition_type === 'dental_caries'
+    )
+    expect(cariesCondition.surfaces).toEqual(['O', 'M', 'D'])
+    expect(cariesCondition.notes).toBe('Multiple surfaces affected')
+
+    const gingivitisCondition = copiedDiagnosis.tooth_conditions.find(
+      (c: any) => c.condition_type === 'gingivitis'
+    )
+    expect(gingivitisCondition.surfaces).toEqual(['B'])
+    expect(gingivitisCondition.notes).toBe('Buccal inflammation')
   })
 })
