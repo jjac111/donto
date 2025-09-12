@@ -85,32 +85,60 @@ export function Odontogram({
             />
           </div>
 
-          {/* Lower Left Quadrant */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('mandibular')} - {t('left')}
-            </span>
-            <ToothGrid
-              teeth={lowerLeftTeeth}
-              onToothClick={onToothClick}
-              selectedTooth={selectedTooth}
-              jaw="lower"
-              side="left"
-            />
+          {/* Mobile/Tablet: Lower Right first, then Lower Left */}
+          <div className="flex flex-col md:hidden gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                {t('mandibular')} - {t('right')}
+              </span>
+              <ToothGrid
+                teeth={lowerRightTeeth}
+                onToothClick={onToothClick}
+                selectedTooth={selectedTooth}
+                jaw="lower"
+                side="right"
+              />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                {t('mandibular')} - {t('left')}
+              </span>
+              <ToothGrid
+                teeth={lowerLeftTeeth}
+                onToothClick={onToothClick}
+                selectedTooth={selectedTooth}
+                jaw="lower"
+                side="left"
+              />
+            </div>
           </div>
 
-          {/* Lower Right Quadrant */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('mandibular')} - {t('right')}
-            </span>
-            <ToothGrid
-              teeth={lowerRightTeeth}
-              onToothClick={onToothClick}
-              selectedTooth={selectedTooth}
-              jaw="lower"
-              side="right"
-            />
+          {/* Desktop: Lower Left first, then Lower Right */}
+          <div className="hidden md:flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                {t('mandibular')} - {t('left')}
+              </span>
+              <ToothGrid
+                teeth={lowerLeftTeeth}
+                onToothClick={onToothClick}
+                selectedTooth={selectedTooth}
+                jaw="lower"
+                side="left"
+              />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                {t('mandibular')} - {t('right')}
+              </span>
+              <ToothGrid
+                teeth={lowerRightTeeth}
+                onToothClick={onToothClick}
+                selectedTooth={selectedTooth}
+                jaw="lower"
+                side="right"
+              />
+            </div>
           </div>
         </div>
       </div>
