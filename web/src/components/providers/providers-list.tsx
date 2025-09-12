@@ -122,7 +122,11 @@ export function ProvidersList({ onProviderSelect }: ProvidersListProps) {
         {providers.map(provider => (
           <Card
             key={provider.id}
-            className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+            className={`p-4 transition-shadow ${
+              provider.isActive
+                ? 'hover:shadow-md cursor-pointer'
+                : 'opacity-60 hover:shadow-md cursor-pointer'
+            }`}
             onClick={() => handleProviderClick(provider)}
           >
             <div className="space-y-3">

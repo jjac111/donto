@@ -58,7 +58,6 @@ export const useProviders = () => {
         `
         )
         .eq('clinic_id', clinicId)
-        .eq('is_active', true)
 
       if (error) {
         throw new Error(`Failed to fetch providers: ${error.message}`)
@@ -299,17 +298,14 @@ export const useUpdateProvider = () => {
   })
 }
 
-// Delete provider mutation (soft delete by setting is_active to false)
+// Delete provider mutation (hard delete)
 export const useDeleteProvider = () => {
   const queryClient = useQueryClient()
   const { clinicId } = useAuthStore()
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('providers')
-        .update({ is_active: false })
-        .eq('id', id)
+      const { error } = await supabase.from('providers').delete().eq('id', id)
 
       if (error) {
         throw new Error(`Failed to delete provider: ${error.message}`)

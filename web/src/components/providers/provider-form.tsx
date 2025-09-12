@@ -62,11 +62,26 @@ const parseExistingPhone = (
   if (!phone) return { countryCode: '+593', number: '' }
 
   try {
-    // Parse as E.164 or international format
-    const parsed = parsePhoneNumberWithError(phone)
+    // Clean the phone number first (remove non-digits and leading zeros)
+    const cleanedPhone = cleanPhoneNumber(phone)
+
+    // Try to parse as E.164 format first
+    if (phone.startsWith('+')) {
+      const parsed = parsePhoneNumberWithError(phone)
+      if (parsed && parsed.isValid()) {
+        return {
+          countryCode: `+${parsed.countryCallingCode}`,
+          number: parsed.nationalNumber,
+        }
+      }
+    }
+
+    // If no country code, try with Ecuador default
+    const phoneWithCountryCode = `+593${cleanedPhone}`
+    const parsed = parsePhoneNumberWithError(phoneWithCountryCode)
     if (parsed && parsed.isValid()) {
       return {
-        countryCode: `+${parsed.countryCallingCode}`,
+        countryCode: '+593',
         number: parsed.nationalNumber,
       }
     }

@@ -451,6 +451,7 @@
       "email": "Correo Electrónico",
       "emailPlaceholder": "contacto@clinica.com",
       "invalidEmail": "Correo electrónico inválido",
+      "invalidPhoneNumber": "Número de teléfono inválido",
       "save": "Guardar",
       "saving": "Guardando...",
       "saved": "Guardado"

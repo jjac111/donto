@@ -28,6 +28,10 @@ import {
 import { useClinic, useUpdateClinic } from '@/hooks/use-clinics'
 import { useAuthStore } from '@/store/auth'
 import countries from 'world-countries'
+import {
+  parsePhoneNumberWithError,
+  isValidPhoneNumber,
+} from 'libphonenumber-js'
 
 // Helper function to get phone code for a country
 const getPhoneCode = (countryCode: string): string => {
@@ -44,15 +48,46 @@ const sortedCountries = countries
   .filter(country => country.independent !== false) // Only independent countries
   .sort((a, b) => a.name.common.localeCompare(b.name.common))
 
+// Helper function to clean phone number (remove non-digits and leading zeros)
+const cleanPhoneNumber = (number: string): string => {
+  return number.replace(/\D/g, '').replace(/^0+/, '')
+}
+
+// Helper function to validate phone number with country code
+const validatePhoneNumber = (
+  countryCode: string,
+  phoneNumber: string
+): boolean => {
+  if (!countryCode || !phoneNumber) return true // Allow empty values
+
+  try {
+    const fullNumber = `${countryCode}${phoneNumber}`
+    return isValidPhoneNumber(fullNumber)
+  } catch (error) {
+    return false
+  }
+}
+
 const clinicSchema = (t: (key: string) => string) =>
-  z.object({
-    name: z.string().min(1, t('nameRequired')),
-    address: z.string().optional(),
-    country: z.string().min(1, t('countryRequired')),
-    phoneCountryCode: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
-  })
+  z
+    .object({
+      name: z.string().min(1, t('nameRequired')),
+      address: z.string().optional(),
+      country: z.string().min(1, t('countryRequired')),
+      phoneCountryCode: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().email(t('invalidEmail')).optional().or(z.literal('')),
+    })
+    .refine(
+      data => {
+        if (!data.phoneCountryCode || !data.phone) return true
+        return validatePhoneNumber(data.phoneCountryCode, data.phone)
+      },
+      {
+        message: t('invalidPhoneNumber'),
+        path: ['phone'],
+      }
+    )
 
 type ClinicFormValues = z.infer<ReturnType<typeof clinicSchema>>
 
@@ -119,7 +154,7 @@ export function ClinicSettingsForm() {
           address: data.address || undefined,
           country: data.country,
           phoneCountryCode: data.phoneCountryCode || undefined,
-          phone: data.phone || undefined,
+          phone: data.phone ? cleanPhoneNumber(data.phone) : undefined,
           email: data.email || undefined,
         },
       })

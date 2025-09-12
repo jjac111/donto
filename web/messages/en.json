@@ -451,6 +451,7 @@
       "email": "Email",
       "emailPlaceholder": "contact@clinic.com",
       "invalidEmail": "Invalid email address",
+      "invalidPhoneNumber": "Invalid phone number",
       "save": "Save",
       "saving": "Saving...",
       "saved": "Saved"
