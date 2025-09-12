@@ -14,6 +14,13 @@ import {
 } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Odontogram } from './odontogram'
 import { DiagnosisForm } from './diagnosis-form'
 import { GeneralConditions } from './general-conditions'
@@ -175,20 +182,21 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
               </CardTitle>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-              <select
-                className="border rounded px-3 py-2 text-sm h-9 min-w-[140px]"
+              <Select
                 value={selectedHistoryId || ''}
-                onChange={e => setSelectedHistoryId(e.target.value || null)}
+                onValueChange={value => setSelectedHistoryId(value || null)}
               >
-                <option value="" disabled>
-                  {t('selectHistory')}
-                </option>
-                {histories.map(h => (
-                  <option key={h.id} value={h.id}>
-                    {new Date(h.created_at).toLocaleDateString('es-MX')}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="min-w-[140px] h-9">
+                  <SelectValue placeholder={t('selectHistory')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {histories.map(h => (
+                    <SelectItem key={h.id} value={h.id}>
+                      {new Date(h.created_at).toLocaleDateString('es-MX')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"
