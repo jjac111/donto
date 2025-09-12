@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card } from '@/components/ui/card'
 import { ClinicSettingsForm } from '@/components/settings/clinic-settings-form'
+import { ProvidersSettingsForm } from '@/components/providers/providers-settings-form'
 
 export default function SettingsPage() {
   const t = useTranslations('settings')
@@ -35,11 +36,7 @@ export default function SettingsPage() {
           {/* Providers Section */}
           <Card>
             <div className="px-6">
-              <h2 className="text-lg font-semibold">{t('providers.title')}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t('providers.description')}
-              </p>
-              {/* <ProvidersSettingsForm /> */}
+              <ProvidersSettingsForm />
             </div>
           </Card>
         </div>

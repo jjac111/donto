@@ -126,8 +126,14 @@ export const invalidateAppointmentData = () => {
   })
 }
 
-export const invalidateProviderData = () => {
-  queryClient.invalidateQueries({ queryKey: queryKeys.providers })
+export const invalidateProviderData = (clinicId?: string) => {
+  if (clinicId) {
+    queryClient.invalidateQueries({
+      queryKey: [...queryKeys.providers, clinicId],
+    })
+  } else {
+    queryClient.invalidateQueries({ queryKey: queryKeys.providers })
+  }
 }
 
 export const invalidateProcedureData = () => {
