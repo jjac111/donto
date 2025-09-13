@@ -37,7 +37,7 @@ export function AppLayout({
         />
 
         {/* Page content */}
-        <main className="flex-1 py-6">
+        <main className="flex-1 py-6 animate-in fade-in duration-300">
           <div className="px-4 pb-6 sm:px-6 lg:pb-8 lg:px-8">{children}</div>
         </main>
       </div>
