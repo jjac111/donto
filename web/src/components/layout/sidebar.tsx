@@ -75,15 +75,18 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed left-0 top-0 z-50 h-screen w-64 transform border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex lg:flex-col',
+          'fixed left-0 top-2 bottom-2 z-50 w-64 transform border border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex lg:flex-col',
+          'rounded-r-2xl lg:rounded-none',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           className
         )}
       >
-        <div className="flex h-screen flex-col">
+        <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between h-17 px-6 py-4 border-b border-border">
-            <Logo size="lg" />
+          <div className="flex items-center justify-center h-17 px-6 py-4 border-b border-border">
+            <Link href="/">
+              <Logo size="lg" />
+            </Link>
           </div>
 
           {/* Search - Hidden on desktop when shown in header */}
