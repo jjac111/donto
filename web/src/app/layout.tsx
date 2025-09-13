@@ -35,7 +35,12 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
             <AuthGuard>{children}</AuthGuard>
-            <Toaster />
+            <Toaster
+              richColors
+              position="top-center"
+              duration={2000}
+              className="rounded-xl"
+            />
           </QueryProvider>
         </NextIntlClientProvider>
       </body>
