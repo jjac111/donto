@@ -54,15 +54,11 @@ export function Odontogram({
     <div
       className={`odontogram w-full max-w-full overflow-hidden ${className}`}
     >
-      <div className="odontogram-grid space-y-8 w-full">
-        {/* Upper jaw */}
-        <div className="upper-jaw">
-          <div className="flex justify-center mb-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('maxillary')}
-            </span>
-          </div>
-          <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-12 w-full max-w-full overflow-hidden">
+      <div className="odontogram-grid space-y-12 w-full mt-8">
+        {/* Mobile: All 4 grids stacked vertically */}
+        <div className="flex flex-col md:hidden gap-12">
+          {/* Upper Left Quadrant */}
+          <div className="flex flex-col items-center gap-2">
             <ToothGrid
               teeth={upperLeftTeeth}
               onToothClick={onToothClick}
@@ -70,8 +66,10 @@ export function Odontogram({
               jaw="upper"
               side="left"
             />
-            <div className="hidden md:block w-2" />{' '}
-            {/* Separation - hidden on mobile */}
+          </div>
+
+          {/* Upper Right Quadrant */}
+          <div className="flex flex-col items-center gap-2">
             <ToothGrid
               teeth={upperRightTeeth}
               onToothClick={onToothClick}
@@ -82,23 +80,36 @@ export function Odontogram({
           </div>
         </div>
 
-        {/* Lower jaw */}
-        <div className="lower-jaw">
-          <div className="flex justify-center mb-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {t('mandibular')}
-            </span>
+        {/* Desktop: Upper quadrants in one row */}
+        <div className="hidden md:flex flex-col gap-12">
+          <div className="flex flex-row justify-evenly gap-8">
+            {/* Upper Left Quadrant */}
+            <div className="flex flex-col items-center gap-2">
+              <ToothGrid
+                teeth={upperLeftTeeth}
+                onToothClick={onToothClick}
+                selectedTooth={selectedTooth}
+                jaw="upper"
+                side="left"
+              />
+            </div>
+
+            {/* Upper Right Quadrant */}
+            <div className="flex flex-col items-center gap-2">
+              <ToothGrid
+                teeth={upperRightTeeth}
+                onToothClick={onToothClick}
+                selectedTooth={selectedTooth}
+                jaw="upper"
+                side="right"
+              />
+            </div>
           </div>
-          <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-12 w-full max-w-full overflow-hidden">
-            {/* Mobile: Show right first, then left (quadrants 3,4) */}
-            <div className="flex flex-col md:hidden gap-4">
-              <ToothGrid
-                teeth={lowerRightTeeth}
-                onToothClick={onToothClick}
-                selectedTooth={selectedTooth}
-                jaw="lower"
-                side="right"
-              />
+
+          {/* Desktop: Lower quadrants in one row */}
+          <div className="flex flex-row justify-evenly gap-8">
+            {/* Lower Left Quadrant */}
+            <div className="flex flex-col items-center gap-2">
               <ToothGrid
                 teeth={lowerLeftTeeth}
                 onToothClick={onToothClick}
@@ -107,16 +118,9 @@ export function Odontogram({
                 side="left"
               />
             </div>
-            {/* Desktop: Show left first, then right (original order) */}
-            <div className="hidden md:flex gap-12">
-              <ToothGrid
-                teeth={lowerLeftTeeth}
-                onToothClick={onToothClick}
-                selectedTooth={selectedTooth}
-                jaw="lower"
-                side="left"
-              />
-              <div className="w-2" /> {/* Separation */}
+
+            {/* Lower Right Quadrant */}
+            <div className="flex flex-col items-center gap-2">
               <ToothGrid
                 teeth={lowerRightTeeth}
                 onToothClick={onToothClick}
@@ -125,6 +129,28 @@ export function Odontogram({
                 side="right"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Mobile/Tablet: Lower Right first, then Lower Left */}
+        <div className="flex flex-col md:hidden gap-12">
+          <div className="flex flex-col items-center gap-2">
+            <ToothGrid
+              teeth={lowerRightTeeth}
+              onToothClick={onToothClick}
+              selectedTooth={selectedTooth}
+              jaw="lower"
+              side="right"
+            />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <ToothGrid
+              teeth={lowerLeftTeeth}
+              onToothClick={onToothClick}
+              selectedTooth={selectedTooth}
+              jaw="lower"
+              side="left"
+            />
           </div>
         </div>
       </div>
