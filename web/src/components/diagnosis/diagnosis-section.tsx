@@ -281,44 +281,50 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
                 </div>
               </CardTitle>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-              <Select
-                value={selectedHistoryId || ''}
-                onValueChange={value => setSelectedHistoryId(value || null)}
-                disabled={histories.length === 0}
-              >
-                <SelectTrigger className="min-w-[140px] h-9">
-                  <SelectValue placeholder={t('selectHistory')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {histories.map(h => (
-                    <SelectItem key={h.id} value={h.id}>
-                      {new Date(h.created_at).toLocaleDateString('es-MX')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNewDiagnosis}
-                disabled={createHistory.isPending}
-              >
-                <History className="h-4 w-4 mr-2" />
-                {t('newDiagnosis')}
-              </Button>
-              {selectedHistoryId && (
+            <div className="flex flex-col gap-2">
+              {/* Mobile: Select + Trash on first row, New Diagnosis below */}
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                <div className="flex gap-2 items-center">
+                  <Select
+                    value={selectedHistoryId || ''}
+                    onValueChange={value => setSelectedHistoryId(value || null)}
+                    disabled={histories.length === 0}
+                  >
+                    <SelectTrigger className="w-full sm:min-w-[140px] h-9">
+                      <SelectValue placeholder={t('selectHistory')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {histories.map(h => (
+                        <SelectItem key={h.id} value={h.id}>
+                          {new Date(h.created_at).toLocaleDateString('es-MX')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedHistoryId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteHistory(selectedHistoryId)}
+                      disabled={deleteHistory.isPending}
+                      className="text-destructive hover:text-destructive w-9 h-9 p-0"
+                      title={t('deleteHistory')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDeleteHistory(selectedHistoryId)}
-                  disabled={deleteHistory.isPending}
-                  className="text-destructive hover:text-destructive"
-                  title={t('deleteHistory')}
+                  onClick={handleNewDiagnosis}
+                  disabled={createHistory.isPending}
+                  className="h-9 w-full sm:w-auto"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <History className="h-4 w-4 mr-2" />
+                  {t('newDiagnosis')}
                 </Button>
-              )}
+              </div>
             </div>
           </div>
         </CardHeader>
