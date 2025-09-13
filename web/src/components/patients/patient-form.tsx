@@ -41,6 +41,7 @@ import {
   parsePhoneNumberWithError,
   isValidPhoneNumber,
 } from 'libphonenumber-js'
+import { toast } from 'sonner'
 
 // Helper function to get phone code for a country
 const getPhoneCode = (countryCode: string): string => {
@@ -174,6 +175,7 @@ export function PatientForm({
 }: PatientFormProps) {
   const t = useTranslations('patients')
   const tCommon = useTranslations('common')
+  const tToast = useTranslations('toast')
   const router = useRouter()
 
   // Use the appropriate mutation hook
@@ -238,10 +240,15 @@ export function PatientForm({
     if (mode === 'create') {
       createPatientMutation.mutate(patientData, {
         onSuccess: newPatient => {
+          toast.success(tToast('success.patientCreated'))
           onOpenChange(false)
           form.reset()
           onSuccess?.()
           router.push(`/patients/${newPatient.id}`)
+        },
+        onError: (error: any) => {
+          console.error('Error creating patient:', error)
+          toast.error(tToast('error.patientCreateFailed'))
         },
       })
     } else if (mode === 'edit' && patient) {
@@ -252,9 +259,14 @@ export function PatientForm({
         },
         {
           onSuccess: updatedPatient => {
+            toast.success(tToast('success.patientUpdated'))
             onOpenChange(false)
             onSuccess?.()
             // Data will be automatically refetched by TanStack Query
+          },
+          onError: (error: any) => {
+            console.error('Error updating patient:', error)
+            toast.error(tToast('error.patientUpdateFailed'))
           },
         }
       )
