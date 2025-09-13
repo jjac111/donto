@@ -5,7 +5,7 @@ import { getMessages } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import { QueryProvider } from '@/providers/query-provider'
 import { AuthGuard } from '@/components/auth/auth-guard'
-import { Toaster } from '@/components/ui/toast'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const font = Font({

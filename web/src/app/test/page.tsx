@@ -36,7 +36,7 @@ import { FormInput, FormTextarea, FormSelect } from '@/components/ui/form-field'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Users, Calendar, FileText, Settings, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 
 export default function TestPage() {
   const [inputValue, setInputValue] = useState('')
@@ -44,14 +44,6 @@ export default function TestPage() {
   const [selectValue, setSelectValue] = useState('')
   const [loading, setLoading] = useState(false)
   const t = useTranslations('test')
-  const {
-    success,
-    error,
-    warning,
-    info,
-    loading: loadingToast,
-    promise,
-  } = useToast()
 
   const handleLoading = () => {
     setLoading(true)
@@ -59,37 +51,37 @@ export default function TestPage() {
   }
 
   const handleSuccessToast = () => {
-    success('¡Operación exitosa!', {
+    toast.success('¡Operación exitosa!', {
       description: 'El paciente ha sido creado correctamente',
     })
   }
 
   const handleErrorToast = () => {
-    error('Error al procesar la solicitud', {
+    toast.error('Error al procesar la solicitud', {
       description: 'Verifica los datos e intenta nuevamente',
     })
   }
 
   const handleWarningToast = () => {
-    warning('Advertencia importante', {
+    toast.warning('Advertencia importante', {
       description: 'Esta acción no se puede deshacer',
     })
   }
 
   const handleInfoToast = () => {
-    info('Información del sistema', {
+    toast.info('Información del sistema', {
       description: 'La actualización se completará en unos minutos',
     })
   }
 
   const handleLoadingToast = () => {
-    const toastId = loadingToast('Procesando...', {
+    const toastId = toast.loading('Procesando...', {
       description: 'Por favor espera mientras guardamos los datos',
     })
 
     // Simulate async operation
     setTimeout(() => {
-      success('¡Guardado exitoso!', {
+      toast.success('¡Guardado exitoso!', {
         description: 'Los datos se han guardado correctamente',
       })
     }, 2000)
@@ -104,7 +96,7 @@ export default function TestPage() {
       }, 2000)
     })
 
-    promise(mockPromise, {
+    toast.promise(mockPromise, {
       loading: 'Guardando datos...',
       success: data => `¡${data} exitosamente!`,
       error: err => `Error: ${err.message}`,
