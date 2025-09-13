@@ -5,6 +5,7 @@ import { getMessages } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import { QueryProvider } from '@/providers/query-provider'
 import { AuthGuard } from '@/components/auth/auth-guard'
+import { Toaster } from '@/components/ui/toast'
 import './globals.css'
 
 const font = Font({
@@ -34,6 +35,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
             <AuthGuard>{children}</AuthGuard>
+            <Toaster />
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

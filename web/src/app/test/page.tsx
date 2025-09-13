@@ -36,6 +36,7 @@ import { FormInput, FormTextarea, FormSelect } from '@/components/ui/form-field'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Users, Calendar, FileText, Settings, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useToast } from '@/hooks/use-toast'
 
 export default function TestPage() {
   const [inputValue, setInputValue] = useState('')
@@ -43,10 +44,71 @@ export default function TestPage() {
   const [selectValue, setSelectValue] = useState('')
   const [loading, setLoading] = useState(false)
   const t = useTranslations('test')
+  const {
+    success,
+    error,
+    warning,
+    info,
+    loading: loadingToast,
+    promise,
+  } = useToast()
 
   const handleLoading = () => {
     setLoading(true)
     setTimeout(() => setLoading(false), 2000)
+  }
+
+  const handleSuccessToast = () => {
+    success('¡Operación exitosa!', {
+      description: 'El paciente ha sido creado correctamente',
+    })
+  }
+
+  const handleErrorToast = () => {
+    error('Error al procesar la solicitud', {
+      description: 'Verifica los datos e intenta nuevamente',
+    })
+  }
+
+  const handleWarningToast = () => {
+    warning('Advertencia importante', {
+      description: 'Esta acción no se puede deshacer',
+    })
+  }
+
+  const handleInfoToast = () => {
+    info('Información del sistema', {
+      description: 'La actualización se completará en unos minutos',
+    })
+  }
+
+  const handleLoadingToast = () => {
+    const toastId = loadingToast('Procesando...', {
+      description: 'Por favor espera mientras guardamos los datos',
+    })
+
+    // Simulate async operation
+    setTimeout(() => {
+      success('¡Guardado exitoso!', {
+        description: 'Los datos se han guardado correctamente',
+      })
+    }, 2000)
+  }
+
+  const handlePromiseToast = () => {
+    const mockPromise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        Math.random() > 0.5
+          ? resolve('Datos guardados')
+          : reject(new Error('Error de conexión'))
+      }, 2000)
+    })
+
+    promise(mockPromise, {
+      loading: 'Guardando datos...',
+      success: data => `¡${data} exitosamente!`,
+      error: err => `Error: ${err.message}`,
+    })
   }
 
   const sampleData = [
@@ -105,6 +167,38 @@ export default function TestPage() {
               <Button onClick={handleLoading} disabled={loading}>
                 {loading ? <LoadingSpinner size="sm" className="mr-2" /> : null}
                 {t('buttons.testLoading')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Toast Tests Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Toast Notifications</CardTitle>
+            <CardDescription>
+              Test different types of toast notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleSuccessToast} variant="default">
+                Success Toast
+              </Button>
+              <Button onClick={handleErrorToast} variant="destructive">
+                Error Toast
+              </Button>
+              <Button onClick={handleWarningToast} variant="secondary">
+                Warning Toast
+              </Button>
+              <Button onClick={handleInfoToast} variant="outline">
+                Info Toast
+              </Button>
+              <Button onClick={handleLoadingToast} variant="ghost">
+                Loading Toast
+              </Button>
+              <Button onClick={handlePromiseToast} variant="default">
+                Promise Toast
               </Button>
             </div>
           </CardContent>
