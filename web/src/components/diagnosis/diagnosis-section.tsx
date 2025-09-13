@@ -32,6 +32,7 @@ import {
 import { Odontogram } from './odontogram'
 import { DiagnosisForm } from './diagnosis-form'
 import { GeneralConditions } from './general-conditions'
+import { toast } from 'sonner'
 import {
   usePatientToothConditions,
   useToothConditions,
@@ -54,6 +55,7 @@ interface DiagnosisSectionProps {
 export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const t = useTranslations('diagnosis')
   const tCommon = useTranslations('common')
+  const tToast = useTranslations('toast')
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null)
   const [diagnosisDialogOpen, setDiagnosisDialogOpen] = useState(false)
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(
@@ -156,10 +158,12 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
       }
     } catch (error) {
       console.error('Failed to delete history:', error)
+      toast.error(tToast('diagnosis.historyDeleteFailed'))
       // Don't close dialog on error, let user retry
       return
     }
 
+    toast.success(tToast('diagnosis.historyDeleted'))
     setDeleteDialogOpen(false)
     setHistoryToDelete(null)
   }
@@ -170,7 +174,14 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
     } else {
       // No current history, create new one directly
       createHistory.mutate(patientId, {
-        onSuccess: ({ id }) => setSelectedHistoryId(id),
+        onSuccess: ({ id }) => {
+          toast.success(tToast('diagnosis.historyCreated'))
+          setSelectedHistoryId(id)
+        },
+        onError: (error: any) => {
+          console.error('Failed to create history:', error)
+          toast.error(tToast('diagnosis.historyCreateFailed'))
+        },
       })
     }
   }
@@ -178,7 +189,14 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
   const handleCreateFromScratch = () => {
     setNewDiagnosisDialogOpen(false)
     createHistory.mutate(patientId, {
-      onSuccess: ({ id }) => setSelectedHistoryId(id),
+      onSuccess: ({ id }) => {
+        toast.success(tToast('diagnosis.historyCreated'))
+        setSelectedHistoryId(id)
+      },
+      onError: (error: any) => {
+        console.error('Failed to create history:', error)
+        toast.error(tToast('diagnosis.historyCreateFailed'))
+      },
     })
   }
 
@@ -187,18 +205,24 @@ export function DiagnosisSection({ patientId }: DiagnosisSectionProps) {
 
     setNewDiagnosisDialogOpen(false)
 
-    // Create new history first
-    const { id: newHistoryId } = await createHistory.mutateAsync(patientId)
+    try {
+      // Create new history first
+      const { id: newHistoryId } = await createHistory.mutateAsync(patientId)
 
-    // Copy current history to new one
-    await copyHistory.mutateAsync({
-      patientId,
-      sourceHistoryId: selectedHistoryId,
-      targetHistoryId: newHistoryId,
-    })
+      // Copy current history to new one
+      await copyHistory.mutateAsync({
+        patientId,
+        sourceHistoryId: selectedHistoryId,
+        targetHistoryId: newHistoryId,
+      })
 
-    // Select the new history
-    setSelectedHistoryId(newHistoryId)
+      toast.success(tToast('diagnosis.historyCopied'))
+      // Select the new history
+      setSelectedHistoryId(newHistoryId)
+    } catch (error) {
+      console.error('Failed to copy history:', error)
+      toast.error(tToast('diagnosis.historyCopyFailed'))
+    }
   }
 
   // Calculate summary statistics

@@ -52,6 +52,7 @@ import {
 } from '@/types/dental-conditions'
 import dentalConditionsData from '@/lib/dental-conditions.json'
 import { Tooth } from './odontogram/tooth'
+import { toast } from 'sonner'
 
 interface DiagnosisFormProps {
   open: boolean
@@ -99,6 +100,7 @@ export function DiagnosisForm({
   const tCategories = useTranslations('categories')
   const tConditions = useTranslations('conditions')
   const tSurfaces = useTranslations('surfaces')
+  const tToast = useTranslations('toast')
 
   const isInitializingRef = useRef(false)
   const preventFocusRef = useRef(false)
@@ -163,8 +165,14 @@ export function DiagnosisForm({
       generalNotes: data.generalNotes,
     }
 
-    await onSave(diagnosisData)
-    onOpenChange(false)
+    try {
+      await onSave(diagnosisData)
+      toast.success(tToast('diagnosis.saved'))
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Error saving diagnosis:', error)
+      toast.error(tToast('diagnosis.saveFailed'))
+    }
   }
 
   const getConditionById = useMemo(

@@ -15,6 +15,48 @@
       }
     }
   },
+  "toast": {
+    "success": {
+      "patientCreated": "Paciente creado exitosamente",
+      "patientUpdated": "Paciente actualizado exitosamente",
+      "patientDeleted": "Paciente eliminado exitosamente"
+    },
+    "error": {
+      "generic": "Ha ocurrido un error inesperado",
+      "networkError": "Error de conexión. Verifica tu internet",
+      "validationError": "Por favor revisa los datos ingresados",
+      "patientCreateFailed": "No se pudo crear el paciente",
+      "patientUpdateFailed": "No se pudo actualizar el paciente",
+      "patientDeleteFailed": "No se pudo eliminar el paciente"
+    },
+    "info": {
+      "loading": "Procesando...",
+      "saving": "Guardando...",
+      "updating": "Actualizando..."
+    },
+    "diagnosis": {
+      "saved": "Diagnóstico guardado exitosamente",
+      "saveFailed": "No se pudo guardar el diagnóstico",
+      "historyCreated": "Historial de diagnóstico creado",
+      "historyCreateFailed": "No se pudo crear el historial",
+      "historyDeleted": "Historial eliminado exitosamente",
+      "historyDeleteFailed": "No se pudo eliminar el historial",
+      "historyCopied": "Historial copiado exitosamente",
+      "historyCopyFailed": "No se pudo copiar el historial"
+    },
+    "clinic": {
+      "updated": "Configuración de clínica actualizada",
+      "updateFailed": "No se pudo actualizar la configuración"
+    },
+    "provider": {
+      "created": "Personal creado exitosamente",
+      "createFailed": "No se pudo crear el personal",
+      "updated": "Personal actualizado exitosamente",
+      "updateFailed": "No se pudo actualizar el personal",
+      "deleted": "Personal eliminado exitosamente",
+      "deleteFailed": "No se pudo eliminar el personal"
+    }
+  },
   "navigation": {
     "patients": "Pacientes",
     "appointments": "Citas",

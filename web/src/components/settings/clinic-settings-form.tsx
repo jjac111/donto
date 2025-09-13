@@ -32,6 +32,7 @@ import {
   parsePhoneNumberWithError,
   isValidPhoneNumber,
 } from 'libphonenumber-js'
+import { toast } from 'sonner'
 
 // Helper function to get phone code for a country
 const getPhoneCode = (countryCode: string): string => {
@@ -94,6 +95,7 @@ type ClinicFormValues = z.infer<ReturnType<typeof clinicSchema>>
 export function ClinicSettingsForm() {
   const t = useTranslations('settings.clinic')
   const tCommon = useTranslations('common')
+  const tToast = useTranslations('toast')
   const { clinicId } = useAuthStore()
 
   const [isSuccess, setIsSuccess] = useState(false)
@@ -159,10 +161,12 @@ export function ClinicSettingsForm() {
         },
       })
 
+      toast.success(tToast('clinic.updated'))
       setIsSuccess(true)
       setTimeout(() => setIsSuccess(false), 3000)
     } catch (error) {
       console.error('Failed to update clinic:', error)
+      toast.error(tToast('clinic.updateFailed'))
     }
   }
 

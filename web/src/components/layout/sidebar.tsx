@@ -98,7 +98,8 @@ export function Sidebar({ isOpen, onClose, className }: SidebarProps) {
           <nav className="flex-1 flex flex-col p-6">
             <div className="space-y-3 h-full flex flex-col">
               {navigation.map(item => {
-                const isActive = pathname === item.href
+                const isActive =
+                  pathname === item.href || pathname.startsWith(item.href + '/')
                 return (
                   <Link
                     key={item.name}

@@ -15,6 +15,48 @@
       }
     }
   },
+  "toast": {
+    "success": {
+      "patientCreated": "Patient created successfully",
+      "patientUpdated": "Patient updated successfully",
+      "patientDeleted": "Patient deleted successfully"
+    },
+    "error": {
+      "generic": "An unexpected error occurred",
+      "networkError": "Connection error. Please check your internet",
+      "validationError": "Please review the entered data",
+      "patientCreateFailed": "Failed to create patient",
+      "patientUpdateFailed": "Failed to update patient",
+      "patientDeleteFailed": "Failed to delete patient"
+    },
+    "info": {
+      "loading": "Processing...",
+      "saving": "Saving...",
+      "updating": "Updating..."
+    },
+    "diagnosis": {
+      "saved": "Diagnosis saved successfully",
+      "saveFailed": "Failed to save diagnosis",
+      "historyCreated": "Diagnosis history created",
+      "historyCreateFailed": "Failed to create history",
+      "historyDeleted": "History deleted successfully",
+      "historyDeleteFailed": "Failed to delete history",
+      "historyCopied": "History copied successfully",
+      "historyCopyFailed": "Failed to copy history"
+    },
+    "clinic": {
+      "updated": "Clinic settings updated",
+      "updateFailed": "Failed to update clinic settings"
+    },
+    "provider": {
+      "created": "Provider created successfully",
+      "createFailed": "Failed to create provider",
+      "updated": "Provider updated successfully",
+      "updateFailed": "Failed to update provider",
+      "deleted": "Provider deleted successfully",
+      "deleteFailed": "Failed to delete provider"
+    }
+  },
   "navigation": {
     "patients": "Patients",
     "appointments": "Appointments",

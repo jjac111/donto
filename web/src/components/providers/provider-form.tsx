@@ -43,7 +43,7 @@ import {
   parsePhoneNumberWithError,
   isValidPhoneNumber,
 } from 'libphonenumber-js'
-// import { toast } from 'sonner' // TODO: Add toast library
+import { toast } from 'sonner'
 
 // Helper function to get phone code for a country
 const getPhoneCode = (countryCode: string): string => {
@@ -181,6 +181,7 @@ export function ProviderForm({
   onOpenChange,
 }: ProviderFormProps) {
   const t = useTranslations('settings.providers')
+  const tToast = useTranslations('toast')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -242,16 +243,20 @@ export function ProviderForm({
             isActive: data.isActive,
           },
         })
-        console.log('Provider updated successfully')
+        toast.success(tToast('provider.updated'))
       } else {
         await createProvider.mutateAsync(providerData)
-        console.log('Provider created successfully')
+        toast.success(tToast('provider.created'))
       }
 
       onSuccess?.()
     } catch (error) {
       console.error('Provider form error:', error)
-      alert(isEditing ? t('updateError') : t('createError'))
+      toast.error(
+        isEditing
+          ? tToast('provider.updateFailed')
+          : tToast('provider.createFailed')
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -263,11 +268,11 @@ export function ProviderForm({
     setIsDeleting(true)
     try {
       await deleteProvider.mutateAsync(provider.id)
-      console.log('Provider deleted successfully')
+      toast.success(tToast('provider.deleted'))
       onSuccess?.()
     } catch (error) {
       console.error('Delete provider error:', error)
-      alert(t('deleteError'))
+      toast.error(tToast('provider.deleteFailed'))
     } finally {
       setIsDeleting(false)
       setShowDeleteConfirm(false)
